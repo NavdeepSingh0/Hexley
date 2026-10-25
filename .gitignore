@@ -1,0 +1,27 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+
+# Secrets: never commit
+.env
+*.key
+*.pem
+
+# Node
+node_modules/
+console/dist/
+
+# Generated output
+spikes/out/
+eval/results/raw/
+data/runtime/
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
