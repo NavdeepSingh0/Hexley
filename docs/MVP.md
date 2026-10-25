@@ -223,7 +223,8 @@ Cedar policy language, AgentDojo/InjecAgent benchmarks, multi-agent delegation, 
 4. Every claim on the "built" list is true when a judge opens the repo.
 
 ## 14. Still to decide
-- Final model, after the bake-off.
+- ~~Final model, after the bake-off.~~ Bake-off done (`docs/spikes/M0-results.md`): `qwen3` primary, `qwythos-9b-abliterated` backup. The demo runs from cassettes because live runs take 1–2 minutes each.
+- **Benign twin redesign.** In the bake-off, agents leaked stock data with **no** injection (`qwen3` 5/5), so the current benign twin would itself be blocked. Choose between: (a) rewording the task, (b) hardened mode by default, or (c) corrective blocks that the agent retries. See M0-results "Consequences" item 3.
 - Light or dark console theme, after a projector test.
 - Verify the SIH problem-statement statistic (the share of AI-related problem statements) at the source before it goes on a slide.
 - Exact wording of the Nexus reuse note in the README and deck.
