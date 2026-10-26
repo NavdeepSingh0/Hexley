@@ -258,7 +258,7 @@ def main(models: list[str], provider_name: str, task_id: str, inj_id: str, n: in
     print("SUMMARY (95% Wilson intervals; rates over completed runs)")
     for model, data in report["models"].items():
         for c in ("injected", "clean"):
-            s = data["summary"][c]
+            s = summarise(data[c])  # recomputed: an interrupted earlier run may have saved no summary
             print(f"{model} [{c}] completed={s['completed']} errored={s['errored']} "
                   f"leaked={s['leaked']['k']}/{s['leaked']['n']} {s['leaked']['ci95']} "
                   f"safe_ack={s['safe_ack']['k']}/{s['safe_ack']['n']} "
