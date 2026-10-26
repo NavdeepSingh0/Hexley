@@ -10,6 +10,7 @@ Security properties implemented here (ARCHITECTURE.md section 5):
 from __future__ import annotations
 
 import json
+import logging
 import uuid
 from contextvars import ContextVar
 from datetime import datetime, timezone
@@ -21,12 +22,15 @@ from fastmcp.server.dependencies import get_http_headers
 from fastmcp.server.middleware import Middleware
 from fastmcp.server.providers.proxy import FastMCPProxy, ProxyClient
 
+from .audit import AuditError, action_payload, decision_payload, result_payload
 from .contracts import Session, SessionError, verify_session_token
 from .engine import decide
 from .events import make_event
-from .models import AgentAction, Column, Confidentiality, Decision, Effect, ReasonCode, SessionStatus
+from .models import AgentAction, Column, Confidentiality, Decision, Effect, Evidence, ReasonCode, SessionStatus
 from .runtime import Runtime
 from .tools.server import COLUMN_HEADER, SESSION_HEADER, TOKEN_HEADER
+
+log = logging.getLogger("sentinel.gateway")
 
 # The session of the call being forwarded, so the downstream client can label it (for the mail sink).
 _current: ContextVar[Session | None] = ContextVar("sentinel_current_session", default=None)
@@ -78,10 +82,22 @@ class SentinelMiddleware(Middleware):
                                              action.model_dump(mode="json")))
         # Decide, reserve budget, count the block and (on FREEZE) revoke, all under one lock: two concurrent
         # calls cannot both take the last send slot, and a freeze takes effect before the next decision.
+        protected = session.column == Column.SENTINEL
         async with session.lock:
             if session.status != SessionStatus.ACTIVE:
                 raise ToolError("Blocked: this session is frozen. Ask the officer to confirm a new slip.")
             decision = decide(action, session, self.rt.registry)
+            # D-020: the decision is recorded durably BEFORE anything is forwarded. No durable record, no action.
+            # (Baseline columns record on a best-effort basis: they are controls, not enforcement.)
+            try:
+                await self.rt.audit.append("decision", session_id=session.session_id, action_id=action.action_id,
+                                           decision_id=decision.decision_id,
+                                           payload={"action": action_payload(action),
+                                                    "decision": decision_payload(decision)})
+            except AuditError as e:
+                log.warning("audit append failed for %s: %s", action.action_id, e)
+                if protected and decision.effect == Effect.ALLOW:
+                    decision = audit_unavailable(action)
             if decision.effect == Effect.ALLOW:
                 if entry.outbound:
                     session.messages_out += 1  # reserved now; a failed send still counts (conservative)
@@ -102,11 +118,28 @@ class SentinelMiddleware(Middleware):
             result = await call_next(context)
         finally:
             _current.reset(reset)
+        text = _result_text(result)
+        try:
+            await self.rt.audit.append("result", session_id=session.session_id, action_id=action.action_id,
+                                       decision_id=decision.decision_id, payload=result_payload(tool, text))
+        except AuditError as e:
+            log.warning("audit append of result failed for %s: %s", action.action_id, e)
+            if protected and entry.output_confidentiality == Confidentiality.RESTRICTED:
+                # A restricted result is not handed to the agent unless the record of it is durable.
+                raise ToolError("Blocked: Sentinel could not record this result in its audit log, so it was withheld.") from e
+            if protected and entry.consequential:
+                # The action already ran and cannot be undone or retried: freeze the session and raise the alarm.
+                self.rt.store.freeze(session.session_id)
+                await self.rt.bus.publish(make_event("audit.failure", session.session_id, session.column,
+                                                     {"tool": tool, "action_id": action.action_id,
+                                                      "detail": "audit record of an executed action could not be written"}))
+                await self.rt.bus.publish(make_event("freeze", session.session_id, session.column,
+                                                     {"reason": "audit failure after execution",
+                                                      "decision_id": decision.decision_id}))
         # Label what came back from the registry (never from the content) and remember restricted values,
         # so a later outbound call can be checked against them (R2).
-        if session.column == Column.SENTINEL and entry.output_confidentiality == Confidentiality.RESTRICTED \
-                and entry.fingerprint_fields:
-            session.index.add(_result_text(result), entry.fingerprint_fields, source_ref=tool)
+        if protected and entry.output_confidentiality == Confidentiality.RESTRICTED and entry.fingerprint_fields:
+            session.index.add(text, entry.fingerprint_fields, source_ref=tool)
         return result
 
 
@@ -114,7 +147,15 @@ def counts_toward_freeze(decision: Decision) -> bool:
     """R6 counts policy blocks only. An engine fault (FAIL_CLOSED) or a session problem is not the agent's
     attempt, and tool errors or timeouts never reach this function at all."""
     return decision.effect in (Effect.BLOCK, Effect.FREEZE) and decision.reason_code not in (
-        ReasonCode.FAIL_CLOSED, ReasonCode.SESSION_INVALID)
+        ReasonCode.FAIL_CLOSED, ReasonCode.SESSION_INVALID, ReasonCode.AUDIT_UNAVAILABLE)
+
+
+def audit_unavailable(action: AgentAction) -> Decision:
+    return Decision(
+        decision_id=f"dec_{uuid.uuid4().hex[:12]}", action_id=action.action_id, effect=Effect.BLOCK,
+        reason_code=ReasonCode.AUDIT_UNAVAILABLE,
+        summary_plain="Blocked: Sentinel could not record this action in its audit log, so it did not run.",
+        evidence=[Evidence(kind="audit", detail="durable audit write failed or missed its deadline")])
 
 
 def _result_text(result) -> str:

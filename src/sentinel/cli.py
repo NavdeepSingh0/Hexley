@@ -12,6 +12,7 @@ import os
 import secrets
 import subprocess
 import sys
+from pathlib import Path
 
 import uvicorn
 
@@ -30,7 +31,8 @@ async def _up(args: argparse.Namespace) -> None:
     api_token = os.environ.get("SENTINEL_API_TOKEN") or secrets.token_urlsafe(24)
     rt = build_runtime(tools_url=f"http://127.0.0.1:{args.tools_port}/mcp",
                        gateway_url=f"http://127.0.0.1:{args.gateway_port}/mcp",
-                       downstream_token=downstream, api_token=api_token)
+                       downstream_token=downstream, api_token=api_token,
+                       audit_dir=Path(args.data_dir), allow_tamper=args.demo)
     env = {**os.environ, "SENTINEL_DOWNSTREAM_TOKEN": downstream, "SENTINEL_TOOLS_PORT": str(args.tools_port)}
     tools = subprocess.Popen([sys.executable, "-m", "sentinel.tools.server"], env=env)
     print(f"Sentinel up. API http://127.0.0.1:{args.api_port}  gateway {rt.gateway_url}  tools pid {tools.pid}")
@@ -49,6 +51,8 @@ def main(argv: list[str] | None = None) -> None:
     up.add_argument("--api-port", type=int, default=8000)
     up.add_argument("--gateway-port", type=int, default=8100)
     up.add_argument("--tools-port", type=int, default=8200)
+    up.add_argument("--data-dir", default="data/runtime", help="audit log and its signing key (git-ignored)")
+    up.add_argument("--demo", action="store_true", help="enable the tamper endpoint used by the demo")
     args = parser.parse_args(argv)
     if args.command == "up":
         try:

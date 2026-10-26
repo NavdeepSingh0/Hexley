@@ -55,6 +55,7 @@ class ReasonCode(StrEnum):
     VOLUME_EXCEEDED = "VOLUME_EXCEEDED"  # R5
     BLOCK_THRESHOLD_FREEZE = "BLOCK_THRESHOLD_FREEZE"  # R6
     SESSION_INVALID = "SESSION_INVALID"
+    AUDIT_UNAVAILABLE = "AUDIT_UNAVAILABLE"  # no durable audit record, so the action was not run
     FAIL_CLOSED = "FAIL_CLOSED"
 
 

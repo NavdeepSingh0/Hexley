@@ -6,7 +6,7 @@ Sentinel is an MCP gateway that sits between an AI agent and its tools. It check
 
 Team 404 Disruptors · Zinnovatio 4.0
 
-## Status (updated each milestone; last: M1 done, M2 in progress: matcher, R2, R5 and R6 built)
+## Status (updated each milestone; last: M1 done, M2 in progress: matcher, R2, R5, R6 and the audit log built)
 
 This table says what exists today, not what the architecture describes. "Tested" means automated tests cover the listed behaviour, not that the component is comprehensively secure.
 
@@ -20,7 +20,7 @@ This table says what exists today, not what the architecture describes. "Tested"
 | Rule R5 (send budget, reserved atomically) and R6 (third policy block freezes the session) | **Built, tested** | The race test fails when the lock is removed (checked by mutation). Bulk-read volume limits arrive with the second scenario |
 | Rules R3 (destination provenance) and R4 (human approval bound to the exact action) | **Planned (M2)** | |
 | Structured egress (hardened mode) | **Planned (M2)** | Slip templates validate at startup; nothing enforces them yet |
-| Signed, hash-chained audit log | **Planned (M2)** | |
+| Signed, hash-chained audit log | **Built, tested** | Ed25519-signed, SHA-256 chained, fsynced, written before an action is forwarded; slow or failed writes fail closed; no secret values or raw arguments are stored. Detects a changed, deleted, reordered or forged record. It does not prove the events were true, and a truncated log is only caught if the verifier holds the earlier chain head |
 | Mock tool server, mail sink (measures what was delivered) | **Built, tested** | |
 | Live events (WebSocket) | **Built, tested** | |
 | Agent runner (OpenAI-compatible, Ollama or NVIDIA) | **Built**, smoke-tested | Not covered by unit tests |

@@ -2,7 +2,9 @@
 
 import asyncio
 import socket
+import tempfile
 from dataclasses import dataclass
+from pathlib import Path
 
 import httpx
 import pytest_asyncio
@@ -58,8 +60,9 @@ async def stack():
     ports = {k: free_port() for k in ("tools", "gateway", "api")}
     tools_url = f"http://127.0.0.1:{ports['tools']}/mcp"
     gateway_url = f"http://127.0.0.1:{ports['gateway']}/mcp"
-    rt = build_runtime(tools_url=tools_url, gateway_url=gateway_url,
-                       downstream_token=DOWNSTREAM_TOKEN, api_token=API_TOKEN)
+    audit_dir = tempfile.mkdtemp(prefix="sentinel-audit-")
+    rt = build_runtime(tools_url=tools_url, gateway_url=gateway_url, downstream_token=DOWNSTREAM_TOKEN,
+                       api_token=API_TOKEN, audit_dir=Path(audit_dir))
     tools, sink = build_tools_server(DOWNSTREAM_TOKEN)
     started = [await serve(tools.http_app(), ports["tools"]),
                await serve(build_gateway(rt).http_app(), ports["gateway"]),

@@ -10,8 +10,10 @@ from datetime import datetime, timezone
 import httpx
 from fastapi import Depends, FastAPI, Header, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import Response
 from pydantic import BaseModel
 
+from .audit import AuditError
 from .contracts import SessionError, draft_contract, mint_session_token, verify_session_token
 from .events import make_event
 from .models import Column, Mode, SessionStatus
@@ -33,6 +35,10 @@ class ConfirmRequest(BaseModel):
 
 class KillRequest(BaseModel):
     session_id: str
+
+
+class TamperRequest(BaseModel):
+    seq: int
 
 
 def create_api(rt: Runtime) -> FastAPI:
@@ -70,9 +76,17 @@ def create_api(rt: Runtime) -> FastAPI:
         token, _ = mint_session_token(contract, req.column, rt.key, ttl_seconds=ttl)
         try:
             claims = verify_session_token(token, rt.key.public_key())
-            session = rt.store.add(claims, contract)
         except SessionError as e:  # pragma: no cover - would indicate a bug in minting
             raise HTTPException(status_code=500, detail=str(e)) from e
+        try:  # the officer's confirmation is the first record of the session; no record, no session
+            await rt.audit.append("contract.issued", session_id=claims.session_id, payload={
+                "contract_id": contract.contract_id, "contract_hash": contract.contract_hash,
+                "template": contract.template, "mode": contract.mode.value, "officer": contract.officer,
+                "allowed_tools": contract.allowed_tools, "column": req.column.value})
+        except AuditError as e:
+            rt.drafts[contract_id] = draft  # the officer can try again
+            raise HTTPException(status_code=503, detail=f"audit log unavailable: {e}") from e
+        session = rt.store.add(claims, contract)
         await rt.bus.publish(make_event("contract.issued", session.session_id, session.column,
                                         {"contract": contract.model_dump(mode="json")}))
         await rt.bus.publish(make_event("session.started", session.session_id, session.column,
@@ -94,9 +108,36 @@ def create_api(rt: Runtime) -> FastAPI:
         s = rt.store.get(req.session_id)
         if s is None:
             raise HTTPException(status_code=404, detail="unknown session")
-        rt.store.freeze(req.session_id)
+        rt.store.freeze(req.session_id)  # the safety action never waits on the audit log
+        try:
+            await rt.audit.append("freeze", session_id=s.session_id, payload={"reason": "kill switch"})
+        except AuditError:
+            pass  # the freeze stands; the missing record is itself visible as a gap in the log
         await rt.bus.publish(make_event("freeze", s.session_id, s.column, {"reason": "kill switch"}))
         return {"session_id": s.session_id, "status": s.status.value}
+
+    @app.get("/audit/verify", dependencies=[Depends(require_token)])
+    async def audit_verify(expected_head: str | None = None):
+        """Re-read the log from disk and check every hash and signature. Truncation is only caught if the
+        caller supplies the chain head it saw earlier."""
+        res = rt.audit.verify(expected_head)
+        return {"ok": res.ok, "checked": res.checked, "head": res.head, "first_bad_seq": res.first_bad_seq,
+                "reason": res.reason}
+
+    @app.get("/audit/export", dependencies=[Depends(require_token)])
+    async def audit_export():
+        return Response(content=rt.audit.export_lines(), media_type="application/x-ndjson")
+
+    @app.post("/audit/tamper", dependencies=[Depends(require_token)])
+    async def audit_tamper(req: TamperRequest):
+        """DEMO ONLY: alter one record on disk so the console can show detection. Off unless enabled at start."""
+        if not rt.allow_tamper:
+            raise HTTPException(status_code=403, detail="tamper demo is disabled")
+        try:
+            rt.audit.tamper(req.seq)
+        except AuditError as e:
+            raise HTTPException(status_code=404, detail=str(e)) from e
+        return {"tampered_seq": req.seq}
 
     @app.get("/inbox", dependencies=[Depends(require_token)])
     async def inbox(column: str | None = None):

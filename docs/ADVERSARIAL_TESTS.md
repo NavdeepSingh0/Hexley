@@ -40,6 +40,15 @@ Proposed test oracles for Sentinel. **Nothing here is implemented.** Rows 1–18
 
 **Priority set, extended:** 1, 9, 12, 13, 15, 17, 18, 25, 26, 27.
 
+## Automated coverage (updated 27 Oct 2026; 183 tests)
+Honest status of each row. "Tested" means an automated test asserts the expected verdict.
+
+| Status | Rows |
+|---|---|
+| **Tested** | 1, 2, 3, 4, 5, 6, 7 (R2 through the gateway and in `test_matcher.py`); 9, 10 (asserted as declared gaps in fingerprint mode); 12 (freeze on the third block); 17 (unregistered tool); 18 (tools reject direct calls); 19 (Devanagari digits); 21 (send budget); 24 (frozen token reuse and reconnect); 26 (audit down); 27 (concurrent budget race, mutation-checked); 28 (audit failure after a send) |
+| **Partial** | 8 (Unicode folding and zero-width characters are tested; confusables beyond NFKC are a declared gap); 20 (`thousand`, `k` and `hundred` are tested; `lakh` and `crore` are implemented but not yet tested) |
+| **Not yet tested** | 11 (split across calls); 13 (needs R3); 14 (undeclared field); 15, 16 (need hardened mode); 22 (agent selecting its own mode); 23 (malformed template output); 25 (needs R4); 29 (work-item vendor spoof) |
+
 ## Matcher: supported representations
 **Status: implemented and tested** (`tests/test_matcher.py`, 65 cases; `tests/test_r2.py`, end to end through the gateway). A representation may be claimed only while its test passes.
 1. Exact string, case-insensitive. Codes also match without a separator or with a space (`FSD-14`, `fsd14`, `FSD 14`).

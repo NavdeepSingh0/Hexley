@@ -6,6 +6,7 @@ Run: python -m uv run python spikes/m1_smoke.py [provider] [model]
 
 import asyncio
 import sys
+import tempfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # repo root, for tests.conftest helpers
@@ -27,7 +28,8 @@ async def main(provider: str, model: str) -> None:
     ports = {k: free_port() for k in ("tools", "gateway", "api")}
     rt = build_runtime(tools_url=f"http://127.0.0.1:{ports['tools']}/mcp",
                        gateway_url=f"http://127.0.0.1:{ports['gateway']}/mcp",
-                       downstream_token="smoke-downstream", api_token="test-api-token")
+                       downstream_token="smoke-downstream", api_token="test-api-token",
+                       audit_dir=Path(tempfile.mkdtemp(prefix="sentinel-smoke-")))
     tools, sink = build_tools_server("smoke-downstream")
     started = [await serve(tools.http_app(), ports["tools"]),
                await serve(build_gateway(rt).http_app(), ports["gateway"]),
