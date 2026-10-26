@@ -150,14 +150,14 @@ Each tier starts only when the one above works reliably end to end.
 
 ### Tier 1: high impact
 8. Judge challenge box. Runs in hardened mode only, and is attacked by us with many formulations before we commit to it on stage. Fallback if unreliable: the judge picks from rehearsed attack variants.
-9. Phone approval (bank-detail change) via QR.
+9. ~~Phone approval (bank-detail change) via QR.~~ **Cut for the build window (D-031).** The approval logic and its API are built and tested; no polished approval page. Revisit only if everything else is done.
 10. Freeze and kill switch.
 11. Credential isolation (tools accept only Sentinel-issued tokens).
 12. Tamper-evident log: hash chain, Ed25519 signatures, verify, tamper button.
 13. Scoreboard with live counters and decision latency (ms).
 14. Measured evaluation: each scenario × 20 runs × 3 columns. Attack success, benign success, approvals per task.
 15. Recorded replay and presenter mode.
-16. Second scenario (veterans' records).
+16. ~~Second scenario (veterans' records).~~ **Cut for the build window (D-031).** Mentioned on a slide as the next deployment context, not built.
 17. **"Any agent" proof:** connect an off-the-shelf MCP client (verify which clients work locally before claiming any by name).
 
 ### Tier 2: polish if time allows
