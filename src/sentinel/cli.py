@@ -77,6 +77,15 @@ def main(argv: list[str] | None = None) -> None:
     rec.add_argument("--attempts", type=int, default=5)
     rec.add_argument("--out", default="recordings")
     rec.add_argument("--source", default="live", choices=["live", "scripted"], help="scripted is for tests and demos of the tooling")
+    ev = sub.add_parser("eval", help="measure Sentinel against a labelled corpus or real-model recordings")
+    ev.add_argument("--agent", default="scripted", choices=["scripted", "recorded", "live"],
+                    help="scripted: the labelled corpus, no model. recorded: summarise recordings/ already on disk. "
+                         "live: record --n fresh attempts of the poisoned and clean scenarios against --model, then summarise")
+    ev.add_argument("--n", type=int, default=5, help="attempts per scenario (live)")
+    ev.add_argument("--model", help="model id (live), or a filter on recordings (recorded)")
+    ev.add_argument("--provider", default="nvidia", choices=["nvidia", "ollama"])
+    ev.add_argument("--recordings", default="recordings", help="where recordings are read (recorded) or written (live)")
+    ev.add_argument("--out", default="eval/results")
     args = parser.parse_args(argv)
     if args.command == "up":
         try:
@@ -89,6 +98,23 @@ def main(argv: list[str] | None = None) -> None:
         paths = asyncio.run(record_scenario(args.scenario, {"provider": args.provider, "model": args.model},
                                             args.attempts, Path(args.out), source=args.source))
         print(f"wrote {len(paths)} recording(s) to {args.out}")
+    elif args.command == "eval":
+        from .eval import harness
+
+        out_dir = Path(args.out)
+        if args.agent == "scripted":
+            result, js, md = asyncio.run(harness.main_scripted(out_dir))
+        else:
+            if args.agent == "live":
+                if not args.model:
+                    parser.error("--agent live needs --model")
+                result = asyncio.run(harness.run_live({"provider": args.provider, "model": args.model}, args.n,
+                                                      Path(args.recordings)))
+            else:
+                result = asyncio.run(harness.run_recorded(Path(args.recordings), args.model))
+            js, md = harness.write_result(result, out_dir)
+        print(md.read_text(encoding="utf-8"))
+        print(f"wrote {js} and {md}")
 
 
 if __name__ == "__main__":

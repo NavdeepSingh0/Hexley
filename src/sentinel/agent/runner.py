@@ -41,6 +41,9 @@ def load_env(root: Path | None = None) -> None:
                     os.environ.setdefault(key.strip(), value)
 
 
+RETRY_BASE_S = 1.0  # backoff is RETRY_BASE_S * 2, 4, 8 ... seconds; tests set it to 0
+
+
 @dataclass
 class ModelEndpoint:
     """An OpenAI-compatible chat endpoint. `provider` is 'ollama' or 'nvidia'."""
@@ -71,20 +74,27 @@ class ModelEndpoint:
         """One chat turn. Hosted providers are throttled below their free-tier cap; 429/5xx are retried."""
         payload = {"model": self.model, "messages": messages, "tools": tools, "temperature": self.temperature}
         min_gap = 60.0 / float(os.environ.get("NVIDIA_MAX_RPM", "30")) if self.provider == "nvidia" else 0.0
+        last = ""
         for attempt in range(6):
             async with self._gate:  # lanes share one endpoint, so together they stay under the provider's cap
                 wait = min_gap - (time.monotonic() - self._last_call)
                 if wait > 0:
                     await asyncio.sleep(wait)
                 self._last_call = time.monotonic()
-            r = await client.post(f"{self._url}/chat/completions", headers=self._headers, json=payload)
-            if r.status_code in (429, 502, 503, 504):
+            try:
+                r = await client.post(f"{self._url}/chat/completions", headers=self._headers, json=payload)
+            except httpx.TransportError as e:  # a read timeout or dropped connection on the hosted API: the turn never happened
+                last = f"{type(e).__name__}: {e}".rstrip(": ")
+                await asyncio.sleep(RETRY_BASE_S * 2 ** (attempt + 1))
+                continue
+            if r.status_code in (429, 500, 502, 503, 504):
+                last = f"HTTP {r.status_code}"
                 retry = r.headers.get("retry-after", "")
-                await asyncio.sleep(float(retry) if retry.replace(".", "").isdigit() else 2 ** (attempt + 1))
+                await asyncio.sleep(float(retry) if retry.replace(".", "").isdigit() else RETRY_BASE_S * 2 ** (attempt + 1))
                 continue
             r.raise_for_status()
             return r.json()["choices"][0]["message"]
-        raise RuntimeError("the model provider kept returning 429/5xx after 6 attempts")
+        raise RuntimeError(f"the model provider failed 6 times in a row (last: {last})")
 
 
 def _openai_tool(tool) -> dict:
