@@ -6,6 +6,7 @@ contract hash. The agent only ever holds the token. See ARCHITECTURE.md section 
 
 from __future__ import annotations
 
+import asyncio
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
@@ -131,6 +132,8 @@ class Session:
     messages_out: int = 0
     records_out: int = 0
     index: FingerprintIndex = field(default_factory=FingerprintIndex)  # restricted values read so far
+    # Held across "decide + reserve budget + count the block", so concurrent calls cannot both take the last slot.
+    lock: asyncio.Lock = field(default_factory=asyncio.Lock, repr=False)
 
     @property
     def session_id(self) -> str:

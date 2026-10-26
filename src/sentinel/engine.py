@@ -35,8 +35,14 @@ def decide(action: AgentAction, session: Session, registry: Registry) -> Decisio
         if session.column == Column.SENTINEL:  # the R1-only baseline runs R1 and nothing else
             matches = session.index.scan_args(action.args) if entry.outbound else []
             results.append(rules.rule_r2(action, entry, matches))
+            results.append(rules.rule_r5(action, entry, session.contract, session.messages_out))
         fired = [r for r in results if r is not None]
         verdict = rules.combine(fired)
+        if verdict is not None and verdict.effect == Effect.BLOCK and session.column == Column.SENTINEL:
+            freeze = rules.rule_r6(session.blocks + 1)  # this block would be the Nth
+            if freeze is not None:
+                fired.append(freeze)
+                verdict = rules.combine(fired)
         if verdict is None:
             return finish(effect=Effect.ALLOW, reason_code=ReasonCode.ALLOWED,
                           summary_plain=f"Allowed: '{action.tool}' is within this task's permission slip.")

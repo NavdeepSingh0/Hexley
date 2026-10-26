@@ -63,6 +63,34 @@ def rule_r2(action: AgentAction, entry: ToolEntry, matches: list[Match]) -> Rule
         evidence)
 
 
+FREEZE_AFTER_BLOCKS = 3
+
+
+def rule_r5(action: AgentAction, entry: ToolEntry, contract: TaskContract, messages_out: int) -> RuleResult | None:
+    """R5: outgoing messages stay within the slip's send budget. `messages_out` counts messages already
+    allowed (reserved) in this session; a blocked attempt does not use any of the budget."""
+    if not entry.outbound or messages_out < contract.max_messages:
+        return None
+    n = contract.max_messages
+    return RuleResult(
+        RuleId.R5, Effect.BLOCK, ReasonCode.VOLUME_EXCEEDED,
+        f"Blocked: this task's permission slip allows {n} outgoing message{'s' if n != 1 else ''} and "
+        f"{'that limit' if n == 1 else 'the limit'} has already been used.",
+        [Evidence(kind="budget", detail=f"{messages_out} of {n} outgoing messages already used",
+                  source_ref=contract.contract_id)])
+
+
+def rule_r6(blocks_including_this: int, threshold: int = FREEZE_AFTER_BLOCKS) -> RuleResult | None:
+    """R6: the third policy block in one session freezes it. Evaluated only when another rule already blocked."""
+    if blocks_including_this < threshold:
+        return None
+    return RuleResult(
+        RuleId.R6, Effect.FREEZE, ReasonCode.BLOCK_THRESHOLD_FREEZE,
+        f"Frozen: this session made {blocks_including_this} blocked attempts and has been quarantined. "
+        "No further actions are possible until the officer confirms a new permission slip.",
+        [Evidence(kind="counter", detail=f"{blocks_including_this} policy blocks in this session")])
+
+
 def combine(results: list[RuleResult]) -> RuleResult | None:
     """Pick the strongest verdict by precedence FREEZE > BLOCK > ASK > ALLOW. None when nothing fired."""
     for effect in EFFECT_PRECEDENCE:

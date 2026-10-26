@@ -24,7 +24,7 @@ from fastmcp.server.providers.proxy import FastMCPProxy, ProxyClient
 from .contracts import Session, SessionError, verify_session_token
 from .engine import decide
 from .events import make_event
-from .models import AgentAction, Column, Confidentiality, Effect
+from .models import AgentAction, Column, Confidentiality, Decision, Effect, ReasonCode, SessionStatus
 from .runtime import Runtime
 from .tools.server import COLUMN_HEADER, SESSION_HEADER, TOKEN_HEADER
 
@@ -76,11 +76,26 @@ class SentinelMiddleware(Middleware):
             outbound=entry.outbound)
         await self.rt.bus.publish(make_event("action.requested", session.session_id, session.column,
                                              action.model_dump(mode="json")))
-        decision = decide(action, session, self.rt.registry)
+        # Decide, reserve budget, count the block and (on FREEZE) revoke, all under one lock: two concurrent
+        # calls cannot both take the last send slot, and a freeze takes effect before the next decision.
+        async with session.lock:
+            if session.status != SessionStatus.ACTIVE:
+                raise ToolError("Blocked: this session is frozen. Ask the officer to confirm a new slip.")
+            decision = decide(action, session, self.rt.registry)
+            if decision.effect == Effect.ALLOW:
+                if entry.outbound:
+                    session.messages_out += 1  # reserved now; a failed send still counts (conservative)
+            elif counts_toward_freeze(decision):
+                session.blocks += 1
+            if decision.effect == Effect.FREEZE:
+                self.rt.store.freeze(session.session_id)
         await self.rt.bus.publish(make_event("decision", session.session_id, session.column,
                                              decision.model_dump(mode="json")))
+        if decision.effect == Effect.FREEZE:
+            await self.rt.bus.publish(make_event("freeze", session.session_id, session.column,
+                                                 {"reason": "block threshold", "blocks": session.blocks,
+                                                  "decision_id": decision.decision_id}))
         if decision.effect != Effect.ALLOW:
-            session.blocks += 1
             raise ToolError(decision.summary_plain)
         reset = _current.set(session)
         try:
@@ -93,6 +108,13 @@ class SentinelMiddleware(Middleware):
                 and entry.fingerprint_fields:
             session.index.add(_result_text(result), entry.fingerprint_fields, source_ref=tool)
         return result
+
+
+def counts_toward_freeze(decision: Decision) -> bool:
+    """R6 counts policy blocks only. An engine fault (FAIL_CLOSED) or a session problem is not the agent's
+    attempt, and tool errors or timeouts never reach this function at all."""
+    return decision.effect in (Effect.BLOCK, Effect.FREEZE) and decision.reason_code not in (
+        ReasonCode.FAIL_CLOSED, ReasonCode.SESSION_INVALID)
 
 
 def _result_text(result) -> str:

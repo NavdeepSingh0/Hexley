@@ -6,7 +6,7 @@ Sentinel is an MCP gateway that sits between an AI agent and its tools. It check
 
 Team 404 Disruptors · Zinnovatio 4.0
 
-## Status (updated each milestone; last: M1 done, M2 in progress: matcher and R2 built)
+## Status (updated each milestone; last: M1 done, M2 in progress: matcher, R2, R5 and R6 built)
 
 This table says what exists today, not what the architecture describes. "Tested" means automated tests cover the listed behaviour, not that the component is comprehensively secure.
 
@@ -17,7 +17,8 @@ This table says what exists today, not what the architecture describes. "Tested"
 | Permission slip, officer confirmation | **Built, tested** (API) | No console screen yet |
 | Rule R1 (action must be in the slip and registry) | **Built, tested** | |
 | Value matcher and rule R2 (restricted values must not leave the building) | **Built, tested** | Recognises the representations in `docs/ADVERSARIAL_TESTS.md`; paraphrase is a declared gap. With a real model: unprotected and R1-only columns delivered the stock data; in the Sentinel column the first (leaking) email was blocked and a clean acknowledgement was then sent. One recorded run per column, not a rate yet |
-| Rules R3-R6 (destination provenance, approval, budgets, freeze) | **Planned (M2)** | |
+| Rule R5 (send budget, reserved atomically) and R6 (third policy block freezes the session) | **Built, tested** | The race test fails when the lock is removed (checked by mutation). Bulk-read volume limits arrive with the second scenario |
+| Rules R3 (destination provenance) and R4 (human approval bound to the exact action) | **Planned (M2)** | |
 | Structured egress (hardened mode) | **Planned (M2)** | Slip templates validate at startup; nothing enforces them yet |
 | Signed, hash-chained audit log | **Planned (M2)** | |
 | Mock tool server, mail sink (measures what was delivered) | **Built, tested** | |
