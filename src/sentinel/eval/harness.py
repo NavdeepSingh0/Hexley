@@ -304,12 +304,13 @@ async def run_live(model: dict, n: int, recordings_dir: Path) -> dict:
     """Record `n` fresh attempts of the poisoned and clean scenarios against a real model, then summarise those only."""
     from ..record import record_scenario
 
+    prov = provenance()  # taken before recording: the run's own recordings must not make the tree look dirty
     written = []
     for scenario in ("poisoned", "clean"):
         written += await record_scenario(scenario, model, n, recordings_dir)
     recs = [(p.name, json.loads(p.read_text(encoding="utf-8"))) for p in written]
     metrics, errors = recorded_metrics(recs)
-    return {**provenance(), "schema": SCHEMA, "agent": "live", "model": model["model"], "temperature": None, "n_per_cell": n,
+    return {**prov, "schema": SCHEMA, "agent": "live", "model": model["model"], "temperature": None, "n_per_cell": n,
             "corpus": {"recordings": [n_ for n_, _ in recs]}, "cells": [], "metrics": metrics, "errors": errors}
 
 
