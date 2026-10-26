@@ -15,6 +15,7 @@ import jwt
 import yaml
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey, Ed25519PublicKey
 
+from .matcher import FingerprintIndex
 from .models import Column, EgressTemplate, Mode, SessionStatus, TaskContract
 
 ISSUER = "sentinel"
@@ -129,6 +130,7 @@ class Session:
     blocks: int = 0
     messages_out: int = 0
     records_out: int = 0
+    index: FingerprintIndex = field(default_factory=FingerprintIndex)  # restricted values read so far
 
     @property
     def session_id(self) -> str:

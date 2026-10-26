@@ -43,6 +43,11 @@ async def main(provider: str, model: str) -> None:
         verdicts = [e.payload["effect"] for e in rt.bus.recent() if e.session_id == s["session_id"] and e.type == "decision"]
         print(f"{column:12s} steps={[x.tool for x in t.steps]} verdicts={verdicts} delivered={len(rows)} "
               f"LEAKED_TO_SINK={leaked} {t.seconds}s {t.error or ''}")
+        for r in rows:
+            print(f"   DELIVERED to {r['to']}: {r['body'][:420]!r}")
+        for step in t.steps:
+            if not step.allowed:
+                print(f"   BLOCKED {step.tool}: attempted body {str(step.args.get('body', ''))[:300]!r}")
     for server, _ in started:
         server.should_exit = True
     await asyncio.gather(*(task for _, task in started), return_exceptions=True)

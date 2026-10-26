@@ -9,6 +9,7 @@ Security properties implemented here (ARCHITECTURE.md section 5):
 
 from __future__ import annotations
 
+import json
 import uuid
 from contextvars import ContextVar
 from datetime import datetime, timezone
@@ -23,7 +24,7 @@ from fastmcp.server.providers.proxy import FastMCPProxy, ProxyClient
 from .contracts import Session, SessionError, verify_session_token
 from .engine import decide
 from .events import make_event
-from .models import AgentAction, Column, Effect
+from .models import AgentAction, Column, Confidentiality, Effect
 from .runtime import Runtime
 from .tools.server import COLUMN_HEADER, SESSION_HEADER, TOKEN_HEADER
 
@@ -83,9 +84,23 @@ class SentinelMiddleware(Middleware):
             raise ToolError(decision.summary_plain)
         reset = _current.set(session)
         try:
-            return await call_next(context)
+            result = await call_next(context)
         finally:
             _current.reset(reset)
+        # Label what came back from the registry (never from the content) and remember restricted values,
+        # so a later outbound call can be checked against them (R2).
+        if session.column == Column.SENTINEL and entry.output_confidentiality == Confidentiality.RESTRICTED \
+                and entry.fingerprint_fields:
+            session.index.add(_result_text(result), entry.fingerprint_fields, source_ref=tool)
+        return result
+
+
+def _result_text(result) -> str:
+    parts = [getattr(p, "text", "") for p in (getattr(result, "content", None) or [])]
+    structured = getattr(result, "structured_content", None)
+    if structured:
+        parts.append(json.dumps(structured, default=str))
+    return "\n".join(p for p in parts if p)
 
 
 def build_gateway(rt: Runtime) -> FastMCP:

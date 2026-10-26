@@ -31,13 +31,17 @@ def decide(action: AgentAction, session: Session, registry: Registry) -> Decisio
                       summary_plain="Allowed: no policy enforcement in this column (instrumented baseline).")
     try:
         entry = registry.get(action.tool)
-        fired = [r for r in (rules.rule_r1(action, session.contract, entry),) if r is not None]
+        results = [rules.rule_r1(action, session.contract, entry)]
+        if session.column == Column.SENTINEL:  # the R1-only baseline runs R1 and nothing else
+            matches = session.index.scan_args(action.args) if entry.outbound else []
+            results.append(rules.rule_r2(action, entry, matches))
+        fired = [r for r in results if r is not None]
         verdict = rules.combine(fired)
         if verdict is None:
             return finish(effect=Effect.ALLOW, reason_code=ReasonCode.ALLOWED,
                           summary_plain=f"Allowed: '{action.tool}' is within this task's permission slip.")
-        return finish(effect=verdict.effect, rule_ids=[verdict.rule_id], reason_code=verdict.reason_code,
-                      summary_plain=verdict.summary, evidence=verdict.evidence)
+        return finish(effect=verdict.effect, rule_ids=[r.rule_id for r in fired], reason_code=verdict.reason_code,
+                      summary_plain=verdict.summary, evidence=[e for r in fired for e in r.evidence])
     except Exception:  # noqa: BLE001 - invariant 2: any error in the decision path is a BLOCK
         log.exception("decision failed; failing closed")
         return finish(effect=Effect.BLOCK, rule_ids=[RuleId.R1], reason_code=ReasonCode.FAIL_CLOSED,

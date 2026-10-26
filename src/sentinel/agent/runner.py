@@ -6,6 +6,7 @@ API token or the permission slip's contents beyond what the tool list reveals.
 
 from __future__ import annotations
 
+import asyncio
 import json
 import os
 import time
@@ -50,6 +51,7 @@ class ModelEndpoint:
     timeout: float = 120.0
     _headers: dict = field(default_factory=dict, repr=False)
     _url: str = field(default="", repr=False)
+    _last_call: float = field(default=0.0, repr=False)
 
     def __post_init__(self) -> None:
         load_env()
@@ -65,10 +67,22 @@ class ModelEndpoint:
             raise ValueError(f"unknown provider {self.provider!r}")
 
     async def chat(self, client: httpx.AsyncClient, messages: list[dict], tools: list[dict]) -> dict:
-        r = await client.post(f"{self._url}/chat/completions", headers=self._headers, json={
-            "model": self.model, "messages": messages, "tools": tools, "temperature": self.temperature})
-        r.raise_for_status()
-        return r.json()["choices"][0]["message"]
+        """One chat turn. Hosted providers are throttled below their free-tier cap; 429/5xx are retried."""
+        payload = {"model": self.model, "messages": messages, "tools": tools, "temperature": self.temperature}
+        min_gap = 60.0 / float(os.environ.get("NVIDIA_MAX_RPM", "30")) if self.provider == "nvidia" else 0.0
+        for attempt in range(6):
+            wait = min_gap - (time.monotonic() - self._last_call)
+            if wait > 0:
+                await asyncio.sleep(wait)
+            self._last_call = time.monotonic()
+            r = await client.post(f"{self._url}/chat/completions", headers=self._headers, json=payload)
+            if r.status_code in (429, 502, 503, 504):
+                retry = r.headers.get("retry-after", "")
+                await asyncio.sleep(float(retry) if retry.replace(".", "").isdigit() else 2 ** (attempt + 1))
+                continue
+            r.raise_for_status()
+            return r.json()["choices"][0]["message"]
+        raise RuntimeError("the model provider kept returning 429/5xx after 6 attempts")
 
 
 def _openai_tool(tool) -> dict:

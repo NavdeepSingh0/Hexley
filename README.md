@@ -6,8 +6,27 @@ Sentinel is an MCP gateway that sits between an AI agent and its tools. It check
 
 Team 404 Disruptors · Zinnovatio 4.0
 
-## Status
-Pre-build. Docs and M0 spikes only; no feature code yet. The table of what is real, partial and roadmap will be kept honest here as work lands.
+## Status (updated each milestone; last: M1 done, M2 in progress: matcher and R2 built)
+
+This table says what exists today, not what the architecture describes. "Tested" means automated tests cover the listed behaviour, not that the component is comprehensively secure.
+
+| Component | Status | Notes |
+|---|---|---|
+| MCP gateway (proxy, per-call checks) | **Built, tested** | R1 on every call; agent headers never forwarded; fail-closed `decide()` |
+| Session tokens (EdDSA, bound to the confirmed slip) | **Built, tested** | Forged `alg: none` and key-confusion tokens rejected; revocation on freeze |
+| Permission slip, officer confirmation | **Built, tested** (API) | No console screen yet |
+| Rule R1 (action must be in the slip and registry) | **Built, tested** | |
+| Value matcher and rule R2 (restricted values must not leave the building) | **Built, tested** | Recognises the representations in `docs/ADVERSARIAL_TESTS.md`; paraphrase is a declared gap. With a real model: unprotected and R1-only columns delivered the stock data; in the Sentinel column the first (leaking) email was blocked and a clean acknowledgement was then sent. One recorded run per column, not a rate yet |
+| Rules R3-R6 (destination provenance, approval, budgets, freeze) | **Planned (M2)** | |
+| Structured egress (hardened mode) | **Planned (M2)** | Slip templates validate at startup; nothing enforces them yet |
+| Signed, hash-chained audit log | **Planned (M2)** | |
+| Mock tool server, mail sink (measures what was delivered) | **Built, tested** | |
+| Live events (WebSocket) | **Built, tested** | |
+| Agent runner (OpenAI-compatible, Ollama or NVIDIA) | **Built**, smoke-tested | Not covered by unit tests |
+| Console UI, phone approval, replay | **Planned (M3-M4)** | |
+| API authentication | **Demo-grade** | One static bearer token; not production identity management |
+
+Measured model results (matched trials, six models) are in [docs/spikes/M0-results.md](docs/spikes/M0-results.md). They describe one task, one quotation and four injection texts, not prompt injection in general.
 
 ## Docs
 - [docs/MVP.md](docs/MVP.md): what we build and present (source of truth)
