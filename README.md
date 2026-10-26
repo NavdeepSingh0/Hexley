@@ -24,6 +24,7 @@ This table says what exists today, not what the architecture describes. "Tested"
 | Signed, hash-chained audit log | **Built, tested** | Ed25519-signed, SHA-256 chained, fsynced, written before an action is forwarded; slow or failed writes fail closed; no secret values or raw arguments are stored. Detects a changed, deleted, reordered or forged record. It does not prove the events were true, and a truncated log is only caught if the verifier holds the earlier chain head |
 | Mock tool server, mail sink (measures what was delivered) | **Built, tested** | |
 | Live events (WebSocket) | **Built, tested** | |
+| Runs API (`/runs`: scenarios across the three comparison lanes, officer confirmation, scripted attacker, replay of recorded runs with divergence detection, `record` CLI) | **Built, tested** | Views are built only from gateway events and the real mail sink. Replay re-issues the recorded model actions; Sentinel's decisions are computed live and compared with the recorded ones. No recordings from a real model are committed yet |
 | Agent runner (OpenAI-compatible, Ollama or NVIDIA) | **Built**, smoke-tested | Not covered by unit tests |
 | Console UI, phone approval, replay | **Planned (M3-M4)** | |
 | API authentication | **Demo-grade** | One static bearer token; not production identity management |

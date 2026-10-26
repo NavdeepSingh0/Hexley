@@ -24,7 +24,7 @@ from fastmcp.server.middleware import Middleware
 from fastmcp.server.providers.proxy import FastMCPProxy, ProxyClient
 
 from .approvals import ApprovalStatus
-from .audit import AuditError, action_payload, decision_payload, result_payload
+from .audit import AuditError, action_payload, decision_payload, result_payload, sha256_hex
 from .contracts import Session, SessionError, verify_session_token
 from . import egress
 from .destinations import extract_destinations
@@ -136,11 +136,12 @@ class SentinelMiddleware(Middleware):
             # R4: hold this call for the officer. Every other rule runs again once approval arrives, so an
             # approval can never excuse a leak; silence, denial or expiry all end as a BLOCK.
             await self.rt.bus.publish(make_event("approval.pending", session.session_id, session.column, {
-                "approval_id": approval.approval_id, "tool": tool, "args": args,
+                "approval_id": approval.approval_id, "action_id": action.action_id, "tool": tool, "args": args,
                 "summary": decision.summary_plain, "expires_in": int(approval.expires - time.time())}))
             status = await self.rt.approvals.wait(approval.approval_id, self.rt.approval_wait)
             await self.rt.bus.publish(make_event("approval.resolved", session.session_id, session.column,
-                                                 {"approval_id": approval.approval_id, "status": status.value}))
+                                                 {"approval_id": approval.approval_id, "action_id": action.action_id,
+                                                  "status": status.value}))
             if status == ApprovalStatus.APPROVED:
                 decision, approval = await self._evaluate(session, action, entry, protected)
                 await self.rt.bus.publish(make_event("decision", session.session_id, session.column,
@@ -169,6 +170,9 @@ class SentinelMiddleware(Middleware):
             _egress_expected.reset(reset_expected)
             _current.reset(reset)
         text = _result_text(result)
+        await self.rt.bus.publish(make_event("action.completed", session.session_id, session.column, {
+            "action_id": action.action_id, "tool": tool, "ok": True, "result_sha256": sha256_hex(text),
+            "chars": len(text)}))
         try:
             await self.rt.audit.append("result", session_id=session.session_id, action_id=action.action_id,
                                        decision_id=decision.decision_id, payload=result_payload(tool, text))

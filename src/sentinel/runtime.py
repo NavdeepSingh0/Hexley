@@ -44,7 +44,9 @@ class Runtime:
     approval_wait: float = 90.0  # seconds a held call waits for the officer; silence is a denial
     approvals: ApprovalStore = field(default_factory=ApprovalStore)
     trusted_addresses: frozenset[str] = frozenset(v["email"] for v in fixtures.VENDOR_MASTER.values())
-    bus: EventBus = field(default_factory=EventBus)
+    recordings_dir: Path = Path("recordings")  # committed recorded runs (synthetic data) used for replay
+    runs: object | None = None  # the RunManager, attached by create_api
+    bus: EventBus = field(default_factory=lambda: EventBus(history=5000))  # a whole run stays in history
     store: SessionStore = field(default_factory=SessionStore)
     registry: Registry = field(default_factory=load_registry)
     templates: dict = field(default_factory=load_templates)

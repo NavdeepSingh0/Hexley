@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import asyncio
+import functools
 import hmac
 import json
-from datetime import datetime, timezone
 from typing import Literal
 
 import httpx
@@ -16,9 +16,11 @@ from pydantic import BaseModel
 
 from .approvals import ApprovalError
 from .audit import AuditError
-from .contracts import SessionError, SlipError, draft_contract, mint_session_token, verify_session_token
+from .confirm import ConfirmError, confirm_draft
+from .contracts import SlipError, draft_contract
+from .runs import SCENARIOS, RunError, RunManager, list_recordings
 from .events import make_event
-from .models import Column, Mode, SessionStatus
+from .models import Column, Mode
 from .runtime import Runtime
 from .tools.server import TOKEN_HEADER
 
@@ -46,6 +48,14 @@ class TamperRequest(BaseModel):
 
 class ApprovalDecision(BaseModel):
     decision: Literal["approve", "deny"]
+
+
+class RunRequest(BaseModel):
+    scenario: str
+    source: Literal["live", "replay", "scripted"] = "scripted"
+    model: dict | None = None  # {"provider": "nvidia" | "ollama", "model": "..."} for a live run
+    recording_id: str | None = None
+    officer: str = "Col. R. Menon"
 
 
 def create_api(rt: Runtime) -> FastAPI:
@@ -78,33 +88,10 @@ def create_api(rt: Runtime) -> FastAPI:
     @app.post("/tasks/{contract_id}/confirm", dependencies=[Depends(require_token)])
     async def confirm_task(contract_id: str, req: ConfirmRequest):
         """The officer confirms the slip. Only now is a token minted; the agent never creates one."""
-        draft = rt.drafts.pop(contract_id, None)
-        if draft is None:
-            raise HTTPException(status_code=404, detail="no pending contract with that id (already confirmed?)")
-        contract = draft.model_copy(update={"status": SessionStatus.ACTIVE})
-        ttl = max(1, int((contract.expires_at - datetime.now(timezone.utc)).total_seconds()))
-        token, _ = mint_session_token(contract, req.column, rt.key, ttl_seconds=ttl)
         try:
-            claims = verify_session_token(token, rt.key.public_key())
-        except SessionError as e:  # pragma: no cover - would indicate a bug in minting
-            raise HTTPException(status_code=500, detail=str(e)) from e
-        try:  # the officer's confirmation is the first record of the session; no record, no session
-            await rt.audit.append("contract.issued", session_id=claims.session_id, payload={
-                "contract_id": contract.contract_id, "contract_hash": contract.contract_hash,
-                "template": contract.template, "mode": contract.mode.value, "officer": contract.officer,
-                "allowed_tools": contract.allowed_tools, "column": req.column.value})
-        except AuditError as e:
-            rt.drafts[contract_id] = draft  # the officer can try again
-            raise HTTPException(status_code=503, detail=f"audit log unavailable: {e}") from e
-        session = rt.store.add(claims, contract)
-        session.trusted_addresses = rt.trusted_addresses  # the vendor records, never the documents
-        await rt.bus.publish(make_event("contract.issued", session.session_id, session.column,
-                                        {"contract": contract.model_dump(mode="json")}))
-        await rt.bus.publish(make_event("session.started", session.session_id, session.column,
-                                        {"mcp_url": rt.gateway_url, "expires_at": claims.expires_at.isoformat()}))
-        return {"session_id": session.session_id, "session_token": token, "mcp_url": rt.gateway_url,
-                "contract_hash": contract.contract_hash, "column": session.column.value,
-                "expires_at": claims.expires_at.isoformat()}
+            return await confirm_draft(rt, contract_id, req.column)
+        except ConfirmError as e:
+            raise HTTPException(status_code=e.status, detail=e.detail) from e
 
     @app.get("/sessions/{session_id}", dependencies=[Depends(require_token)])
     async def get_session(session_id: str):
@@ -126,6 +113,52 @@ def create_api(rt: Runtime) -> FastAPI:
             pass  # the freeze stands; the missing record is itself visible as a gap in the log
         await rt.bus.publish(make_event("freeze", s.session_id, s.column, {"reason": "kill switch"}))
         return {"session_id": s.session_id, "status": s.status.value}
+
+    runs = RunManager(rt)
+    rt.runs = runs
+
+    def run_errors(fn):
+        @functools.wraps(fn)  # keeps the signature, so FastAPI still reads the parameters from it
+        async def wrapper(*a, **k):
+            try:
+                return await fn(*a, **k)
+            except RunError as e:
+                raise HTTPException(status_code=e.status, detail=e.detail) from e
+        return wrapper
+
+    @app.get("/scenarios", dependencies=[Depends(require_token)])
+    async def list_scenarios():
+        return {"scenarios": [{"id": s.id, "title": s.title, "description": s.description,
+                               "lanes": [{"column": l.column.value, "template": l.template} for l in s.lanes]}
+                              for s in SCENARIOS.values()]}
+
+    @app.get("/recordings", dependencies=[Depends(require_token)])
+    async def get_recordings():
+        return {"recordings": list_recordings(rt.recordings_dir)}
+
+    @app.post("/runs", status_code=201, dependencies=[Depends(require_token)])
+    @run_errors
+    async def create_run(req: RunRequest):
+        """Draft one slip per lane. Nothing runs until the officer confirms (POST /runs/{id}/confirm)."""
+        run = await runs.create(req.scenario, req.source, req.officer, model=req.model, recording_id=req.recording_id)
+        return await runs.view(run.run_id)
+
+    @app.post("/runs/{run_id}/confirm", dependencies=[Depends(require_token)])
+    @run_errors
+    async def confirm_run(run_id: str):
+        run = await runs.confirm(run_id)
+        return await runs.view(run.run_id)
+
+    @app.get("/runs/{run_id}", dependencies=[Depends(require_token)])
+    @run_errors
+    async def get_run(run_id: str):
+        return await runs.view(run_id)
+
+    @app.post("/runs/{run_id}/cancel", dependencies=[Depends(require_token)])
+    @run_errors
+    async def cancel_run(run_id: str):
+        await runs.cancel(run_id)
+        return await runs.view(run_id)
 
     @app.get("/approvals", dependencies=[Depends(require_token)])
     async def list_approvals():

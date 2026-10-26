@@ -53,12 +53,25 @@ def main(argv: list[str] | None = None) -> None:
     up.add_argument("--tools-port", type=int, default=8200)
     up.add_argument("--data-dir", default="data/runtime", help="audit log and its signing key (git-ignored)")
     up.add_argument("--demo", action="store_true", help="enable the tamper endpoint used by the demo")
+    rec = sub.add_parser("record", help="run a scenario against a model several times and keep every attempt")
+    rec.add_argument("--scenario", required=True)
+    rec.add_argument("--model", required=True, help="model id, e.g. nvidia/nemotron-3-ultra-550b-a55b")
+    rec.add_argument("--provider", default="nvidia", choices=["nvidia", "ollama"])
+    rec.add_argument("--attempts", type=int, default=5)
+    rec.add_argument("--out", default="recordings")
+    rec.add_argument("--source", default="live", choices=["live", "scripted"], help="scripted is for tests and demos of the tooling")
     args = parser.parse_args(argv)
     if args.command == "up":
         try:
             asyncio.run(_up(args))
         except KeyboardInterrupt:
             pass
+    elif args.command == "record":
+        from .record import record_scenario
+
+        paths = asyncio.run(record_scenario(args.scenario, {"provider": args.provider, "model": args.model},
+                                            args.attempts, Path(args.out), source=args.source))
+        print(f"wrote {len(paths)} recording(s) to {args.out}")
 
 
 if __name__ == "__main__":

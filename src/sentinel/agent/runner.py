@@ -52,6 +52,7 @@ class ModelEndpoint:
     _headers: dict = field(default_factory=dict, repr=False)
     _url: str = field(default="", repr=False)
     _last_call: float = field(default=0.0, repr=False)
+    _gate: asyncio.Lock = field(default_factory=asyncio.Lock, repr=False)
 
     def __post_init__(self) -> None:
         load_env()
@@ -71,10 +72,11 @@ class ModelEndpoint:
         payload = {"model": self.model, "messages": messages, "tools": tools, "temperature": self.temperature}
         min_gap = 60.0 / float(os.environ.get("NVIDIA_MAX_RPM", "30")) if self.provider == "nvidia" else 0.0
         for attempt in range(6):
-            wait = min_gap - (time.monotonic() - self._last_call)
-            if wait > 0:
-                await asyncio.sleep(wait)
-            self._last_call = time.monotonic()
+            async with self._gate:  # lanes share one endpoint, so together they stay under the provider's cap
+                wait = min_gap - (time.monotonic() - self._last_call)
+                if wait > 0:
+                    await asyncio.sleep(wait)
+                self._last_call = time.monotonic()
             r = await client.post(f"{self._url}/chat/completions", headers=self._headers, json=payload)
             if r.status_code in (429, 502, 503, 504):
                 retry = r.headers.get("retry-after", "")
@@ -107,6 +109,7 @@ class Transcript:
     final_text: str = ""
     error: str | None = None
     seconds: float = 0.0
+    diverged: dict | None = None  # set by a replay whose live decision differed from the recorded one
 
 
 async def run_agent(gateway_url: str, session_token: str, task: str, endpoint: ModelEndpoint) -> Transcript:
