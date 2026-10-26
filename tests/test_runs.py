@@ -7,6 +7,7 @@ show anything the gateway and mail sink did not do.
 import asyncio
 import copy
 import json
+from pathlib import Path
 
 import pytest
 
@@ -220,6 +221,24 @@ async def test_a_fresh_recording_replays_without_divergence(stack):
     assert not any(l["diverged"] for l in v["lanes"])
     assert lane(v, "sentinel")["steps"][-1]["rule_ids"] == ["R2"] and lane(v, "sentinel")["inbox"] == []
     assert len(lane(v, "unprotected")["inbox"]) == 1
+
+
+async def test_every_committed_recording_replays_without_divergence(stack):
+    """The demo replays recordings/ on stage: today's rules must still decide exactly as they did when it was recorded."""
+    committed = Path(__file__).resolve().parents[1] / "recordings"
+    files = sorted(committed.glob("*.json"))
+    assert files, "no committed recordings to replay"
+    stack.rt.recordings_dir = committed
+    async with stack.api() as api:
+        for f in files:
+            rec = json.loads(f.read_text(encoding="utf-8"))
+            v = await finish(api, await start(api, rec["scenario"], "replay", recording_id=f.stem), timeout=60.0)
+            assert not any(l["diverged"] for l in v["lanes"]), f.name
+            # A lane that ended in agent_error when recorded (the model API failed) has no model to fail on replay: it
+            # replays the steps it did make and ends "completed". Every other outcome must reproduce exactly.
+            for replayed, recorded in zip(v["lanes"], rec["lanes"], strict=True):
+                if recorded["outcome"]["lane_outcome"] != "agent_error":
+                    assert replayed["outcome"] == recorded["outcome"]["lane_outcome"], f.name
 
 
 async def test_a_replay_whose_decision_differs_stops_instead_of_replaying_blind(stack):

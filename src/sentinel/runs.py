@@ -505,7 +505,7 @@ class RunManager:
                            "recorded": {"effect": s["effect"], "rule_ids": s["rule_ids"], "reason_code": s["reason_code"],
                                         "result_sha256": (s["completed"] or {}).get("result_sha256")}}
                           for i, s in enumerate(lv["steps"])],
-                "outcome": {"lane_outcome": lv["outcome"], "oracle_leak": lv["leaked"],
+                "outcome": {"lane_outcome": lv["outcome"], "oracle_leak": lv["leaked"], "error": lv["error"],
                             "delivered": [{"to": m["to"], "subject": m["subject"], "body": m["body"]} for m in lv["inbox"]]}})
         return {"schema": "sentinel.recording/1", "scenario": run.scenario.id, "task_text": run.lanes[0].task,
                 "model": run.model, "recorded_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),

@@ -1,0 +1,8 @@
+{
+  "ok": false,
+  "checked": 113,
+  "head": null,
+  "first_bad_seq": 113,
+  "reason": "record hash does not match its content (record was altered)",
+  "tamper_enabled": true
+}

@@ -6,7 +6,7 @@ Sentinel is an MCP gateway that sits between an AI agent and its tools. It check
 
 Team 404 Disruptors · Zinnovatio 4.0
 
-## Status (updated each milestone; last: M1 done, M2 enforcement complete: matcher, R1-R6, audit log, approvals and hardened mode built; the runs API, evaluation harness and console remain)
+## Status (updated each milestone; last: M3 console built on top of M2 enforcement; the evaluation harness, the fallback video and a full rehearsal remain)
 
 This table says what exists today, not what the architecture describes. "Tested" means automated tests cover the listed behaviour, not that the component is comprehensively secure.
 
@@ -14,7 +14,7 @@ This table says what exists today, not what the architecture describes. "Tested"
 |---|---|---|
 | MCP gateway (proxy, per-call checks) | **Built, tested** | R1 on every call; agent headers never forwarded; fail-closed `decide()` |
 | Session tokens (EdDSA, bound to the confirmed slip) | **Built, tested** | Forged `alg: none` and key-confusion tokens rejected; revocation on freeze |
-| Permission slip, officer confirmation | **Built, tested** (API) | No console screen yet |
+| Permission slip, officer confirmation | **Built, tested** (API and console) | |
 | Rule R1 (action must be in the slip and registry) | **Built, tested** | |
 | Value matcher and rule R2 (restricted values must not leave the building) | **Built, tested** | Recognises the representations in `docs/ADVERSARIAL_TESTS.md`; paraphrase is a declared gap. With a real model: unprotected and R1-only columns delivered the stock data; in the Sentinel column the first (leaking) email was blocked and a clean acknowledgement was then sent. One recorded run per column, not a rate yet |
 | Rule R5 (send budget, reserved atomically) and R6 (third policy block freezes the session) | **Built, tested** | The race test fails when the lock is removed (checked by mutation). Bulk-read volume limits arrive with the second scenario |
@@ -24,9 +24,11 @@ This table says what exists today, not what the architecture describes. "Tested"
 | Signed, hash-chained audit log | **Built, tested** | Ed25519-signed, SHA-256 chained, fsynced, written before an action is forwarded; slow or failed writes fail closed; no secret values or raw arguments are stored. Detects a changed, deleted, reordered or forged record. It does not prove the events were true, and a truncated log is only caught if the verifier holds the earlier chain head |
 | Mock tool server, mail sink (measures what was delivered) | **Built, tested** | |
 | Live events (WebSocket) | **Built, tested** | |
-| Runs API (`/runs`: scenarios across the three comparison lanes, officer confirmation, scripted attacker, replay of recorded runs with divergence detection, `record` CLI) | **Built, tested** | Views are built only from gateway events and the real mail sink. Replay re-issues the recorded model actions; Sentinel's decisions are computed live and compared with the recorded ones. No recordings from a real model are committed yet |
+| Runs API (`/runs`: scenarios across the three comparison lanes, officer confirmation, scripted attacker, replay of recorded runs with divergence detection, `record` CLI) | **Built, tested** | Views are built only from gateway events and the real mail sink. Replay re-issues the recorded model actions; Sentinel's decisions are computed live and compared with the recorded ones. Real-model recordings are committed (see below) |
 | Agent runner (OpenAI-compatible, Ollama or NVIDIA) | **Built**, smoke-tested | Not covered by unit tests |
-| Console UI, phone approval, replay | **Planned (M3-M4)** | |
+| Console (start, permission slip, three-column stage, verdict with the matched values highlighted, officer approval card, audit verify and tamper, guided presenter keys) | **Built**, unit-tested (derivations) and checked on screen at 1280x720 and 1920x1080 | Served at `/console/` by `python -m sentinel up`. Build once with `npm --prefix console ci` then `npm --prefix console run build` (the build output is not committed). Not yet rehearsed end to end by a person |
+| Recordings of a real model (`recordings/`, nemotron-3-ultra-550b, 5 attempts each of the poisoned and clean quotation) | **Committed** | Several attempts ended in `agent_error` on the hosted API (the attempt is kept, and shown as such). Every recording replays without divergence (tested) |
+| Phone approval page | **Planned**, first to cut | The approval card in the console works; there is no separate phone page |
 | API authentication | **Demo-grade** | One static bearer token; not production identity management |
 
 Measured model results (matched trials, six models) are in [docs/spikes/M0-results.md](docs/spikes/M0-results.md). They describe one task, one quotation and four injection texts, not prompt injection in general.
