@@ -61,17 +61,17 @@ One Python process serves the gateway, REST/WS API and event bus. The mock tools
    - **BLOCK or FREEZE:** return a tool error carrying the plain-English summary. Nothing reaches the tool.
 6. Every step emits events for the console and writes a signed audit record.
 
-`standard` column: the same pipeline with only R1 enabled. `unprotected` column: the same process forwards everything with no rules, but still emits events and is labelled on screen as "observer, no enforcement". All three use the same model, prompt and fixtures.
+`r1_only` column ("R1-only access control"): the same pipeline with only R1 enabled. `unprotected` column ("No policy enforcement — instrumented baseline"): the same process forwards everything with no rules and does not modify inputs, outputs or tool results; it only emits events. All three use the same model, task contract, tools and fixtures.
 
 ## 4. Interfaces (I1–I4)
 
 Names follow MVP.md. Mapping to the older build-kit names: ALLOW=ALLOW, ASK=REQUIRE_APPROVAL, BLOCK=DENY, FREEZE=QUARANTINE; R1–R6 replace SNT-001..015.
 
 **I1 models (`models.py`)**
-- `AgentAction`: `action_id, ts, session_id, contract_id, column (unprotected|standard|sentinel), tool, capability (read|write|send), resource_class, args, outbound: bool`.
+- `AgentAction`: `action_id, ts, session_id, contract_id, column (unprotected|r1_only|sentinel), tool, capability (read|write|send), resource_class, args, outbound: bool`.
 - `TaskContract`:
   - identity: `contract_id, template, objective, officer`;
-  - scope: `mode (standard|hardened), allowed_tools[], resource_classes[], allowed_recipient_domains[], max_records`;
+  - scope: `mode (fingerprint|hardened), allowed_tools[], resource_classes[], allowed_recipient_domains[], max_records`;
   - egress budget: `max_messages, max_records_out`;
   - `egress_templates[]` (see below);
   - lifecycle: `issued_at, expires_at, status (pending|active|revoked|frozen), contract_hash, token_id`.
@@ -146,13 +146,27 @@ Names follow MVP.md. Mapping to the older build-kit names: ALLOW=ALLOW, ASK=REQU
 6. Labels and fingerprint fields come only from the registry. Unknown means untrusted + restricted.
 7. A frozen or revoked session cannot call, reconnect, or start a new session without a newly confirmed slip.
 8. Recipients in hardened mode are resolved by Sentinel, never supplied by the agent.
+9. The mode comes only from the officer-confirmed contract; the agent cannot change it.
+10. A consequential action does not proceed unless its audit record is written. An audit write failure means BLOCK.
+11. Send-count and data-out budgets are **reserved atomically before forwarding** (per-session lock), so concurrent calls cannot exceed them.
+12. An approval is bound to the exact pending action: a hash of session, tool, destination and arguments. It is one-time and expires. A modified payload is not covered by it.
+13. Session tokens and downstream tokens never appear in logs or events.
+
+## 5a. Session token
+- EdDSA-signed token with `iss`, `aud` (the gateway), `exp` (short), a unique `jti` (the session id) and `contract_hash`.
+- Checked on **every** call: signature, permitted algorithm, issuer, audience, expiry, and the server-side revocation list. FREEZE revokes the `jti` immediately.
+- Sent only in the `Authorization` header, never in a URL or query string.
+- Limit we state: a stolen token works until it expires or is revoked. The demo runs locally; anything crossing a network uses HTTPS.
+
+## 5b. How R3 decides a destination is untrusted (value-level provenance)
+A destination (recipient, URL, account) is **untrusted-origin** if its normalised value appears in the fingerprint index of an **untrusted** tool result in this session (for example the quotation text), and does **not** appear in a trusted source: the confirmed slip's allowed recipients, or the registry-labelled vendor master. This is value matching, not general information-flow tracking: a destination the model assembles from fragments is not detected. That is stated as a limit. In hardened mode the question doesn't arise, because the agent never supplies the destination.
 
 ## 6. Build order
 | Milestone | Done when |
 |---|---|
 | M0 spikes | `docs/spikes/M0-results.md` |
 | M1 skeleton | Agent → gateway → tools, all ALLOW, events reach a bare console |
-| **M2 core (gate)** | Matcher, rules, egress, audit; the priority oracles (rows 1, 9, 12, 13, 15, 17, 18) pass in pytest; primary scenario leaks in unprotected and standard and is blocked in sentinel; benign twin passes |
+| **M2 core (gate)** | Matcher, rules, egress, audit; the priority oracles (rows 1, 9, 12, 13, 15, 17, 18) pass in pytest; a reproducible harness proves four outcomes: unprotected leaks, R1-only leaks, Sentinel blocks the exact-value leak, benign acknowledgement succeeds with no approval. **Main-stage UI starts only after this** |
 | M3 demo surface | Main stage, verdict card, chain view on real events |
 | M4 Tier 1 | Challenge, approval, freeze, signed log UI, scoreboard, measured eval, replay |
 | M5 ready | Fresh-clone demo offline on both laptops, deck with measured numbers, rehearsals |

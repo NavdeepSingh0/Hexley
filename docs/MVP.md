@@ -29,7 +29,7 @@ It asks two questions no wording can change:
 
 ## 3. What Sentinel is
 
-**Sentinel is an MCP gateway.** Any MCP-capable agent (our demo agent, or an off-the-shelf client) connects to Sentinel instead of connecting to the real tools. In standard mode Sentinel exposes the same tools, checks every call, and forwards only what passes. In hardened mode the task template replaces free-form outbound tools with constrained ones (same underlying task, with output constraints set by the approved template). **Adopting it means pointing the agent at one URL and choosing a task template** (the permission slip and, for high-assurance tasks, the allowed outbound message shapes).
+**Sentinel is an MCP gateway.** Any MCP-capable agent (our demo agent, or an off-the-shelf client) connects to Sentinel instead of connecting to the real tools. In fingerprint mode Sentinel exposes the same tools, checks every call, and forwards only what passes. In hardened mode the task template replaces free-form outbound tools with constrained ones (same underlying task, with output constraints set by the approved template). **Adopting it means pointing the agent at one URL and choosing a task template** (the permission slip and, for high-assurance tasks, the allowed outbound message shapes).
 
 ```
 Officer ──confirms permission slip──▶ Sentinel Console
@@ -42,7 +42,7 @@ Agent (any MCP client) ──MCP──▶ SENTINEL GATEWAY ──▶ real tools 
 ### Core design decisions
 | Decision | Why |
 |---|---|
-| **The permission slip comes from the console, never from the agent.** The officer confirms it, and the agent receives a session URL that only works for that task | If the agent could set its own contract, an injection could widen it |
+| **The permission slip comes from the console, never from the agent.** The officer confirms it, and the agent receives a session token (sent in the `Authorization` header, never in a URL) that only works for that task | If the agent could set its own contract, an injection could widen it |
 | **No LLM in the decision path.** Rules are plain code over labelled facts | Deterministic, explainable, fast, and impossible to talk out of a verdict |
 | **Labels come only from the tool registry**, never from content. Unregistered or malformed tool results default to untrusted and restricted | Data can't relabel itself, and unknown never means trusted |
 | **Fail closed.** If Sentinel errors, consequential actions are blocked | A crashed guard must not mean an open door |
@@ -80,7 +80,7 @@ A procurement cell processes thousands of vendor quotations a month with an AI a
 | Column | What happens |
 |---|---|
 | **Unprotected** | Agent replies with depot stock and dispatch dates. They appear in the **vendor's (adversary's) inbox** |
-| **Standard access control** (R1 only, task-scoped, as typical products do) | Every call is allowed. **Same leak.** This proves per-call rules aren't enough |
+| **R1-only access control** (task-scoped, as typical products do) | Every call is allowed. **Same leak.** This proves per-call rules aren't enough |
 | **Sentinel** | `send_email` BLOCKED (R2: SECRET depot values in the body). The agent retries, gets blocked again, then FROZEN (R6). The inbox stays empty |
 
 **Benign twin** (must stay green): the same quotation without the injection. The agent replies "Quote received, PO to follow." ALLOW, no human needed.
@@ -88,7 +88,7 @@ A procurement cell processes thousands of vendor quotations a month with an AI a
 **Recipient is not content.** The vendor is both the permitted recipient and the adversary here. A trusted destination does not make every piece of data safe to send to it, so **R2 (content) is the decisive control**. R3 (destination from untrusted text) is tested separately with an injected address.
 
 **Two layers, shown in this order (proposed; confirm before building the demo script):**
-1. *Layer 1, standard mode.* The agent may write a free-text reply. Sentinel blocks the leak by value matching (R2) and shows the chain.
+1. *Layer 1, fingerprint mode.* The agent may write a free-text reply. Sentinel blocks the leak by value matching (R2) and shows the chain.
 2. *The limit, shown by us.* A paraphrased attack ("stock is comfortable at the western facility") can slip past Layer 1. We show it ourselves, as a rehearsed replay, before anyone asks.
 3. *Layer 2, hardened mode (structured egress).* The reply is `quote_ack_v1` with slots `quote_id` (pattern `Q-\d{4}`, must equal the id of the quotation being processed) and `status` (enumeration). Sentinel renders the email. The paraphrase has nowhere to go.
 
@@ -106,9 +106,9 @@ A records office answers grievance letters for **lakhs of ex-servicemen**. One l
 |---|---|---|
 | 0:00 | **Hook.** "One poisoned PDF among ten thousand. No hacking required." | Title |
 | 0:30 | Officer starts the task and confirms the **permission slip** | Mission brief |
-| 0:50 | **Three columns run the same agent.** Unprotected leaks; standard access control leaks *with every call allowed*; Sentinel blocks | Main stage |
+| 0:50 | **Three columns run the same agent.** Unprotected leaks; R1-only access control leaks *with every call allowed*; Sentinel blocks | Main stage |
 | 2:00 | Click the red card: the **plain-English verdict** and the **chain** PDF → stock register → email glowing red. "Each step was allowed. The chain is the attack." | Verdict card + chain view |
-| 2:40 | **Limit, then fix (30–40 s):** a rehearsed paraphrase attack, shown as a **labelled replay** because the model's wording isn't deterministic, passes Standard; the same attempt in Hardened has nowhere to go. Then the **judge challenge** (Hardened): the judge picks from pre-tested attack variants, and types free text only if pre-event testing showed that to be reliable. The gateway enforces the output shape even if the judge fools the model | Challenge box |
+| 2:40 | **Limit, then fix (30–40 s):** a rehearsed paraphrase attack, shown as a **labelled replay** because the model's wording isn't deterministic, passes Fingerprint mode; the same attempt in Hardened has nowhere to go. Then the **judge challenge** (Hardened): the judge picks from pre-tested attack variants, and types free text only if pre-event testing showed that to be reliable. The gateway enforces the output shape even if the judge fools the model | Challenge box |
 | 3:20 | **Freeze:** repeated attempts quarantine the agent | Freeze banner |
 | 3:40 | **Phone approval:** bank-detail change, scan the QR, the judge approves | Phone |
 | 4:10 | **Receipts:** corrupt one byte of the log, verification turns red at that record | Receipts |
@@ -127,7 +127,7 @@ The UI is how non-specialist judges see the engine. It must be readable **from t
 4. **Mission-control aesthetic, no hacker clichés.** Restrained colour, classification-style chips (SECRET, UNTRUSTED, TRUSTED).
 5. **Never show fake data.** Every number and event comes from the backend.
 6. **Label what we show.** The chain view is "observed tool flow with value-match links", not full taint tracking.
-7. **The mode is always visible:** `STANDARD: fingerprint enforcement` or `HARDENED: structured egress`, so judges see why results differ. The mode comes from the confirmed slip; the agent cannot change it.
+7. **The mode is always visible:** `FINGERPRINT MODE: value matching` or `HARDENED MODE: structured egress`. Column headers are **No policy enforcement — instrumented baseline**, **R1-only access control** and **Sentinel**, so judges see why results differ. The mode comes from the confirmed slip; the agent cannot change it.
 
 **Screens:** Mission brief (permission slip) · **Main stage** (three columns, an inbox under each, shared step timeline) · Verdict card · Chain view · Judge challenge · Phone approval (a mobile web page via QR, so judges don't install anything) · Scoreboard · Receipts with tamper button · Freeze banner and kill switch.
 
@@ -211,7 +211,7 @@ Cedar policy language, AgentDojo/InjecAgent benchmarks, multi-agent delegation, 
 |---|---|---|
 | M0 | Model bake-off; MCP proxy spike | Chosen model obeys the injection in ≥ 8/10 unprotected runs (else replay is the default); proxy forwards one call and blocks another |
 | M1 | Walking skeleton | Agent → Sentinel → mock tools, all ALLOW, events reach the console |
-| M2 | **The core works** | Primary scenario: Unprotected leaks, Standard leaks, Sentinel blocks; benign twin passes; oracles green in pytest |
+| M2 | **The core works** | A reproducible harness proves four outcomes: unprotected leaks, R1-only leaks, Sentinel blocks the exact-value leak, benign acknowledgement succeeds with no approval; oracles green in pytest. Main-stage UI starts only after this |
 | M3 | **The demo looks right** | Three-column stage, verdict card, chain view on real events |
 | M4 | Tier 1 complete | Challenge, approval, freeze, log, scoreboard, measured numbers, replay |
 | M5 | Ready to present | Fresh-clone demo works offline on both laptops; deck uses measured numbers; fallback video; three timed rehearsals |
