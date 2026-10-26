@@ -196,7 +196,8 @@ class SentinelMiddleware(Middleware):
             session.index.add(text, entry.fingerprint_fields, source_ref=tool)
         # Addresses found in untrusted content are remembered so R3 can refuse them as destinations later.
         if protected and entry.output_integrity == Integrity.UNTRUSTED:
-            session.untrusted_destinations |= extract_destinations(text)
+            for address in extract_destinations(text):
+                session.untrusted_destinations.setdefault(address, tool)  # remember the first source
         return result
 
 

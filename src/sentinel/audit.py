@@ -205,8 +205,16 @@ class AuditLog:
     def export_lines(self) -> str:
         return self.path.read_text(encoding="utf-8") if self.path.exists() else ""
 
-    def tamper(self, seq: int) -> None:
-        """DEMO ONLY: alter one record on disk without re-signing it, so the console can show detection."""
+    def latest_block_seq(self) -> int:
+        """Sequence number of the most recent BLOCK or FREEZE decision: the one the audience just watched."""
+        for r in reversed(read_records(self.path)):
+            if r["type"] == "decision" and r["payload"].get("decision", {}).get("effect") in ("BLOCK", "FREEZE"):
+                return r["seq"]
+        raise AuditError("no blocked action has been recorded yet")
+
+    def tamper(self, seq: int) -> str | None:
+        """DEMO ONLY: alter one record on disk without re-signing it, so the console can show detection.
+        Returns the action id of the altered record, if it has one."""
         records = read_records(self.path)
         if not 1 <= seq < len(records):
             raise AuditError("no such record to tamper with")
@@ -214,3 +222,4 @@ class AuditLog:
         tmp = self.path.with_suffix(".tmp")
         tmp.write_text("".join(json.dumps(r, sort_keys=True, separators=(",", ":")) + "\n" for r in records), encoding="utf-8")
         os.replace(tmp, self.path)
+        return records[seq].get("action_id")

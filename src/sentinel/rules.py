@@ -81,7 +81,7 @@ def rule_r1_egress(action: AgentAction, entry: ToolEntry, contract: TaskContract
         [Evidence(kind="egress", detail=e, source_ref=entry.egress_template) for e in errors])
 
 
-def rule_r3(action: AgentAction, entry: ToolEntry, recipients: list[str], untrusted: set[str],
+def rule_r3(action: AgentAction, entry: ToolEntry, recipients: list[str], untrusted: dict[str, str] | set[str],
             trusted: frozenset[str]) -> RuleResult | None:
     """R3: a destination that appears only in untrusted content (and not in the trusted vendor records) is
     refused, even inside an allowed domain. Value-level provenance, not general flow tracking."""
@@ -95,7 +95,9 @@ def rule_r3(action: AgentAction, entry: ToolEntry, recipients: list[str], untrus
         f"Blocked: the recipient {', '.join(bad)} appears only inside a document the agent read, not in the "
         "trusted vendor records or the officer's slip. Reply to the vendor's registered address.",
         [Evidence(kind="provenance", detail=f"{r} was found in untrusted content and in no trusted source",
-                  source_ref="untrusted tool result") for r in bad])
+                  # the tool whose result held it, so the console can draw an honest link; a plain set carries no source
+                  source_ref=untrusted.get(r, "untrusted tool result") if isinstance(untrusted, dict)
+                  else "untrusted tool result") for r in bad])
 
 
 def rule_r4(action: AgentAction, entry: ToolEntry, approved: bool) -> RuleResult | None:

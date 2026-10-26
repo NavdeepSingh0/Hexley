@@ -163,7 +163,8 @@ class Session:
     messages_out: int = 0
     records_out: int = 0
     index: FingerprintIndex = field(default_factory=FingerprintIndex)  # restricted values read so far
-    untrusted_destinations: set[str] = field(default_factory=set)  # addresses seen in untrusted tool results
+    # addresses seen in untrusted tool results, each mapped to the tool whose result contained it first
+    untrusted_destinations: dict[str, str] = field(default_factory=dict)
     trusted_addresses: frozenset[str] = frozenset()  # vendor-master addresses (trusted records), set at confirmation
     # Held across "decide + reserve budget + count the block", so concurrent calls cannot both take the last slot.
     lock: asyncio.Lock = field(default_factory=asyncio.Lock, repr=False)

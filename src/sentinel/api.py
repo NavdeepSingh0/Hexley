@@ -6,12 +6,14 @@ import asyncio
 import functools
 import hmac
 import json
+from pathlib import Path
 from typing import Literal
 
 import httpx
 from fastapi import Depends, FastAPI, Header, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import Response
+from fastapi.responses import PlainTextResponse, Response
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from .approvals import ApprovalError
@@ -43,7 +45,7 @@ class KillRequest(BaseModel):
 
 
 class TamperRequest(BaseModel):
-    seq: int
+    seq: int | None = None
 
 
 class ApprovalDecision(BaseModel):
@@ -58,7 +60,10 @@ class RunRequest(BaseModel):
     officer: str = "Col. R. Menon"
 
 
-def create_api(rt: Runtime) -> FastAPI:
+CONSOLE_DIST = Path(__file__).resolve().parents[2] / "console" / "dist"
+
+
+def create_api(rt: Runtime, console_dir: Path | None = None) -> FastAPI:
     app = FastAPI(title="Sentinel API", version="0.1")
     app.add_middleware(CORSMiddleware, allow_origins=[CONSOLE_ORIGIN], allow_methods=["*"], allow_headers=["*"])
 
@@ -149,6 +154,11 @@ def create_api(rt: Runtime) -> FastAPI:
         run = await runs.confirm(run_id)
         return await runs.view(run.run_id)
 
+    @app.get("/runs", dependencies=[Depends(require_token)])
+    async def list_runs():
+        """Lets the console re-attach to the active run after a page reload."""
+        return runs.list_runs()
+
     @app.get("/runs/{run_id}", dependencies=[Depends(require_token)])
     @run_errors
     async def get_run(run_id: str):
@@ -203,22 +213,24 @@ def create_api(rt: Runtime) -> FastAPI:
         caller supplies the chain head it saw earlier."""
         res = rt.audit.verify(expected_head)
         return {"ok": res.ok, "checked": res.checked, "head": res.head, "first_bad_seq": res.first_bad_seq,
-                "reason": res.reason}
+                "reason": res.reason, "tamper_enabled": rt.allow_tamper}
 
     @app.get("/audit/export", dependencies=[Depends(require_token)])
     async def audit_export():
         return Response(content=rt.audit.export_lines(), media_type="application/x-ndjson")
 
     @app.post("/audit/tamper", dependencies=[Depends(require_token)])
-    async def audit_tamper(req: TamperRequest):
-        """DEMO ONLY: alter one record on disk so the console can show detection. Off unless enabled at start."""
+    async def audit_tamper(req: TamperRequest = TamperRequest()):
+        """DEMO ONLY: alter one record on disk so the console can show detection. Off unless enabled at start.
+        Without a `seq` it targets the most recent BLOCK or FREEZE decision, which is the one the audience just saw."""
         if not rt.allow_tamper:
             raise HTTPException(status_code=403, detail="tamper demo is disabled")
         try:
-            rt.audit.tamper(req.seq)
+            seq = req.seq if req.seq is not None else rt.audit.latest_block_seq()
+            action_id = rt.audit.tamper(seq)
         except AuditError as e:
             raise HTTPException(status_code=404, detail=str(e)) from e
-        return {"tampered_seq": req.seq}
+        return {"tampered_seq": seq, "action_id": action_id}
 
     @app.get("/inbox", dependencies=[Depends(require_token)])
     async def inbox(column: str | None = None):
@@ -267,4 +279,23 @@ def create_api(rt: Runtime) -> FastAPI:
         finally:
             unsubscribe()
 
+    mount_console(app, console_dir)
     return app
+
+
+class ConsoleFiles(StaticFiles):
+    """StaticFiles that answers 404 with an instruction, instead of raising, while the console is not built.
+    (Starlette's own check_dir=False still raises RuntimeError at request time, which would be a 500 on stage.)"""
+
+    async def __call__(self, scope, receive, send):
+        if not Path(str(self.directory)).is_dir():
+            await PlainTextResponse("The console is not built yet. Run: npm --prefix console run build",
+                                    status_code=404)(scope, receive, send)
+            return
+        await super().__call__(scope, receive, send)
+
+
+def mount_console(app: FastAPI, directory: Path | None = None) -> None:
+    """Serve the built console at /console, so `python -m sentinel up` is the only command a demo needs."""
+    app.mount("/console", ConsoleFiles(directory=directory or CONSOLE_DIST, html=True, check_dir=False),
+              name="console")

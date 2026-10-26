@@ -220,7 +220,7 @@ async def test_verify_export_and_the_tamper_demo(stack):
         assert (await api.post("/audit/tamper", json={"seq": 2})).status_code == 403  # off by default
         stack.rt.allow_tamper = True
         try:
-            assert (await api.post("/audit/tamper", json={"seq": 2})).json() == {"tampered_seq": 2}
+            assert (await api.post("/audit/tamper", json={"seq": 2})).json()["tampered_seq"] == 2
             bad = (await api.get("/audit/verify")).json()
             assert not bad["ok"] and bad["first_bad_seq"] == 2 and "altered" in bad["reason"]
             assert (await api.post("/audit/tamper", json={"seq": 9999})).status_code == 404

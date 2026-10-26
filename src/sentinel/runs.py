@@ -206,7 +206,7 @@ def build_steps(events: list[EventEnvelope]) -> list[dict]:
             aid = p["action_id"]
             steps[aid] = {"action_id": aid, "tool": p["tool"], "args": p["args"], "ts": e.ts.isoformat(),
                           "effect": None, "rule_ids": [], "reason_code": None, "summary": "", "evidence": [],
-                          "held": False, "approval": None, "completed": None, "rendered": None}
+                          "latency_ms": None, "held": False, "approval": None, "completed": None, "rendered": None}
             order.append(aid)
             if p["tool"] == "send_quote_ack":
                 last_ack = aid
@@ -214,7 +214,7 @@ def build_steps(events: list[EventEnvelope]) -> list[dict]:
             s = steps[p["action_id"]]
             s["held"] = s["held"] or p["effect"] == "ASK"
             s.update(effect=p["effect"], rule_ids=p["rule_ids"], reason_code=p["reason_code"],
-                     summary=p["summary_plain"], evidence=p["evidence"])
+                     summary=p["summary_plain"], evidence=p["evidence"], latency_ms=p.get("latency_ms"))
         elif e.type == "approval.pending" and p["action_id"] in steps:
             steps[p["action_id"]]["approval"] = {"approval_id": p["approval_id"], "status": "pending",
                                                  "summary": p["summary"]}
@@ -237,7 +237,10 @@ def list_recordings(directory: Path) -> list[dict]:
             continue
         if r.get("schema") == "sentinel.recording/1":
             out.append({"recording_id": f.stem, "scenario": r["scenario"], "model": r["model"],
-                        "recorded_at": r["recorded_at"], "attempt": r["attempt"], "attempts_total": r["attempts_total"]})
+                        "recorded_at": r["recorded_at"], "attempt": r["attempt"], "attempts_total": r["attempts_total"],
+                        # so the presenter can see, before choosing, which attempts ended badly (e.g. agent_error)
+                        "lanes": [{"column": l["column"], "outcome": l["outcome"]["lane_outcome"],
+                                   "oracle_leak": l["outcome"]["oracle_leak"]} for l in r["lanes"]]})
     return out
 
 
@@ -434,7 +437,9 @@ class RunManager:
         return "completed", leaked
 
     # ---- reading ------------------------------------------------------------------------------------------------
-    async def inbox(self, session_ids: list[str | None]) -> list[dict]:
+    async def inbox_status(self, session_ids: list[str | None]) -> tuple[list[dict], bool]:
+        """What the mail sink actually holds for these sessions, and whether the sink could be read at all.
+        An unreadable sink must never look like an empty one, so callers get the flag."""
         wanted = {s for s in session_ids if s}
         try:
             async with httpx.AsyncClient(timeout=10) as c:
@@ -442,13 +447,21 @@ class RunManager:
                                 headers={TOKEN_HEADER: self.rt.downstream_token})
             r.raise_for_status()
         except (httpx.HTTPError, OSError):
-            return []
+            return [], False
         return [{**m, "oracle_leak": message_leaks(m["to"], m["subject"], m["body"])}
-                for m in r.json()["delivered"] if m["session_id"] in wanted]
+                for m in r.json()["delivered"] if m["session_id"] in wanted], True
+
+    async def inbox(self, session_ids: list[str | None]) -> list[dict]:
+        return (await self.inbox_status(session_ids))[0]
+
+    def list_runs(self) -> dict:
+        return {"active": self.active,
+                "runs": [{"run_id": r.run_id, "scenario": r.scenario.id, "source": r.source, "status": r.status,
+                          "created": r.created} for r in self.runs.values()]}
 
     async def view(self, run_id: str) -> dict:
         run = self._get(run_id)
-        inbox = await self.inbox([l.session_id for l in run.lanes])
+        inbox, inbox_ok = await self.inbox_status([l.session_id for l in run.lanes])
         lanes = []
         for lane in run.lanes:
             events = [e for e in self.rt.bus.recent() if e.session_id == lane.session_id] if lane.session_id else []
@@ -462,8 +475,13 @@ class RunManager:
                 "session_status": session.status.value if session else None, "blocks": session.blocks if session else 0,
                 "steps": build_steps(events), "freeze": freeze,
                 "approvals": [a.card() for a in self.rt.approvals.pending() if a.session_id == lane.session_id],
-                "contract": {k: c[k] for k in ("objective", "allowed_tools", "allowed_recipient_domains", "work_item_id",
-                                               "resolved_vendor", "mode", "max_messages", "contract_hash")},
+                "contract": {**{k: c[k] for k in ("objective", "allowed_tools", "allowed_recipient_domains",
+                                                  "work_item_id", "resolved_vendor", "mode", "max_messages",
+                                                  "contract_hash")},
+                             # the fixed message a hardened agent can cause to be sent (None for free-text slips)
+                             "egress_template": ({"subject": c["egress_templates"][0]["subject"],
+                                                  "body": c["egress_templates"][0]["body"]}
+                                                 if c["egress_templates"] else None)},
                 "task": lane.task, "final_text": lane.transcript.final_text if lane.transcript else "",
                 "error": lane.transcript.error if lane.transcript else None,
                 "diverged": lane.transcript.diverged if lane.transcript else None,
@@ -471,7 +489,8 @@ class RunManager:
         return {"run_id": run.run_id, "scenario": {"id": run.scenario.id, "title": run.scenario.title,
                                                   "description": run.scenario.description},
                 "source": run.source, "status": run.status, "disclosure": run.disclosure, "model": run.model,
-                "officer": run.officer, "created": run.created, "lanes": lanes, "audit_head": self.rt.audit.head}
+                "officer": run.officer, "created": run.created, "lanes": lanes, "audit_head": self.rt.audit.head,
+                "inbox_ok": inbox_ok}
 
     # ---- recording ----------------------------------------------------------------------------------------------
     async def build_recording(self, run: Run, attempt: int, attempts_total: int, sentinel_commit: str = "") -> dict:

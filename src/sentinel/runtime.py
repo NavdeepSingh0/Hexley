@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from pathlib import Path
 
 from cryptography.hazmat.primitives import serialization
@@ -15,6 +16,20 @@ from .contracts import SessionStore, load_templates
 from .events import EventBus
 from .models import TaskContract
 from .registry import Registry, load_registry
+
+
+def rotate_audit_log(directory: Path) -> Path | None:
+    """Move an existing audit log aside and return where it went (None if there was none).
+
+    Used by `up --demo`: a log that was tampered with during a rehearsal is refused on the next start, which
+    would stop the demo from starting at all. Rotating keeps the old file for inspection and starts a fresh,
+    valid chain."""
+    log = Path(directory) / "audit.jsonl"
+    if not log.exists() or log.stat().st_size == 0:
+        return None
+    moved = log.with_name(f"audit.{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S')}.jsonl.bak")
+    log.rename(moved)
+    return moved
 
 
 def load_or_create_audit_key(directory: Path) -> Ed25519PrivateKey:
