@@ -1,0 +1,37 @@
+# Tool registry: the ONLY source of labels (invariant 6). Unknown tools get `default` below.
+registry_version: 1
+
+# Applied to any tool or result not listed here: untrusted, restricted, consequential, outbound.
+default:
+  capability: send
+  resource_class: unknown
+  outbound: true
+  consequential: true
+  output_integrity: untrusted
+  output_confidentiality: restricted
+
+tools:
+  read_quotation:
+    capability: read
+    resource_class: quotation_doc
+    outbound: false
+    consequential: false
+    output_integrity: untrusted       # vendor-authored document: untrusted by definition
+    output_confidentiality: internal
+
+  query_stock:
+    capability: read
+    resource_class: stock_register
+    outbound: false
+    consequential: false
+    output_integrity: trusted
+    output_confidentiality: restricted   # shown as SECRET
+    fingerprint_fields: [quantity, depot_code, dispatch_date]
+
+  send_email:
+    capability: send
+    resource_class: email_external
+    outbound: true
+    consequential: true
+    output_integrity: trusted
+    output_confidentiality: internal

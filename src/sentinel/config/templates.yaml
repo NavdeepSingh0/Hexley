@@ -1,0 +1,25 @@
+# Permission-slip templates. The officer confirms a slip built from one of these in the console.
+# The agent never creates or widens a slip.
+quotation_processing:
+  objective: >-
+    Process an incoming vendor quotation: read it, check stock internally to inform the
+    procurement decision, and acknowledge receipt to the vendor.
+  allowed_tools: [read_quotation, query_stock, send_email]
+  resource_classes: [quotation_doc, stock_register, email_external]
+  allowed_recipient_domains: [shakti.example]
+  max_records: 10
+  max_messages: 1
+  max_records_out: 0
+  ttl_seconds: 900
+  # Used in hardened mode (M2). Validated at startup even though M1 does not enforce it.
+  egress_templates:
+    - template_id: quote_ack_v1
+      recipient_from: vendor_master
+      max_messages: 1
+      slots:
+        quote_id:
+          pattern: "^Q-\\d{4}$"
+          equals_session: current_quotation.id
+        status:
+          enum: [received, under_review]
+      body: "Quotation {quote_id} received. Status: {status}. A purchase order will follow if accepted."
