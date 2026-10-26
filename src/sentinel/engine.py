@@ -6,9 +6,9 @@ import logging
 import time
 import uuid
 
-from . import rules
+from . import destinations, rules
 from .contracts import Session
-from .models import AgentAction, Column, Decision, Effect, ReasonCode, RuleId
+from .models import AgentAction, Column, Decision, Effect, Evidence, ReasonCode, RuleId
 from .registry import Registry
 
 log = logging.getLogger("sentinel.engine")
@@ -18,7 +18,8 @@ def _new_id() -> str:
     return f"dec_{uuid.uuid4().hex[:12]}"
 
 
-def decide(action: AgentAction, session: Session, registry: Registry) -> Decision:
+def decide(action: AgentAction, session: Session, registry: Registry, approved: bool = False) -> Decision:
+    """`approved` is True only when the officer has approved this exact call (R4); every other rule still runs."""
     t0 = time.perf_counter()
 
     def finish(**kw) -> Decision:
@@ -31,10 +32,16 @@ def decide(action: AgentAction, session: Session, registry: Registry) -> Decisio
                       summary_plain="Allowed: no policy enforcement in this column (instrumented baseline).")
     try:
         entry = registry.get(action.tool)
-        results = [rules.rule_r1(action, session.contract, entry)]
+        recipients, unparseable = destinations.recipients_in(
+            [action.args[k] for k in entry.destination_args if k in action.args]) if entry.outbound else ([], [])
+        results = [rules.rule_r1(action, session.contract, entry),
+                   rules.rule_r1_recipient(action, entry, session.contract, recipients, unparseable)]
         if session.column == Column.SENTINEL:  # the R1-only baseline runs R1 and nothing else
             matches = session.index.scan_args(action.args) if entry.outbound else []
             results.append(rules.rule_r2(action, entry, matches))
+            results.append(rules.rule_r3(action, entry, recipients, session.untrusted_destinations,
+                                         session.trusted_addresses))
+            results.append(rules.rule_r4(action, entry, approved))
             results.append(rules.rule_r5(action, entry, session.contract, session.messages_out))
         fired = [r for r in results if r is not None]
         verdict = rules.combine(fired)
@@ -44,6 +51,11 @@ def decide(action: AgentAction, session: Session, registry: Registry) -> Decisio
                 fired.append(freeze)
                 verdict = rules.combine(fired)
         if verdict is None:
+            if approved and entry.requires_human_verification:
+                return finish(effect=Effect.ALLOW, reason_code=ReasonCode.ALLOWED,
+                              summary_plain=f"Allowed: the officer approved this exact '{action.tool}' request.",
+                              evidence=[Evidence(kind="approval", detail="the officer approved this exact action",
+                                                 source_ref=action.tool)])
             return finish(effect=Effect.ALLOW, reason_code=ReasonCode.ALLOWED,
                           summary_plain=f"Allowed: '{action.tool}' is within this task's permission slip.")
         return finish(effect=verdict.effect, rule_ids=[r.rule_id for r in fired], reason_code=verdict.reason_code,

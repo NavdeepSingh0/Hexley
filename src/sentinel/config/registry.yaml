@@ -35,3 +35,13 @@ tools:
     consequential: true
     output_integrity: trusted
     output_confidentiality: internal
+    destination_args: [to]
+
+  update_vendor_bank:
+    capability: write
+    resource_class: vendor_bank_details
+    outbound: false
+    consequential: true
+    requires_human_verification: true   # R4: a person confirms every change to where money goes
+    output_integrity: trusted
+    output_confidentiality: internal

@@ -6,6 +6,7 @@ import asyncio
 import hmac
 import json
 from datetime import datetime, timezone
+from typing import Literal
 
 import httpx
 from fastapi import Depends, FastAPI, Header, HTTPException, WebSocket, WebSocketDisconnect
@@ -13,6 +14,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 from pydantic import BaseModel
 
+from .approvals import ApprovalError
 from .audit import AuditError
 from .contracts import SessionError, draft_contract, mint_session_token, verify_session_token
 from .events import make_event
@@ -39,6 +41,10 @@ class KillRequest(BaseModel):
 
 class TamperRequest(BaseModel):
     seq: int
+
+
+class ApprovalDecision(BaseModel):
+    decision: Literal["approve", "deny"]
 
 
 def create_api(rt: Runtime) -> FastAPI:
@@ -87,6 +93,7 @@ def create_api(rt: Runtime) -> FastAPI:
             rt.drafts[contract_id] = draft  # the officer can try again
             raise HTTPException(status_code=503, detail=f"audit log unavailable: {e}") from e
         session = rt.store.add(claims, contract)
+        session.trusted_addresses = rt.trusted_addresses  # the vendor records, never the documents
         await rt.bus.publish(make_event("contract.issued", session.session_id, session.column,
                                         {"contract": contract.model_dump(mode="json")}))
         await rt.bus.publish(make_event("session.started", session.session_id, session.column,
@@ -115,6 +122,43 @@ def create_api(rt: Runtime) -> FastAPI:
             pass  # the freeze stands; the missing record is itself visible as a gap in the log
         await rt.bus.publish(make_event("freeze", s.session_id, s.column, {"reason": "kill switch"}))
         return {"session_id": s.session_id, "status": s.status.value}
+
+    @app.get("/approvals", dependencies=[Depends(require_token)])
+    async def list_approvals():
+        return {"pending": [a.card() for a in rt.approvals.pending()]}
+
+    @app.get("/approvals/{approval_id}", dependencies=[Depends(require_token)])
+    async def get_approval(approval_id: str):
+        a = rt.approvals.get(approval_id)
+        if a is None:
+            raise HTTPException(status_code=404, detail="unknown approval")
+        return a.card()
+
+    @app.post("/approvals/{approval_id}", dependencies=[Depends(require_token)])
+    async def resolve_approval(approval_id: str, req: ApprovalDecision):
+        """The officer approves or denies one exact pending action. An approval is recorded durably BEFORE it
+        takes effect; a denial never waits on the log."""
+        a = rt.approvals.get(approval_id)
+        if a is None:
+            raise HTTPException(status_code=404, detail="unknown approval")
+        approve = req.decision == "approve"
+        if approve:
+            try:
+                await rt.audit.append("approval.resolved", session_id=a.session_id, payload={
+                    "approval_id": a.approval_id, "action_hash": a.action_hash, "tool": a.tool, "decision": "approve"})
+            except AuditError as e:
+                raise HTTPException(status_code=503, detail=f"audit log unavailable: {e}") from e
+        try:
+            a = rt.approvals.resolve(approval_id, approve)
+        except ApprovalError as e:
+            raise HTTPException(status_code=409, detail=str(e)) from e
+        if not approve:
+            try:
+                await rt.audit.append("approval.resolved", session_id=a.session_id, payload={
+                    "approval_id": a.approval_id, "action_hash": a.action_hash, "tool": a.tool, "decision": "deny"})
+            except AuditError:
+                pass
+        return a.card()
 
     @app.get("/audit/verify", dependencies=[Depends(require_token)])
     async def audit_verify(expected_head: str | None = None):

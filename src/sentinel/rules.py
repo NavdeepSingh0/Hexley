@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from .destinations import domain_of
 from .matcher import Match
 from .models import EFFECT_PRECEDENCE, AgentAction, Effect, Evidence, ReasonCode, RuleId, TaskContract, ToolEntry
 
@@ -37,6 +38,57 @@ def rule_r1(action: AgentAction, contract: TaskContract, entry: ToolEntry) -> Ru
             [Evidence(kind="slip", detail=f"'{action.tool}' is not in allowed_tools",
                       source_ref=contract.contract_id)])
     return None
+
+
+def rule_r1_recipient(action: AgentAction, entry: ToolEntry, contract: TaskContract, recipients: list[str],
+                      unparseable: list[str]) -> RuleResult | None:
+    """R1 (destination part): every recipient must be a real address inside the slip's allowed domains.
+    This also stops a model that invents an address ("vendor email", vendor@example.com)."""
+    if not entry.outbound:
+        return None
+    allowed = {d.lower() for d in contract.allowed_recipient_domains}
+    outside = sorted({domain_of(r) for r in recipients if domain_of(r) not in allowed})
+    if unparseable:
+        return RuleResult(
+            RuleId.R1, Effect.BLOCK, ReasonCode.NOT_IN_SLIP,
+            f"Blocked: the recipient is not a valid e-mail address. This task's permission slip allows replies "
+            f"only to: {', '.join(sorted(allowed)) or 'nobody'}.",
+            [Evidence(kind="recipient", detail="no e-mail address found in the recipient field")])
+    if outside:
+        return RuleResult(
+            RuleId.R1, Effect.BLOCK, ReasonCode.NOT_IN_SLIP,
+            f"Blocked: this task's permission slip allows replies only to {', '.join(sorted(allowed))}; "
+            f"{', '.join(outside)} is outside it.",
+            [Evidence(kind="recipient", detail=f"domain {d} is not an allowed recipient domain") for d in outside])
+    return None
+
+
+def rule_r3(action: AgentAction, entry: ToolEntry, recipients: list[str], untrusted: set[str],
+            trusted: frozenset[str]) -> RuleResult | None:
+    """R3: a destination that appears only in untrusted content (and not in the trusted vendor records) is
+    refused, even inside an allowed domain. Value-level provenance, not general flow tracking."""
+    if not entry.outbound:
+        return None
+    bad = [r for r in recipients if r in untrusted and r not in trusted]
+    if not bad:
+        return None
+    return RuleResult(
+        RuleId.R3, Effect.BLOCK, ReasonCode.DEST_FROM_UNTRUSTED,
+        f"Blocked: the recipient {', '.join(bad)} appears only inside a document the agent read, not in the "
+        "trusted vendor records or the officer's slip. Reply to the vendor's registered address.",
+        [Evidence(kind="provenance", detail=f"{r} was found in untrusted content and in no trusted source",
+                  source_ref="untrusted tool result") for r in bad])
+
+
+def rule_r4(action: AgentAction, entry: ToolEntry, approved: bool) -> RuleResult | None:
+    """R4: actions the registry marks for human verification need the officer's approval of this exact call."""
+    if not entry.requires_human_verification or approved:
+        return None
+    return RuleResult(
+        RuleId.R4, Effect.ASK, ReasonCode.HUMAN_VERIFICATION,
+        f"Approval needed: '{action.tool}' is an action the officer must confirm. "
+        "It will run only if the officer approves this exact request.",
+        [Evidence(kind="approval", detail=f"'{action.tool}' requires human verification", source_ref=action.tool)])
 
 
 _KIND_LABEL = {"number": "quantity", "code": "depot code", "date": "date"}

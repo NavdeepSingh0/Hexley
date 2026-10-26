@@ -1,5 +1,16 @@
 # Permission-slip templates. The officer confirms a slip built from one of these in the console.
 # The agent never creates or widens a slip.
+vendor_maintenance:
+  objective: >-
+    Update a vendor's registered bank details after the vendor's written request, then confirm to the vendor.
+  allowed_tools: [update_vendor_bank, send_email]
+  resource_classes: [vendor_bank_details, email_external]
+  allowed_recipient_domains: [shakti.example]
+  max_records: 1
+  max_messages: 1
+  max_records_out: 0
+  ttl_seconds: 900
+
 quotation_processing:
   objective: >-
     Process an incoming vendor quotation: read it, check stock internally to inform the

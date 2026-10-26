@@ -98,6 +98,7 @@ class ToolEntry(_Model):
     output_integrity: Integrity
     output_confidentiality: Confidentiality
     fingerprint_fields: list[str] = Field(default_factory=list)
+    destination_args: list[str] = Field(default_factory=list)  # arguments that name where data is going
     requires_human_verification: bool = False
 
 
