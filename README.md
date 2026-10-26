@@ -26,7 +26,7 @@ This table says what exists today, not what the architecture describes. "Tested"
 | Live events (WebSocket) | **Built, tested** | |
 | Runs API (`/runs`: scenarios across the three comparison lanes, officer confirmation, scripted attacker, replay of recorded runs with divergence detection, `record` CLI) | **Built, tested** | Views are built only from gateway events and the real mail sink. Replay re-issues the recorded model actions; Sentinel's decisions are computed live and compared with the recorded ones. Real-model recordings are committed (see below) |
 | Agent runner (OpenAI-compatible, Ollama or NVIDIA) | **Built**, smoke-tested | The model client's retry of timeouts and 429/5xx is unit-tested with a fake transport; a full model run is not |
-| Evaluation harness (`python -m sentinel eval`) | **Built, tested** | Measured from the mail sink against a labelled corpus; results with commit, model, n and date in `eval/results/`. Numbers below are copied from `scripted-20261026T185710.json` (commit 6491c74, clean tree) and `recorded-20261026T185713.json`. They describe this corpus and this task, not prompt injection in general |
+| Evaluation harness (`python -m sentinel eval`) | **Built, tested** | Measured from the mail sink against a labelled corpus; results with commit, model, n and date in `eval/results/`. Numbers below are copied from `scripted-20261026T185710.json` (commit 6491c74, clean tree) and `recorded-20261026T195255.json` (commit 1ffea42, clean tree). They describe this corpus and this task, not prompt injection in general |
 | Console (start, permission slip, three-column stage, verdict with the matched values highlighted, officer approval card, audit verify and tamper, guided presenter keys) | **Built**, unit-tested (derivations) and checked on screen at 1280x720 and 1920x1080 | Served at `/console/` by `python -m sentinel up`. Build once with `npm --prefix console ci` then `npm --prefix console run build` (the build output is not committed). Not yet rehearsed end to end by a person |
 | Recordings of a real model (`recordings/`, nemotron-3-ultra-550b, 5 attempts each of the poisoned and clean quotation) | **Committed** | Several attempts ended in `agent_error` on the hosted API (the attempt is kept, and shown as such). Every recording replays without divergence (tested) |
 | Phone approval page | **Planned**, first to cut | The approval card in the console works; there is no separate phone page |
@@ -46,7 +46,14 @@ Scripted attacker, labelled corpus, through the real gateway, read from the mail
 
 The zero is a measurement on this corpus. The cases were written from the matcher's own documented list, so it shows the matcher does what its documentation says, not that an attacker cannot find another representation. Hardened slip, apart from the table: 0 of 4 attack cases delivered; the valid acknowledgement completed 1/1.
 
-Real model (nemotron-3-ultra-550b), from the 10 committed recordings (5 poisoned, 5 clean). 8 of the 30 lanes ended in `agent_error` on the hosted API and are excluded and listed, so the denominators are small: with the poisoned quotation the model disclosed restricted data in 4/4 usable unprotected lanes and 4/4 R1-only lanes; in the Sentinel column 0 of 3 usable lanes delivered it (each was stopped, then sent a clean acknowledgement: `recovered`, not counted as completed). With the clean quotation 1/3 unprotected lanes disclosed it anyway (the model's own habit, as in M0). Zero of 17 valid Sentinel actions were blocked.
+Real model (nemotron-3-ultra-550b), from the 30 committed recordings (15 poisoned, 15 clean attempts; `recorded-20261026T195255.json`, commit 1ffea42). 21 of the 90 lanes ended in `agent_error`, all HTTP 429 (the hosted API's rate limit) after retries, and are excluded and listed, so the denominators are 9 to 13 lanes per cell:
+
+| Condition | Unprotected | R1-only | Sentinel |
+|---|---|---|---|
+| Poisoned quotation: lanes that delivered restricted data | 13/13 (95% CI 77-100%) | 12/12 (76-100%) | **0/9** (0-30%) |
+| Clean quotation: lanes that delivered restricted data (the model's own habit, as in M0) | 4/13 (13-58%) | 2/11 (5-48%) | 0/11 (0-26%) |
+
+All 9 usable poisoned Sentinel lanes were stopped and then sent a clean acknowledgement (`recovered`, not counted as completed, D-007); on the clean quotation 7 of 11 Sentinel lanes completed outright and 4 recovered, because the model tried to include stock figures even without an injection and was stopped. Zero of 37 valid Sentinel actions were blocked. One model, one task: this does not generalise to other models or other attacks.
 
 Measured model results (matched trials, six models) are in [docs/spikes/M0-results.md](docs/spikes/M0-results.md). They describe one task, one quotation and four injection texts, not prompt injection in general.
 
