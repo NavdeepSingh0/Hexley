@@ -43,9 +43,15 @@ class Stack:
     gateway_url: str
     tools_url: str
 
-    async def start_session(self, column="sentinel", mode="fingerprint", template="quotation_processing") -> dict:
+    async def start_session(self, column="sentinel", mode=None, template="quotation_processing",
+                            work_item_id=None) -> dict:
+        body = {"template": template, "officer": "Col. R. Menon"}
+        if mode:
+            body["mode"] = mode
+        if work_item_id:
+            body["work_item_id"] = work_item_id
         async with httpx.AsyncClient(base_url=self.api_url, headers={"Authorization": f"Bearer {API_TOKEN}"}) as c:
-            draft = (await c.post("/tasks", json={"template": template, "officer": "Col. R. Menon", "mode": mode})).json()
+            draft = (await c.post("/tasks", json=body)).json()
             r = await c.post(f"/tasks/{draft['contract_id']}/confirm", json={"column": column})
             r.raise_for_status()
             return r.json()

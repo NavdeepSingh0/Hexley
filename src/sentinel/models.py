@@ -100,6 +100,8 @@ class ToolEntry(_Model):
     fingerprint_fields: list[str] = Field(default_factory=list)
     destination_args: list[str] = Field(default_factory=list)  # arguments that name where data is going
     requires_human_verification: bool = False
+    egress_template: str | None = None  # a tool that sends only through this fixed template (hardened mode)
+    local: bool = False  # implemented inside the gateway, not forwarded to the tool server
 
 
 # ---- task contract (permission slip) -----------------------------------------------------------
@@ -114,6 +116,7 @@ class EgressTemplate(_Model):
     recipient_from: str
     slots: dict[str, EgressSlot]
     body: str
+    subject: str = "Acknowledgement"
     max_messages: int = 1
 
 
@@ -130,6 +133,10 @@ class TaskContract(_Model):
     max_messages: int
     max_records_out: int
     egress_templates: list[EgressTemplate] = Field(default_factory=list)
+    # The quotation this slip is about and the vendor resolved from trusted records (D-019). Both are part of
+    # the contract hash, so a token is bound to them.
+    work_item_id: str | None = None
+    resolved_vendor: dict[str, str] | None = None
     issued_at: datetime
     expires_at: datetime
     status: SessionStatus = SessionStatus.PENDING

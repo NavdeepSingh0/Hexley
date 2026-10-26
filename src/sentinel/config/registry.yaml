@@ -37,6 +37,18 @@ tools:
     output_confidentiality: internal
     destination_args: [to]
 
+  # Implemented inside the gateway (hardened mode): the agent supplies only the quotation id; Sentinel renders
+  # the message and chooses the recipient. No destination_args: the agent has no say in where it goes.
+  send_quote_ack:
+    capability: send
+    resource_class: email_external
+    outbound: true
+    consequential: true
+    local: true
+    egress_template: quote_ack_v1
+    output_integrity: trusted
+    output_confidentiality: internal
+
   update_vendor_bank:
     capability: write
     resource_class: vendor_bank_details

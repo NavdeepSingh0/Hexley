@@ -16,7 +16,7 @@ from pydantic import BaseModel
 
 from .approvals import ApprovalError
 from .audit import AuditError
-from .contracts import SessionError, draft_contract, mint_session_token, verify_session_token
+from .contracts import SessionError, SlipError, draft_contract, mint_session_token, verify_session_token
 from .events import make_event
 from .models import Column, Mode, SessionStatus
 from .runtime import Runtime
@@ -28,7 +28,8 @@ CONSOLE_ORIGIN = "http://localhost:5173"
 class TaskRequest(BaseModel):
     template: str
     officer: str
-    mode: Mode = Mode.FINGERPRINT
+    mode: Mode | None = None  # normally omitted: the template sets the mode; a disagreeing value is refused
+    work_item_id: str | None = None  # the quotation this slip is about; resolved through the intake queue
 
 
 class ConfirmRequest(BaseModel):
@@ -65,9 +66,12 @@ def create_api(rt: Runtime) -> FastAPI:
     @app.post("/tasks", dependencies=[Depends(require_token)])
     async def create_task(req: TaskRequest):
         try:
-            contract = draft_contract(rt.templates, req.template, officer=req.officer, mode=req.mode)
+            contract = draft_contract(rt.templates, req.template, officer=req.officer, mode=req.mode,
+                                      work_item_id=req.work_item_id)
         except KeyError:
             raise HTTPException(status_code=404, detail=f"unknown template {req.template!r}") from None
+        except SlipError as e:
+            raise HTTPException(status_code=422, detail=str(e)) from e
         rt.drafts[contract.contract_id] = contract
         return contract.model_dump(mode="json")
 

@@ -26,10 +26,11 @@ from fastmcp.server.providers.proxy import FastMCPProxy, ProxyClient
 from .approvals import ApprovalStatus
 from .audit import AuditError, action_payload, decision_payload, result_payload
 from .contracts import Session, SessionError, verify_session_token
+from . import egress
 from .destinations import extract_destinations
 from .engine import decide
 from .events import make_event
-from .models import (AgentAction, Column, Confidentiality, Decision, Effect, Evidence, Integrity, ReasonCode,
+from .models import (AgentAction, Column, Confidentiality, Decision, Effect, Evidence, Integrity, Mode, ReasonCode,
                      RuleId, SessionStatus)
 from .runtime import Runtime
 from .tools.server import COLUMN_HEADER, SESSION_HEADER, TOKEN_HEADER
@@ -38,6 +39,8 @@ log = logging.getLogger("sentinel.gateway")
 
 # The session of the call being forwarded, so the downstream client can label it (for the mail sink).
 _current: ContextVar[Session | None] = ContextVar("sentinel_current_session", default=None)
+# The recorded hash of the message a fixed-template tool is allowed to send (set only while that call runs).
+_egress_expected: ContextVar[str | None] = ContextVar("sentinel_egress_expected", default=None)
 
 
 class SentinelMiddleware(Middleware):
@@ -66,9 +69,11 @@ class SentinelMiddleware(Middleware):
             tools = await call_next(context)
         finally:
             _current.reset(reset)
-        if session.column == Column.UNPROTECTED:
-            return tools
         allowed = set(session.contract.allowed_tools)
+        if session.column == Column.UNPROTECTED:
+            # The baseline sees every backend tool, but never a gateway-local tool its slip does not allow:
+            # otherwise the like-for-like comparison would differ between columns (D-028).
+            return [t for t in tools if not self.rt.registry.get(t.name).local or t.name in allowed]
         # Listing is a convenience for the agent, not a control: R1 is enforced again on every call.
         return [t for t in tools if t.name in allowed and self.rt.registry.is_known(t.name)]
 
@@ -153,10 +158,15 @@ class SentinelMiddleware(Middleware):
                                                   "decision_id": decision.decision_id}))
         if decision.effect != Effect.ALLOW:
             raise ToolError(decision.summary_plain)
+        # For a fixed-template tool, hand the tool the hash of the message the decision recorded, so it can
+        # refuse to send anything different (D-020).
+        egress_ev = next((e for e in decision.evidence if e.kind == "egress" and e.source_ref), None)
         reset = _current.set(session)
+        reset_expected = _egress_expected.set(egress_ev.source_ref if egress_ev else None)
         try:
             result = await call_next(context)
         finally:
+            _egress_expected.reset(reset_expected)
             _current.reset(reset)
         text = _result_text(result)
         try:
@@ -231,4 +241,32 @@ def build_gateway(rt: Runtime) -> FastMCP:
 
     proxy = FastMCPProxy(client_factory=client_factory, name="sentinel-gateway")
     proxy.add_middleware(SentinelMiddleware(rt))
+
+    @proxy.tool
+    async def send_quote_ack(quote_id: str) -> str:
+        """Acknowledge receipt of a quotation to its vendor with Sentinel's fixed message.
+        Give only the quotation id; Sentinel writes the message and chooses the recipient."""
+        # The middleware has already decided. This body runs only for an allowed call, and it still checks
+        # everything itself: it is the code that finally sends, so it must not trust its caller.
+        session, expected = _current.get(), _egress_expected.get()
+        if session is None or expected is None or session.contract.mode != Mode.HARDENED:
+            raise ToolError("Blocked: send_quote_ack needs a confirmed hardened-mode slip.")
+        template = egress.find_template(session.contract, "quote_ack_v1")
+        if template is None:
+            raise ToolError("Blocked: this slip defines no acknowledgement template.")
+        try:
+            msg = egress.render(template, {"quote_id": quote_id}, session.contract)
+        except ValueError as e:
+            raise ToolError(f"Blocked: {e}") from e
+        if msg.message_sha256 != expected:
+            raise ToolError("Blocked: the message differs from the one recorded for this decision, so it was not sent.")
+        # Call the tool server directly. proxy.call_tool would run the middleware a second time and double-count
+        # the budget, the audit record and the block counter.
+        async with client_factory() as backend:
+            await backend.call_tool("send_email", {"to": msg.to, "subject": msg.subject, "body": msg.body})
+        await rt.bus.publish(make_event("egress.rendered", session.session_id, session.column, {
+            "template_id": msg.template_id, "to": msg.to, "subject": msg.subject, "body": msg.body,
+            "message_sha256": msg.message_sha256}))
+        return f"Acknowledgement sent to {msg.to}."
+
     return proxy

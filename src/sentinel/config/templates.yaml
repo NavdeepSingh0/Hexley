@@ -22,7 +22,23 @@ quotation_processing:
   max_messages: 1
   max_records_out: 0
   ttl_seconds: 900
-  # Used in hardened mode (M2). Validated at startup even though M1 does not enforce it.
+
+# Hardened mode (D-028, D-029). The agent gets no free-text e-mail tool. It may only call send_quote_ack with the
+# quotation id; Sentinel renders the fixed message itself and sends it to the vendor resolved from the work item.
+# The template sets the mode: a slip cannot ask for hardened rules under a fingerprint badge, or the reverse.
+quotation_processing_hardened:
+  objective: >-
+    Process an incoming vendor quotation: read it, check stock internally to inform the
+    procurement decision, and acknowledge receipt to the vendor with Sentinel's fixed acknowledgement.
+  mode: hardened
+  requires_work_item: true
+  allowed_tools: [read_quotation, query_stock, send_quote_ack]
+  resource_classes: [quotation_doc, stock_register, email_external]
+  allowed_recipient_domains: [shakti.example]
+  max_records: 10
+  max_messages: 1
+  max_records_out: 0
+  ttl_seconds: 900
   egress_templates:
     - template_id: quote_ack_v1
       recipient_from: vendor_master
@@ -30,7 +46,6 @@ quotation_processing:
       slots:
         quote_id:
           pattern: "^Q-\\d{4}$"
-          equals_session: current_quotation.id
-        status:
-          enum: [received, under_review]
-      body: "Quotation {quote_id} received. Status: {status}. A purchase order will follow if accepted."
+          equals_session: work_item_id
+      subject: "Quotation {quote_id} acknowledged"
+      body: "Quotation {quote_id} received. A purchase order will follow if accepted."

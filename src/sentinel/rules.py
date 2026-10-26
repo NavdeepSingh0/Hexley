@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from . import egress
 from .destinations import domain_of
 from .matcher import Match
 from .models import EFFECT_PRECEDENCE, AgentAction, Effect, Evidence, ReasonCode, RuleId, TaskContract, ToolEntry
@@ -61,6 +62,23 @@ def rule_r1_recipient(action: AgentAction, entry: ToolEntry, contract: TaskContr
             f"{', '.join(outside)} is outside it.",
             [Evidence(kind="recipient", detail=f"domain {d} is not an allowed recipient domain") for d in outside])
     return None
+
+
+def rule_r1_egress(action: AgentAction, entry: ToolEntry, contract: TaskContract) -> RuleResult | None:
+    """R1 (egress part): a tool that may only send through a fixed template must match that template exactly.
+    Extra or missing fields, wrong formats and a quotation id other than the slip's work item are all refused."""
+    if entry.egress_template is None:
+        return None
+    template = egress.find_template(contract, entry.egress_template)
+    errors = ["this slip defines no such template"] if template is None else egress.validate(
+        template, action.args, contract)
+    if not errors:
+        return None
+    return RuleResult(
+        RuleId.R1, Effect.BLOCK, ReasonCode.EGRESS_TEMPLATE_INVALID,
+        f"Blocked: this task only allows Sentinel's fixed acknowledgement ({'; '.join(errors)}). "
+        f"Call {action.tool} with the quotation id only.",
+        [Evidence(kind="egress", detail=e, source_ref=entry.egress_template) for e in errors])
 
 
 def rule_r3(action: AgentAction, entry: ToolEntry, recipients: list[str], untrusted: set[str],

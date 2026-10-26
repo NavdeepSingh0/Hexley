@@ -16,6 +16,7 @@ import jwt
 import yaml
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey, Ed25519PublicKey
 
+from . import fixtures
 from .matcher import FingerprintIndex
 from .models import Column, EgressTemplate, Mode, SessionStatus, TaskContract
 
@@ -41,20 +42,50 @@ def load_templates(path: Path | None = None) -> dict[str, dict]:
                          "max_records", "max_messages", "max_records_out", "ttl_seconds"):
             if required not in spec:
                 raise ValueError(f"template {name!r} is missing {required!r}")
+        Mode(spec.get("mode", "fingerprint"))  # an unknown mode stops startup
+        if spec.get("mode") == "hardened" and not spec.get("egress_templates"):
+            raise ValueError(f"hardened template {name!r} has no egress template")
+        if spec.get("requires_work_item") and not spec.get("egress_templates"):
+            raise ValueError(f"template {name!r} requires a work item but defines no egress template")
     return templates
 
 
+class SlipError(ValueError):
+    """The slip cannot be drafted as asked (mode mismatch, missing or unresolvable work item)."""
+
+
 def draft_contract(templates: dict[str, dict], template: str, officer: str, now: datetime | None = None,
-                   mode: Mode = Mode.FINGERPRINT) -> TaskContract:
-    """Build a pending slip from a template. KeyError for an unknown template."""
+                   mode: Mode | None = None, work_item_id: str | None = None) -> TaskContract:
+    """Build a pending slip from a template. KeyError for an unknown template, SlipError for anything else.
+
+    The template sets the mode (an explicit `mode` that disagrees is refused). A work item is resolved
+    through the trusted intake queue to a vendor in the vendor master (D-019); the document's own claims
+    about who sent it are never consulted."""
     spec = templates[template]
+    template_mode = Mode(spec.get("mode", "fingerprint"))
+    if mode is not None and mode != template_mode:
+        raise SlipError(f"template {template!r} runs in {template_mode.value} mode, not {mode.value}")
+    resolved_vendor = None
+    if spec.get("requires_work_item") and not work_item_id:
+        raise SlipError(f"template {template!r} needs a work item (a quotation id)")
+    if work_item_id:
+        vendor_key = fixtures.INTAKE.get(work_item_id)
+        if vendor_key is None or vendor_key not in fixtures.VENDOR_MASTER:
+            raise SlipError(f"work item {work_item_id!r} is not in the intake queue")
+        vendor = fixtures.VENDOR_MASTER[vendor_key]
+        domain = vendor["email"].rsplit("@", 1)[-1]
+        if domain not in spec["allowed_recipient_domains"]:
+            raise SlipError(f"the vendor's domain {domain!r} is not allowed by this slip")
+        resolved_vendor = {"key": vendor_key, "name": vendor["name"], "email": vendor["email"]}
     now = now or datetime.now(timezone.utc)
     contract = TaskContract(
         contract_id=f"tc_{uuid.uuid4().hex[:12]}",
         template=template,
         objective=" ".join(str(spec["objective"]).split()),
         officer=officer,
-        mode=mode,
+        mode=template_mode,
+        work_item_id=work_item_id,
+        resolved_vendor=resolved_vendor,
         allowed_tools=list(spec["allowed_tools"]),
         resource_classes=list(spec["resource_classes"]),
         allowed_recipient_domains=list(spec["allowed_recipient_domains"]),

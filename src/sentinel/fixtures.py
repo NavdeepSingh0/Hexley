@@ -38,3 +38,7 @@ STOCK_REGISTER = (
 )
 
 VENDOR_MASTER = {"shakti": {"name": "Shakti Precision Components", "email": VENDOR}}
+
+# Synthetic "trusted intake queue": which vendor a quotation work item belongs to, set when the document is
+# received, never taken from the document's own text (D-019). A mock, not production-grade identity verification.
+INTAKE = {"Q-1042": "shakti", "Q-1043": "shakti", "Q-1044": "shakti", "Q-1045": "shakti"}

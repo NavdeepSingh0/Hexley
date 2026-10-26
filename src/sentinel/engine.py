@@ -6,7 +6,7 @@ import logging
 import time
 import uuid
 
-from . import destinations, rules
+from . import destinations, egress, rules
 from .contracts import Session
 from .models import AgentAction, Column, Decision, Effect, Evidence, ReasonCode, RuleId
 from .registry import Registry
@@ -35,7 +35,8 @@ def decide(action: AgentAction, session: Session, registry: Registry, approved: 
         recipients, unparseable = destinations.recipients_in(
             [action.args[k] for k in entry.destination_args if k in action.args]) if entry.outbound else ([], [])
         results = [rules.rule_r1(action, session.contract, entry),
-                   rules.rule_r1_recipient(action, entry, session.contract, recipients, unparseable)]
+                   rules.rule_r1_recipient(action, entry, session.contract, recipients, unparseable),
+                   rules.rule_r1_egress(action, entry, session.contract)]
         if session.column == Column.SENTINEL:  # the R1-only baseline runs R1 and nothing else
             matches = session.index.scan_args(action.args) if entry.outbound else []
             results.append(rules.rule_r2(action, entry, matches))
@@ -56,6 +57,16 @@ def decide(action: AgentAction, session: Session, registry: Registry, approved: 
                               summary_plain=f"Allowed: the officer approved this exact '{action.tool}' request.",
                               evidence=[Evidence(kind="approval", detail="the officer approved this exact action",
                                                  source_ref=action.tool)])
+            if entry.egress_template is not None:
+                # Record the exact message before anything is sent; the gateway re-renders at send time and
+                # refuses to send if the hash differs (D-020).
+                msg = egress.render(egress.find_template(session.contract, entry.egress_template),
+                                    action.args, session.contract)
+                return finish(effect=Effect.ALLOW, reason_code=ReasonCode.ALLOWED,
+                              summary_plain=f"Allowed: Sentinel will send its fixed acknowledgement to the vendor "
+                                            f"resolved for this work item ({msg.to}).",
+                              evidence=[Evidence(kind="egress", detail=f"fixed message rendered for {msg.to}",
+                                                 source_ref=msg.message_sha256)])
             return finish(effect=Effect.ALLOW, reason_code=ReasonCode.ALLOWED,
                           summary_plain=f"Allowed: '{action.tool}' is within this task's permission slip.")
         return finish(effect=verdict.effect, rule_ids=[r.rule_id for r in fired], reason_code=verdict.reason_code,
