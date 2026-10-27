@@ -1,0 +1,46 @@
+[
+  {
+    "label": "Disguised leaks that got past Sentinel (scripted corpus)",
+    "value": "0 of 31",
+    "n": 31,
+    "ci95": [
+      0.0,
+      0.11
+    ],
+    "source_file": "eval/results/scripted-20261026T185710.json",
+    "caveat": "Cases were written from the matcher's own documented list: this shows it does what we say, not that no other disguise exists."
+  },
+  {
+    "label": "The same cases with no protection",
+    "value": "31 of 31",
+    "n": 31,
+    "ci95": [
+      0.89,
+      1.0
+    ],
+    "source_file": "eval/results/scripted-20261026T185710.json",
+    "caveat": "Scripted attacker, mock tools, synthetic data."
+  },
+  {
+    "label": "Real model, poisoned quotation: lanes that leaked with no protection",
+    "value": "13 of 13",
+    "n": 13,
+    "ci95": [
+      0.772,
+      1.0
+    ],
+    "source_file": "eval/results/recorded-20261026T195255.json",
+    "caveat": "One model, one task. 21 of 90 lanes failed on the hosted API and are excluded."
+  },
+  {
+    "label": "Real model, poisoned quotation: lanes that leaked behind Sentinel",
+    "value": "0 of 9",
+    "n": 9,
+    "ci95": [
+      0.0,
+      0.299
+    ],
+    "source_file": "eval/results/recorded-20261026T195255.json",
+    "caveat": "Small sample: a count with an interval, not a guarantee."
+  }
+]

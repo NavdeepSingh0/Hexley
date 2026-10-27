@@ -8,12 +8,15 @@ __pycache__/
 
 # Secrets: never commit
 .env
+.env.*
+!.env.example
 *.key
 *.pem
 
 # Node
 node_modules/
 console/dist/
+site/dist/
 
 # Generated output
 spikes/out/

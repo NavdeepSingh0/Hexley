@@ -1,0 +1,80 @@
+/* Sentinel design tokens, shared by the site (site/) and the console (console/).
+   Taken from the 404 Disruptors deck: charcoal background, white bold sans-serif, spaced capital labels,
+   hairlines, outlined boxes. Dark is the default; <html data-theme="light"> switches to the off-white theme.
+   Colour is meaning: --harm (red) only for harm that reached the outside; --denied, --approval, --quarantined
+   for Sentinel's decisions; --ok only for a verified audit log. Never hard-code a colour in a component. */
+
+:root,
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #1f1f1e;
+  --panel: #262625;
+  --panel-2: #2d2d2b;
+  --ink: #f2f1ed;
+  --muted: #a3a29d;
+  --line: #3b3b39;
+  --line-strong: #f2f1ed;
+
+  --denied: #8db8ff;
+  --denied-bg: rgba(141, 184, 255, 0.12);
+  --harm: #ff7f73;
+  --harm-bg: rgba(255, 127, 115, 0.12);
+  --approval: #f2bd55;
+  --approval-bg: rgba(242, 189, 85, 0.12);
+  --quarantined-bg: #f2f1ed;
+  --quarantined-ink: #1f1f1e;
+  --ok: #7fd6a1;
+  --ok-bg: rgba(127, 214, 161, 0.12);
+  --focus: #8db8ff;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f3f2ee;
+  --panel: #ffffff;
+  --panel-2: #ebeae5;
+  --ink: #161616;
+  --muted: #5c5b57;
+  --line: #d6d4cd;
+  --line-strong: #161616;
+
+  --denied: #1d4f91;
+  --denied-bg: rgba(29, 79, 145, 0.09);
+  --harm: #b3261e;
+  --harm-bg: rgba(179, 38, 30, 0.08);
+  --approval: #8a5a00;
+  --approval-bg: rgba(138, 90, 0, 0.1);
+  --quarantined-bg: #161616;
+  --quarantined-ink: #f3f2ee;
+  --ok: #1d6b3a;
+  --ok-bg: rgba(29, 107, 58, 0.09);
+  --focus: #1d4f91;
+}
+
+:root {
+  --font: "Helvetica Neue", Helvetica, Arial, "Liberation Sans", sans-serif;
+  --mono: ui-monospace, "Cascadia Mono", Consolas, "Liberation Mono", monospace;
+
+  --size-base: 18px;
+  --size-small: 15px;
+  --size-label: 13px;
+  --size-h3: 24px;
+  --size-h2: 44px;
+  --size-hero: 72px;
+  --tracking-label: 0.18em;
+  --tracking-tight: -0.01em;
+
+  --hairline: 1px solid var(--line);
+  --outline: 1px solid var(--line);
+  --outline-active: 2px solid var(--line-strong);
+  --radius: 2px;
+
+  --gutter: 16px;
+  --content-max: 1200px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 16px;
+  --space-4: 24px;
+  --space-5: 40px;
+  --space-6: 64px;
+}
