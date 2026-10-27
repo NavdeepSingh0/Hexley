@@ -13,7 +13,7 @@ The core works on one measured scenario (poisoned quotation → e-mail): gateway
 
 ## Method (same as the frontend plan)
 1. Each phase has deliverables and a QA checklist; QA = `python -m uv run pytest` green, the phase's new tests, the listed manual checks, and (where a rule is added) a mutation check in `spikes/mutate.py`.
-2. **Pass → commit on `main`** (message ends with `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`) → next phase.
+2. **Pass → commit on `main`** (no co-author or attribution trailer, by Navdeep's instruction) → next phase.
 3. **Fail → rework only what failed → QA again. 3 QA attempts per phase.** After attempt 3 fails: stop the phase, write an escalation note in `docs/PHASE_LOG.md`, and decide with Navdeep (cut scope / change approach / move later / drop).
 4. Every attempt is one line in `docs/PHASE_LOG.md`.
 5. Dependent phases wait for their predecessor to pass.

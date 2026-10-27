@@ -19,7 +19,9 @@ from pydantic import BaseModel
 from .approvals import ApprovalError
 from .audit import AuditError
 from .confirm import ConfirmError, confirm_draft
+from .connect import connect_view, issue_header_token
 from .contracts import SlipError, draft_contract
+from .oauth import OAuthError
 from .runs import SCENARIOS, RunError, RunManager, list_recordings
 from .events import make_event
 from .models import Column, Mode
@@ -50,6 +52,15 @@ class TamperRequest(BaseModel):
 
 class ApprovalDecision(BaseModel):
     decision: Literal["approve", "deny"]
+
+
+class ConnectTokenRequest(BaseModel):
+    preset: str = "quotation_processing"
+
+
+class OAuthDecision(BaseModel):
+    decision: Literal["approve", "deny"]
+    officer_code: str = ""
 
 
 class RunRequest(BaseModel):
@@ -278,6 +289,41 @@ def create_api(rt: Runtime, console_dir: Path | None = None) -> FastAPI:
             pass
         finally:
             unsubscribe()
+
+    # ---- connecting a real client (docs/contracts/API.md; core plan phase B1) --------------------------------------
+    @app.get("/api/v1/connect", dependencies=[Depends(require_token)])
+    async def connect():
+        return connect_view(rt)
+
+    @app.post("/api/v1/connect/token", dependencies=[Depends(require_token)])
+    async def connect_token(req: ConnectTokenRequest = ConnectTokenRequest()):
+        try:
+            return await issue_header_token(rt, req.preset)
+        except SlipError as e:
+            raise HTTPException(status_code=422, detail=str(e)) from e
+        except ConfirmError as e:
+            raise HTTPException(status_code=e.status, detail=e.detail) from e
+
+    # The consent endpoints are NOT behind the API token: the officer code is the credential. The officer's browser reaches
+    # them from the AI client's sign-in redirect, where the console's token may not be present.
+    def oauth_provider():
+        if rt.oauth is None:
+            raise HTTPException(status_code=404, detail="OAuth is not enabled; start Sentinel with --public-url or --tunnel")
+        return rt.oauth
+
+    @app.get("/api/v1/oauth/requests/{request_id}")
+    async def oauth_request(request_id: str):
+        try:
+            return oauth_provider().view(request_id)
+        except OAuthError as e:
+            raise HTTPException(status_code=e.status, detail=e.detail) from e
+
+    @app.post("/api/v1/oauth/requests/{request_id}")
+    async def oauth_decide(request_id: str, req: OAuthDecision):
+        try:
+            return {"redirect_to": await oauth_provider().decide(request_id, req.decision, req.officer_code)}
+        except OAuthError as e:
+            raise HTTPException(status_code=e.status, detail=e.detail) from e
 
     mount_console(app, console_dir)
     return app

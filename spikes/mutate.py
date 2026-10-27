@@ -41,6 +41,15 @@ MUTATIONS = [
     ("an approved action skips the other rules (BLOCK no longer outranks ASK)", "src/sentinel/rules.py",
      "EFFECT_PRECEDENCE", "[Effect.FREEZE, Effect.ASK, Effect.BLOCK, Effect.ALLOW]  # MUTATION\n_UNUSED_PRECEDENCE",
      "tests/test_r4.py", "still_has_to_pass_every_other_rule"),
+    ("OAuth approval no longer needs the officer code", "src/sentinel/oauth.py",
+     "if not (officer_code and hmac.compare_digest(officer_code.strip().encode(), req.officer_code.encode())):", "if False:",
+     "tests/test_oauth.py", "no_approval_without_the_officer_code or locks_after"),
+    ("an OAuth refresh starts a NEW session (would reset the message budget)", "src/sentinel/oauth.py",
+     "ttl_seconds=ttl, session_id=session_id)", "ttl_seconds=ttl)",
+     "tests/test_oauth.py", "refresh_keeps_the_session"),
+    ("an OAuth refresh ignores a frozen session", "src/sentinel/oauth.py",
+     "if session is None or not self.rt.store.is_usable(session_id):", "if session is None:",
+     "tests/test_oauth.py", "refresh_is_refused_for_a_frozen_session"),
 ]
 
 

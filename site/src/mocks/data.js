@@ -13,7 +13,7 @@ export const CONNECT = {
   mcp_url: 'http://127.0.0.1:8100/mcp',
   methods: [
     {
-      id: 'oauth', status: 'untested',
+      id: 'oauth', status: 'tested',
       steps: ['Open Customize → Connectors → Add custom connector', 'Paste the URL', 'Choose “Sign in now”', 'Approve the permission slip with the officer code'],
     },
     {
@@ -22,7 +22,7 @@ export const CONNECT = {
     },
   ],
   clients: [
-    { id: 'claude-web', name: 'Claude.ai (web)', kind: 'web', status: 'tested', method: 'header', snippet: null,
+    { id: 'claude-web', name: 'Claude.ai (web)', kind: 'web', status: 'tested', method: 'oauth', snippet: null,
       screenshot: '/img/real-claude-blocked-by-sentinel.png' },
     { id: 'claude-code', name: 'Claude Code', kind: 'cli', status: 'should_work', method: 'header',
       snippet: 'claude mcp add --transport http sentinel {mcp_url} --header "Authorization: {header_value}"', screenshot: null },

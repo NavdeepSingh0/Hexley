@@ -111,12 +111,17 @@ class SessionClaims:
 
 
 def mint_session_token(contract: TaskContract, column: Column, key: Ed25519PrivateKey, *,
-                       now: datetime | None = None, ttl_seconds: int = 900) -> tuple[str, str]:
-    """Mint a token for an ACTIVE contract. Returns (token, session_id)."""
+                       now: datetime | None = None, ttl_seconds: int = 900,
+                       session_id: str | None = None) -> tuple[str, str]:
+    """Mint a token for an ACTIVE contract. Returns (token, session_id).
+
+    `session_id` is passed only to re-issue a token for an EXISTING session (an OAuth refresh): the session keeps its
+    budget, block count and fingerprints, so a refresh can never reset them. The caller must have checked that the
+    session is still usable and that the slip has not expired."""
     if contract.status != SessionStatus.ACTIVE:
         raise SessionError("a token is minted only for a contract the officer has confirmed")
     now = now or datetime.now(timezone.utc)
-    session_id = f"ses_{uuid.uuid4().hex[:12]}"
+    session_id = session_id or f"ses_{uuid.uuid4().hex[:12]}"
     payload = {
         "iss": ISSUER, "aud": AUDIENCE, "jti": session_id,
         "iat": int(now.timestamp()), "exp": int((now + timedelta(seconds=ttl_seconds)).timestamp()),

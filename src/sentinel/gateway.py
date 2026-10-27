@@ -244,8 +244,16 @@ def build_gateway(rt: Runtime) -> FastMCP:
         # Never forward what the agent sent: Sentinel alone decides which headers the tools see.
         return ProxyClient(StreamableHttpTransport(rt.tools_url, headers=headers), forward_incoming_headers=False)
 
-    proxy = FastMCPProxy(client_factory=client_factory, name="sentinel-gateway")
+    # With OAuth on (rt.oauth set by `up --public-url/--tunnel`), the HTTP layer demands a valid bearer token and answers
+    # a client without one with the 401 that starts the sign-in. Off by default: the header route works either way, and
+    # the middleware below remains the real check on every call.
+    oauth = getattr(rt, "oauth", None)
+    proxy = FastMCPProxy(client_factory=client_factory, name="sentinel-gateway", **({"auth": oauth} if oauth else {}))
     proxy.add_middleware(SentinelMiddleware(rt))
+    if oauth is not None:
+        from .oauth import register_consent_routes
+
+        register_consent_routes(proxy, oauth)
 
     @proxy.tool
     async def send_quote_ack(quote_id: str) -> str:

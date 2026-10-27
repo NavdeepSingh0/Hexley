@@ -56,7 +56,11 @@ def test_the_corpus_labels_are_what_they_claim():
 
 @pytest.fixture(scope="module")
 async def result(stack):
-    return await harness.run_scripted(stack)
+    r = await harness.run_scripted(stack)
+    # An errored case is excluded from the counts, which would make every number below look wrong for the wrong reason.
+    # Fail here instead, with the recorded cause, so a flaky infrastructure error is diagnosable at once.
+    assert not r["errors"], f"{len(r['errors'])} corpus cases errored; first: {r['errors'][:3]}"
+    return r
 
 
 async def test_scripted_supported_corpus_zero_through(result):

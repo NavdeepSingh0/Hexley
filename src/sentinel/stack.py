@@ -71,14 +71,22 @@ class Stack:
 
 @asynccontextmanager
 async def running_stack(api_token: str = "test-api-token", downstream_token: str = "test-downstream-secret",
-                        audit_dir: Path | None = None, **runtime_kwargs):
-    """Start tool server, gateway and API; yield a Stack; shut everything down afterwards."""
+                        audit_dir: Path | None = None, oauth: dict | bool = False, **runtime_kwargs):
+    """Start tool server, gateway and API; yield a Stack; shut everything down afterwards.
+
+    `oauth=True` (or a dict of SentinelOAuthProvider options) turns on the OAuth sign-in on the gateway, whose public
+    address is then its own local one."""
     ports = {k: free_port() for k in ("tools", "gateway", "api")}
     tools_url = f"http://127.0.0.1:{ports['tools']}/mcp"
     gateway_url = f"http://127.0.0.1:{ports['gateway']}/mcp"
     audit_dir = audit_dir or Path(tempfile.mkdtemp(prefix="sentinel-audit-"))
     rt = build_runtime(tools_url=tools_url, gateway_url=gateway_url, downstream_token=downstream_token,
                        api_token=api_token, audit_dir=audit_dir, **runtime_kwargs)
+    if oauth:
+        from .oauth import SentinelOAuthProvider
+
+        rt.oauth = SentinelOAuthProvider(rt, base_url=f"http://127.0.0.1:{ports['gateway']}",
+                                         **(oauth if isinstance(oauth, dict) else {}))
     tools, sink = build_tools_server(downstream_token)
     started = [await serve(tools.http_app(), ports["tools"]),
                await serve(build_gateway(rt).http_app(), ports["gateway"]),

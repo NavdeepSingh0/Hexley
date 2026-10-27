@@ -9,9 +9,12 @@ from __future__ import annotations
 import argparse
 import asyncio
 import os
+import re
 import secrets
+import shutil
 import subprocess
 import sys
+import time
 import webbrowser
 from pathlib import Path
 
@@ -25,6 +28,37 @@ from .runtime import build_runtime, rotate_audit_log
 async def _serve(app, port: int) -> None:
     server = uvicorn.Server(uvicorn.Config(app, host="127.0.0.1", port=port, log_level="warning"))
     await server.serve()
+
+
+CLOUDFLARED_DEFAULT = r"C:\Program Files (x86)\cloudflared\cloudflared.exe"
+
+
+def start_tunnel(gateway_port: int, binary: str | None = None, timeout: float = 40.0) -> tuple[subprocess.Popen, str]:
+    """Open a free cloudflared quick tunnel to the gateway and return (process, public https address).
+
+    The address changes on every start, so the AI client's connector must be re-added each time. Only the gateway port
+    is exposed; the API and the console stay on this machine."""
+    exe = binary or shutil.which("cloudflared") or CLOUDFLARED_DEFAULT
+    if not Path(exe).exists() and not shutil.which(exe):
+        raise SystemExit(f"cloudflared not found ({exe}). Install it with: winget install Cloudflare.cloudflared")
+    proc = subprocess.Popen([exe, "tunnel", "--url", f"http://127.0.0.1:{gateway_port}", "--no-autoupdate"],
+                            stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True)
+    deadline = time.monotonic() + timeout
+    pattern = re.compile(r"https://[a-z0-9-]+\.trycloudflare\.com")
+    while time.monotonic() < deadline:
+        line = proc.stderr.readline()
+        if not line and proc.poll() is not None:
+            break
+        m = pattern.search(line)
+        if m:
+            return proc, m.group(0)
+    proc.terminate()
+    raise SystemExit("could not read the tunnel address from cloudflared; try again or pass --public-url")
+
+
+def print_officer_code(req) -> None:
+    print(f"\n*** Sign-in request from {req.client.client_name or 'an AI client'}: OFFICER CODE {req.officer_code} "
+          f"(valid 5 minutes; type it on the consent page to approve the permission slip) ***\n", flush=True)
 
 
 async def _up(args: argparse.Namespace) -> None:
@@ -41,6 +75,16 @@ async def _up(args: argparse.Namespace) -> None:
                        gateway_url=f"http://127.0.0.1:{args.gateway_port}/mcp",
                        downstream_token=downstream, api_token=api_token,
                        audit_dir=data_dir, allow_tamper=args.demo)
+    tunnel = None
+    public_url = args.public_url
+    if args.tunnel and not public_url:
+        tunnel, public_url = start_tunnel(args.gateway_port, args.cloudflared)
+    if public_url:
+        # OAuth sign-in on the gateway's public address: the AI client signs in, the officer approves the slip here.
+        from .oauth import SentinelOAuthProvider
+
+        rt.oauth = SentinelOAuthProvider(rt, base_url=public_url, consent_base_url=args.consent_url,
+                                         preset=args.oauth_preset, slip_ttl=args.oauth_ttl, on_request=print_officer_code)
     api_app = create_api(rt)
     rt.runs.pace = args.pace  # type: ignore[union-attr]
     env = {**os.environ, "SENTINEL_DOWNSTREAM_TOKEN": downstream, "SENTINEL_TOOLS_PORT": str(args.tools_port)}
@@ -48,6 +92,8 @@ async def _up(args: argparse.Namespace) -> None:
     console_url = f"http://127.0.0.1:{args.api_port}/console/#token={api_token}"
     print(f"Sentinel up. API http://127.0.0.1:{args.api_port}  gateway {rt.gateway_url}  tools pid {tools.pid}")
     print(f"Console (the token is in the link, not on screen once it opens): {console_url}")
+    if public_url:
+        print(f"Connector URL for an AI client: {public_url.rstrip('/')}/mcp   (Sign in, then enter the officer code printed here)")
     if not args.no_browser:
         # Open it ourselves so this terminal, which shows the token, never has to be on the projector.
         asyncio.get_running_loop().call_later(1.5, webbrowser.open, console_url)
@@ -56,6 +102,8 @@ async def _up(args: argparse.Namespace) -> None:
                              _serve(api_app, args.api_port))
     finally:
         tools.terminate()
+        if tunnel is not None:
+            tunnel.terminate()
 
 
 def main(argv: list[str] | None = None) -> None:
@@ -70,6 +118,12 @@ def main(argv: list[str] | None = None) -> None:
                     help="enable the tamper endpoint and start a fresh audit log (the old one is kept aside)")
     up.add_argument("--pace", type=float, default=1.2, help="seconds between scripted or replayed steps")
     up.add_argument("--no-browser", action="store_true", help="do not open the console in a browser")
+    up.add_argument("--public-url", help="public https address of the gateway (turns on OAuth sign-in for AI clients)")
+    up.add_argument("--tunnel", action="store_true", help="open a free cloudflared tunnel to the gateway and use its address")
+    up.add_argument("--cloudflared", help="path to cloudflared (default: PATH, then the winget install location)")
+    up.add_argument("--consent-url", help="where the officer's consent page lives (default: the gateway's own address)")
+    up.add_argument("--oauth-preset", default="quotation_processing", help="slip template approved by an OAuth sign-in")
+    up.add_argument("--oauth-ttl", type=int, default=3600, help="seconds an OAuth-approved slip lasts")
     rec = sub.add_parser("record", help="run a scenario against a model several times and keep every attempt")
     rec.add_argument("--scenario", required=True)
     rec.add_argument("--model", required=True, help="model id, e.g. nvidia/nemotron-3-ultra-550b-a55b")

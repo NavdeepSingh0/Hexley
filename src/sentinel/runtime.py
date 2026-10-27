@@ -61,6 +61,7 @@ class Runtime:
     trusted_addresses: frozenset[str] = frozenset(v["email"] for v in fixtures.VENDOR_MASTER.values())
     recordings_dir: Path = Path("recordings")  # committed recorded runs (synthetic data) used for replay
     runs: object | None = None  # the RunManager, attached by create_api
+    oauth: object | None = None  # the SentinelOAuthProvider, set before build_gateway when OAuth is on (cli, stack)
     bus: EventBus = field(default_factory=lambda: EventBus(history=5000))  # a whole run stays in history
     store: SessionStore = field(default_factory=SessionStore)
     registry: Registry = field(default_factory=load_registry)
