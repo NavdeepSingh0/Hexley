@@ -19,21 +19,21 @@ Brand is a **violet** family, not Anthropic's terracotta: the orange would colli
 
 | Token | Dark | Light |
 |---|---|---|
-| `--bg` | `#08080B` | `#FFFFFF` |
-| `--panel` | `#121218` | `#F5F4FA` |
-| `--raised` | `#1B1B25` | `#ECEAF6` |
+| `--bg` | `#07070A` | `#FFFFFF` |
+| `--panel` | `#15151E` | `#F5F4FA` |
+| `--raised` | `#212130` | `#ECEAF6` |
 | `--ink` | `#FFFFFF` | `#0A0A10` |
 | `--muted` | `#A9A9BC` | `#55556B` |
 | `--line` (decorative only) | `#2A2A36` | `#D9D6EA` |
 | `--brand` (text, links, icons) | `#A98BFF` | `#6226D6` |
 | `--brand-fill` (buttons) | `#8F5BFF` with **black** text | `#6226D6` with white text |
-| `--allowed` | `#34E8A3` | `#067A4E` |
+| `--allowed` | `#34E8A3` | `#05734A` |
 | `--denied` | `#5B9BFF` | `#1857D6` |
 | `--approval` | `#FFB62E` | `#8F5200` |
 | `--harm` (only when harm reached outside) | `#FF5468` | `#C8102E` |
 | `--quarantined` | inverted: `--ink` background, `--bg` text | the same |
 
-Measured contrast (text on `--bg` / `--panel` / `--raised`), dark: ink 20.0 / 18.7 / 17.1; muted 8.7 / 8.1 / 7.4; brand 7.5 / 7.0 / 6.4; allowed 12.6 / 11.7 / 10.8; denied 7.2 / 6.7 / 6.2; approval 11.4 / 10.7 / 9.7; harm 6.4 / 6.0 / 5.5. Light: ink 19.7 / 18.1 / 16.6; muted 7.3 / 6.6 / 6.1; brand 7.6 / 6.9 / 6.4; allowed 5.4 / 4.9 / 4.5; denied 6.2 / 5.7 / 5.2; approval 6.2 / 5.7 / 5.2; harm 5.9 / 5.4 / 5.0. All at least 4.5. **Dark brand fill: black text 4.87, white text 4.11 (fails), so buttons use black text.** The existing `contrast.test.js` keeps enforcing this against the real file.
+Measured contrast (text on `--bg` / `--panel` / `--raised`, computed from `design/tokens.css`), dark: ink 20.1 / 18.1 / 15.9; muted 8.7 / 7.8 / 6.9; brand 7.5 / 6.8 / 5.9; allowed 12.7 / 11.4 / 10.0; denied 7.3 / 6.5 / 5.7; approval 11.5 / 10.3 / 9.0; harm 6.4 / 5.8 / 5.1. Light: ink 19.7 / 18.1 / 16.6; muted 7.2 / 6.6 / 6.1; brand 7.6 / 6.9 / 6.4; allowed 5.9 / 5.4 / 5.0; denied 6.2 / 5.7 / 5.2; approval 6.2 / 5.7 / 5.2; harm 5.9 / 5.4 / 4.9. All at least 4.5. **Dark brand fill: black text 5.1, white text 4.1 (fails), so buttons use black text.** `contrast.test.js` enforces all of this against the real file (also each colour on its own tinted background, and that page, panel and raised are distinguishable layers). Two values changed on first test (28 Oct): the dark surfaces were too close together (page to panel 1.07:1, now 1.11) and the light green failed on its own tint (4.3:1, now 4.7).
 
 "Shiny" means: pure black and white at full contrast, saturated accents, a soft coloured glow (`box-shadow` at about 30% of the accent, 24 px) on the single decisive element, and a 1 px top highlight on the active panel. No gradients on text, no glow on more than one element.
 
@@ -66,7 +66,7 @@ Nav (logo, How it works, Integrations, Docs, Connect, "See it work"). Home, top 
 Slim preset list on the left; a wide single message column; under each assistant message, one-line action chips (decision word and reason, expand for detail); the mascot beside the composer, never over messages; a permanent one-line disclosure ("Sentinel's own host app, model nemotron, synthetic data").
 
 ## 6. Mascot
-Revised 28 Oct 2026 after Navdeep's reference images (three white rounded robots with dark screen faces). Chosen: an original **retro-monitor robot** (glossy white body with an angled side and foot, dark screen with a faint pixel grid and two blocky eyes, a small dark badge tile whose dot shows the decision colour). It is an **animated SVG** with fluid motion, not pixel sprites. The reference's caret badge looks like a brand mark and is not used; no Supercell character is copied. Nine states (`sleeping idle checking allowed denied needs-approval quarantined verified tamper`), readable on both themes, no red on the body (tamper uses red on the screen only), quarantined inverts the body. One mascot per screen, in the top bar or beside the chat composer, driven only by real events (`docs/contracts/MASCOT.md`).
+Revised 28 Oct 2026 after Navdeep's reference images (three white rounded robots with dark screen faces). Chosen: an original **rounded screen-cube robot** (glossy white soft-cornered body with a dome highlight, dark screen with a faint pixel grid and two blocky eyes, a small dark badge tile whose dot shows the decision colour). The retro monitor was prototyped too and set aside by Navdeep in favour of the cube. It is an **animated SVG** with fluid motion, not pixel sprites. The reference's caret badge looks like a brand mark and is not used; no Supercell character is copied. Nine states (`sleeping idle checking allowed denied needs-approval quarantined verified tamper`), readable on both themes, no red on the body (tamper uses red on the screen only), quarantined inverts the body. One mascot per screen, in the top bar or beside the chat composer, driven only by real events (`docs/contracts/MASCOT.md`).
 
 ## 7. What is cut
 Browser extension, pricing polish, mobile layout beyond "no horizontal scroll", a visual regression suite. The red-team cards need a person who has not read the rules, so they are asked of a mentor or another participant at the venue and reported as "blind, n people, date".

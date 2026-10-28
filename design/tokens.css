@@ -1,75 +1,108 @@
-/* Sentinel design tokens, shared by the site (site/) and the console (console/).
-   Taken from the 404 Disruptors deck: charcoal background, white bold sans-serif, spaced capital labels,
-   hairlines, outlined boxes. Dark is the default; <html data-theme="light"> switches to the off-white theme.
-   Colour is meaning: --harm (red) only for harm that reached the outside; --denied, --approval, --quarantined
-   for Sentinel's decisions; --ok only for a verified audit log. Never hard-code a colour in a component.
-   --line is for decorative dividers only. A control's boundary (a button, an input) must use --ink or --muted, which meet the
-   3:1 contrast WCAG asks of interface components; console/src/lib/contrast.test.js checks every pairing below. */
+/* Sentinel design tokens, shared by the site (site/) and the console (console/). Palette and rules: docs/DESIGN_BRIEF.md.
+   Pure black and white at full contrast, one violet brand family, saturated decision colours. Dark is the default;
+   <html data-theme="light"> switches to the white theme.
+   Colour is meaning: --brand marks Sentinel and the primary action only; --allowed / --denied / --approval / --harm and the
+   inverted --quarantined block appear only on a real decision (--harm only for harm that reached outside). Never hard-code
+   a colour in a component. --line is for decorative dividers only: a control's boundary must use --ink or --muted, which meet
+   the 3:1 contrast WCAG asks of interface components. console/src/lib/contrast.test.js checks every pairing below from this file. */
 
 :root,
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --bg: #1f1f1e;
-  --panel: #262625;
-  --panel-2: #2d2d2b;
-  --ink: #f2f1ed;
-  --muted: #a3a29d;
-  --line: #3b3b39;
-  --line-strong: #f2f1ed;
+  --bg: #07070a;
+  --panel: #15151e;
+  --raised: #212130;
+  --ink: #ffffff;
+  --muted: #a9a9bc;
+  --line: #2a2a36;
+  --line-strong: #ffffff;
 
-  --denied: #8db8ff;
-  --denied-bg: rgba(141, 184, 255, 0.12);
-  --harm: #ff7f73;
-  --harm-bg: rgba(255, 127, 115, 0.12);
-  --approval: #f2bd55;
-  --approval-bg: rgba(242, 189, 85, 0.12);
-  --quarantined-bg: #f2f1ed;
-  --quarantined-ink: #1f1f1e;
-  --ok: #7fd6a1;
-  --ok-bg: rgba(127, 214, 161, 0.12);
-  --focus: #8db8ff;
+  --brand: #a98bff;
+  --brand-fill: #8f5bff;
+  --on-brand-fill: #000000;
+  --focus: #a98bff;
+
+  --allowed: #34e8a3;
+  --denied: #5b9bff;
+  --approval: #ffb62e;
+  --harm: #ff5468;
+  --quarantined-bg: #ffffff;
+  --quarantined-ink: #07070a;
+
+  --brand-bg: rgba(169, 139, 255, 0.14);
+  --allowed-bg: rgba(52, 232, 163, 0.12);
+  --denied-bg: rgba(91, 155, 255, 0.14);
+  --approval-bg: rgba(255, 182, 46, 0.12);
+  --harm-bg: rgba(255, 84, 104, 0.14);
+
+  /* "Shiny": a thin highlight along the top edge of the active panel, and a soft glow on the one decisive element. */
+  --highlight: inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  --glow-brand: 0 0 24px rgba(143, 91, 255, 0.4);
+  --glow-allowed: 0 0 24px rgba(52, 232, 163, 0.3);
+  --glow-denied: 0 0 24px rgba(91, 155, 255, 0.3);
+  --glow-approval: 0 0 24px rgba(255, 182, 46, 0.3);
+  --glow-harm: 0 0 24px rgba(255, 84, 104, 0.3);
 }
 
 :root[data-theme="light"] {
   color-scheme: light;
-  --bg: #f3f2ee;
-  --panel: #ffffff;
-  --panel-2: #ebeae5;
-  --ink: #161616;
-  --muted: #5c5b57;
-  --line: #d6d4cd;
-  --line-strong: #161616;
+  --bg: #ffffff;
+  --panel: #f5f4fa;
+  --raised: #eceaf6;
+  --ink: #0a0a10;
+  --muted: #55556b;
+  --line: #d9d6ea;
+  --line-strong: #0a0a10;
 
-  --denied: #1d4f91;
-  --denied-bg: rgba(29, 79, 145, 0.09);
-  --harm: #b3261e;
-  --harm-bg: rgba(179, 38, 30, 0.08);
-  --approval: #8a5a00;
-  --approval-bg: rgba(138, 90, 0, 0.1);
-  --quarantined-bg: #161616;
-  --quarantined-ink: #f3f2ee;
-  --ok: #1d6b3a;
-  --ok-bg: rgba(29, 107, 58, 0.09);
-  --focus: #1d4f91;
+  --brand: #6226d6;
+  --brand-fill: #6226d6;
+  --on-brand-fill: #ffffff;
+  --focus: #6226d6;
+
+  --allowed: #05734a;
+  --denied: #1857d6;
+  --approval: #8f5200;
+  --harm: #c8102e;
+  --quarantined-bg: #0a0a10;
+  --quarantined-ink: #ffffff;
+
+  --brand-bg: rgba(98, 38, 214, 0.1);
+  --allowed-bg: rgba(5, 115, 74, 0.1);
+  --denied-bg: rgba(24, 87, 214, 0.1);
+  --approval-bg: rgba(143, 82, 0, 0.1);
+  --harm-bg: rgba(200, 16, 46, 0.09);
+
+  --highlight: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  --glow-brand: 0 0 24px rgba(98, 38, 214, 0.28);
+  --glow-allowed: 0 0 24px rgba(5, 115, 74, 0.24);
+  --glow-denied: 0 0 24px rgba(24, 87, 214, 0.24);
+  --glow-approval: 0 0 24px rgba(143, 82, 0, 0.22);
+  --glow-harm: 0 0 24px rgba(200, 16, 46, 0.22);
 }
 
 :root {
   --font: "Helvetica Neue", Helvetica, Arial, "Liberation Sans", sans-serif;
   --mono: ui-monospace, "Cascadia Mono", Consolas, "Liberation Mono", monospace;
 
-  --size-base: 18px;
-  --size-small: 15px;
+  /* At most three text sizes and two weights on any one screen (display, body, label). */
   --size-label: 13px;
+  --size-small: 15px;
+  --size-base: 18px;
   --size-h3: 24px;
   --size-h2: 44px;
-  --size-hero: 72px;
-  --tracking-label: 0.18em;
-  --tracking-tight: -0.01em;
+  --size-display: clamp(28px, 6vw, 40px); /* console verdict words; shrinks so a long word fits a phone */
+  --size-hero: clamp(44px, 9vw, 72px);
+  --weight-regular: 400;
+  --weight-bold: 800;
+  --tracking-label: 0.14em;
+  --tracking-tight: -0.02em;
 
   --hairline: 1px solid var(--line);
   --outline: 1px solid var(--line);
-  --outline-active: 2px solid var(--line-strong);
-  --radius: 2px;
+  --outline-active: 2px solid var(--brand);
+  --radius: 12px;
+  --radius-lg: 20px;
+  --radius-pill: 999px;
 
   --gutter: 16px;
   --content-max: 1200px;
@@ -79,4 +112,14 @@
   --space-4: 24px;
   --space-5: 40px;
   --space-6: 64px;
+
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --dur: 180ms;
+}
+
+/* Old names, kept so the first console keeps working until it is restyled (phase F2). Delete in F2. */
+:root {
+  --panel-2: var(--raised);
+  --ok: var(--allowed);
+  --ok-bg: var(--allowed-bg);
 }

@@ -17,5 +17,7 @@ export function setTheme(theme) {
 }
 
 export function applySavedTheme() {
-  document.documentElement.dataset.theme = getTheme()
+  // ?theme=light|dark forces a theme for this page load without saving it (for screenshots and reviews).
+  const forced = new URLSearchParams(window.location.search).get('theme')
+  document.documentElement.dataset.theme = forced === 'light' || forced === 'dark' ? forced : getTheme()
 }

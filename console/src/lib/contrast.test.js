@@ -5,11 +5,14 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 
 const css = readFileSync(new URL('../../../design/tokens.css', import.meta.url), 'utf8')
+const primitives = readFileSync(new URL('../../../design/primitives.css', import.meta.url), 'utf8')
 
+function block(source, selector) {
+  const start = source.indexOf(selector)
+  return source.slice(source.indexOf('{', start) + 1, source.indexOf('}', start))
+}
 function themeVars(selector) {
-  const start = css.indexOf(selector)
-  const body = css.slice(css.indexOf('{', start) + 1, css.indexOf('}', start))
-  return Object.fromEntries([...body.matchAll(/--([\w-]+):\s*([^;]+);/g)].map((m) => [m[1], m[2].trim()]))
+  return Object.fromEntries([...block(css, selector).matchAll(/--([\w-]+):\s*([^;]+);/g)].map((m) => [m[1], m[2].trim()]))
 }
 
 const parse = (v) => {
@@ -33,32 +36,60 @@ const ratio = (a, b) => {
 describe.each([['dark', ':root[data-theme="dark"]'], ['light', ':root[data-theme="light"]']])('%s theme tokens', (_name, selector) => {
   const t = themeVars(selector)
   const col = (k) => parse(t[k])
-  const bg = col('bg')
-  const panel = col('panel')
-  const tint = (k) => over(col(k), panel)
+  const surfaces = { bg: col('bg'), panel: col('panel'), raised: col('raised') }
 
-  const TEXT = [
-    ['ink', bg], ['ink', panel], ['muted', bg], ['muted', panel],
-    ['denied', tint('denied-bg')], ['harm', tint('harm-bg')], ['approval', tint('approval-bg')], ['ok', tint('ok-bg')],
-    ['denied', panel], ['harm', panel], ['approval', panel], ['ok', panel],
-    ['quarantined-ink', col('quarantined-bg')],
-  ]
-  it.each(TEXT.map(([fg, back], i) => [fg, i]))('text colour %s is readable on its background (4.5:1)', (fg, i) => {
-    expect(ratio(col(fg), TEXT[i][1]), `${fg} on background #${i}`).toBeGreaterThanOrEqual(4.5)
+  // Every text colour, on every surface it can sit on.
+  const TEXT_COLOURS = ['ink', 'muted', 'brand', 'allowed', 'denied', 'approval', 'harm']
+  const TEXT = TEXT_COLOURS.flatMap((fg) => Object.keys(surfaces).map((s) => [fg, s]))
+  it.each(TEXT)('text colour %s is readable on %s (4.5:1)', (fg, s) => {
+    expect(ratio(col(fg), surfaces[s])).toBeGreaterThanOrEqual(4.5)
+  })
+
+  it.each(['brand', 'allowed', 'denied', 'approval', 'harm'])('%s text is readable on its own tinted background (4.5:1)', (k) => {
+    const tint = over(col(`${k}-bg`), surfaces.panel)
+    expect(ratio(col(k), tint)).toBeGreaterThanOrEqual(4.5)
+  })
+
+  it('primary button text is readable on the brand fill (4.5:1); white on the dark fill would not be', () => {
+    expect(ratio(col('on-brand-fill'), col('brand-fill'))).toBeGreaterThanOrEqual(4.5)
+  })
+
+  it('quarantined text is readable on the inverted block (4.5:1)', () => {
+    expect(ratio(col('quarantined-ink'), col('quarantined-bg'))).toBeGreaterThanOrEqual(4.5)
   })
 
   it('a control boundary (ink or muted) and the focus ring are visible against every surface (3:1)', () => {
     for (const k of ['ink', 'muted', 'focus']) {
-      for (const surface of [bg, panel]) expect(ratio(col(k), surface), k).toBeGreaterThanOrEqual(3)
+      for (const [name, surface] of Object.entries(surfaces)) expect(ratio(col(k), surface), `${k} on ${name}`).toBeGreaterThanOrEqual(3)
     }
   })
 
   it('the hairline colour is decorative only: it must not be relied on as a control boundary', () => {
     // documented in tokens.css; this records the fact so a future change cannot silently start using it for controls
-    expect(ratio(col('line'), bg)).toBeLessThan(3)
+    expect(ratio(col('line'), surfaces.bg)).toBeLessThan(3)
   })
 
   it('the quarantined block is a true inversion of the page (maximum separation from it)', () => {
-    expect(ratio(col('quarantined-bg'), bg)).toBeGreaterThanOrEqual(7)
+    expect(ratio(col('quarantined-bg'), surfaces.bg)).toBeGreaterThanOrEqual(7)
+  })
+
+  it('page, panel and raised surfaces are distinguishable layers (the first version looked flat)', () => {
+    expect(ratio(surfaces.bg, surfaces.panel)).toBeGreaterThanOrEqual(1.08)
+    expect(ratio(surfaces.panel, surfaces.raised)).toBeGreaterThanOrEqual(1.05)
+  })
+})
+
+describe('token coverage', () => {
+  it('every token used by the shared primitives is defined in both themes (or is a per-element variable set in primitives.css)', () => {
+    const used = new Set([...primitives.matchAll(/var\(--([\w-]+)/g)].map((m) => m[1]))
+    const setLocally = new Set([...primitives.matchAll(/(?:^|[;{\s])--([\w-]+):/g)].map((m) => m[1]))
+    const dark = themeVars(':root[data-theme="dark"]')
+    const light = themeVars(':root[data-theme="light"]')
+    const shared = Object.fromEntries([...block(css, ':root {\n  --font').matchAll(/--([\w-]+):/g)].map((m) => [m[1], true]))
+    for (const name of used) {
+      if (setLocally.has(name)) continue
+      const defined = (dark[name] && light[name]) || shared[name]
+      expect(defined, `--${name} is used in primitives.css but not defined in both themes`).toBeTruthy()
+    }
   })
 })

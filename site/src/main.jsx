@@ -5,6 +5,7 @@ import App from './App.jsx'
 import { initAuth } from './api/client.js'
 import { applySavedTheme } from './theme.js'
 import '../../design/tokens.css'
+import '../../design/primitives.css'
 import './styles/base.css'
 
 applySavedTheme()

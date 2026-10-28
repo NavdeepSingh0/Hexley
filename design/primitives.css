@@ -1,0 +1,115 @@
+/* Shared UI primitives for the site and the console (phase F0). Plain CSS on the tokens in tokens.css, no framework, so both
+   apps and a plain HTML page can use them. Every class is prefixed s- so it cannot collide with an app's own classes.
+   Rules (docs/DESIGN_BRIEF.md): space before borders; colour only on a real decision; glow on at most one element per screen. */
+
+.s-label {
+  margin: 0;
+  font-size: var(--size-label);
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* Buttons. The primary one is the single violet element of a screen: black text on the dark fill (white fails 4.5:1). */
+.s-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  padding: 0 var(--space-4);
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: var(--size-base);
+  font-weight: var(--weight-bold);
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease), background var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+.s-btn:hover { transform: translateY(-1px); }
+.s-btn:active { transform: translateY(0) scale(0.98); }
+.s-btn:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
+.s-btn[disabled], .s-btn[aria-disabled="true"] { opacity: 0.45; cursor: not-allowed; transform: none; }
+
+.s-btn--primary { background: var(--brand-fill); color: var(--on-brand-fill); box-shadow: var(--highlight); }
+.s-btn--primary:hover { box-shadow: var(--highlight), var(--glow-brand); }
+.s-btn--ghost { border-color: var(--muted); }
+.s-btn--ghost:hover { border-color: var(--ink); background: var(--raised); }
+.s-btn--small { min-height: 36px; padding: 0 var(--space-3); font-size: var(--size-small); }
+
+/* Panels. Quiet by default; the active one gets the top highlight and a brand outline. */
+.s-panel {
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--panel);
+}
+.s-panel--raised { background: var(--raised); }
+.s-panel.is-active { box-shadow: var(--highlight); outline: var(--outline-active); outline-offset: -2px; }
+
+/* One big verdict word per lane. Glow only where .s-glow is added (one element per screen). */
+.s-verdict {
+  margin: 0;
+  font-size: var(--size-display);
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-tight);
+  line-height: 1.05;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+.s-verdict--allowed { color: var(--allowed); --glow: var(--glow-allowed); }
+.s-verdict--denied { color: var(--denied); --glow: var(--glow-denied); }
+.s-verdict--approval { color: var(--approval); --glow: var(--glow-approval); }
+.s-verdict--harm { color: var(--harm); --glow: var(--glow-harm); }
+.s-verdict--quarantined {
+  display: inline-block;
+  padding: 0.1em 0.35em;
+  border-radius: var(--radius);
+  background: var(--quarantined-bg);
+  color: var(--quarantined-ink);
+  --glow: none;
+}
+.s-glow { text-shadow: none; box-shadow: var(--glow, none); border-radius: var(--radius); }
+.s-glow--brand { --glow: var(--glow-brand); }
+.s-glow--allowed { --glow: var(--glow-allowed); }
+.s-glow--denied { --glow: var(--glow-denied); }
+.s-glow--approval { --glow: var(--glow-approval); }
+.s-glow--harm { --glow: var(--glow-harm); }
+.s-verdict.s-glow { text-shadow: 0 0 22px color-mix(in srgb, currentColor 45%, transparent); box-shadow: none; }
+
+/* Status badge for integrations: how far we have actually tested a client. Brand for tested, quiet for the rest. */
+.s-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border: 1px solid var(--muted);
+  border-radius: var(--radius-pill);
+  font-size: var(--size-label);
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.s-badge--tested { border-color: var(--brand); background: var(--brand-bg); color: var(--brand); }
+.s-badge--planned { border-style: dashed; }
+
+/* A keyboard key, for the presenter shortcuts. */
+.s-kbd {
+  display: inline-block;
+  min-width: 1.8em;
+  padding: 2px 8px;
+  border: 1px solid var(--muted);
+  border-bottom-width: 2px;
+  border-radius: 6px;
+  font-family: var(--mono);
+  font-size: var(--size-small);
+  text-align: center;
+  color: var(--ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .s-btn { transition: none; }
+  .s-btn:hover, .s-btn:active { transform: none; }
+}

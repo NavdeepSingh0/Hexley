@@ -14,3 +14,16 @@ a { color: inherit; }
 .ghost { background: none; color: var(--ink); border: var(--outline); border-radius: var(--radius); padding: 6px 14px; font: inherit; cursor: pointer; }
 .placeholder { max-width: var(--content-max); margin: 0 auto; padding: var(--space-6) var(--gutter); }
 .placeholder h1 { font-size: var(--size-hero); letter-spacing: var(--tracking-tight); margin: var(--space-3) 0; }
+
+/* Styleguide page (dev only, phase F0) */
+.sg { max-width: var(--content-max); margin: 0 auto; padding: var(--space-5) var(--gutter) var(--space-6); }
+.sg-title { font-size: var(--size-hero); letter-spacing: var(--tracking-tight); margin: var(--space-2) 0; }
+.sg-lede { color: var(--muted); margin: 0 0 var(--space-4); }
+.sg-body { margin: var(--space-2) 0 0; }
+.sg-section { margin-top: var(--space-5); }
+.sg-section > .s-label { margin-bottom: var(--space-3); }
+.sg-row { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: stretch; }
+.sg-swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: var(--space-3); }
+.sg-swatch { display: flex; flex-direction: column; gap: 4px; font-size: var(--size-small); }
+.sg-swatch code { color: var(--muted); font-family: var(--mono); font-size: var(--size-label); }
+.sg-chip { height: 56px; border-radius: var(--radius); border: 1px solid var(--muted); }
