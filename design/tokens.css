@@ -2,7 +2,9 @@
    Taken from the 404 Disruptors deck: charcoal background, white bold sans-serif, spaced capital labels,
    hairlines, outlined boxes. Dark is the default; <html data-theme="light"> switches to the off-white theme.
    Colour is meaning: --harm (red) only for harm that reached the outside; --denied, --approval, --quarantined
-   for Sentinel's decisions; --ok only for a verified audit log. Never hard-code a colour in a component. */
+   for Sentinel's decisions; --ok only for a verified audit log. Never hard-code a colour in a component.
+   --line is for decorative dividers only. A control's boundary (a button, an input) must use --ink or --muted, which meet the
+   3:1 contrast WCAG asks of interface components; console/src/lib/contrast.test.js checks every pairing below. */
 
 :root,
 :root[data-theme="dark"] {

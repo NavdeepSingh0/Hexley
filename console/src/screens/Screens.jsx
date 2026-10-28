@@ -83,6 +83,8 @@ export function SlipScreen({ view, onConfirm, busy, error }) {
               <dd>{c.allowed_tools.map((t) => TOOL_ALLOWS[t] ?? t).join(' · ')}</dd>
               <dt>May write to</dt>
               <dd>{(c.allowed_recipient_domains || []).join(', ') || 'nobody'}</dd>
+              <dt>Restricted data may go to</dt>
+              <dd>{(c.internal_destinations || []).join(', ') || 'nowhere outside'}</dd>
               {c.resolved_vendor ? (<><dt>Vendor on file</dt><dd>{c.resolved_vendor.name} · {c.resolved_vendor.email}</dd></>) : null}
               <dt>Message limit</dt>
               <dd>{c.max_messages}</dd>

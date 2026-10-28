@@ -17,8 +17,8 @@ TOP_KEYS = {"run_id", "scenario", "source", "status", "disclosure", "model", "of
 LANE_KEYS = {"lane_id", "column", "title", "mode", "badge", "session_id", "status", "outcome", "leaked",
              "session_status", "blocks", "steps", "freeze", "approvals", "contract", "task", "final_text", "error",
              "diverged", "inbox"}
-CONTRACT_KEYS = {"objective", "allowed_tools", "allowed_recipient_domains", "work_item_id", "resolved_vendor", "mode",
-                 "max_messages", "contract_hash", "egress_template"}
+CONTRACT_KEYS = {"objective", "allowed_tools", "allowed_recipient_domains", "internal_destinations", "work_item_id",
+                 "resolved_vendor", "mode", "max_messages", "contract_hash", "egress_template"}
 STEP_KEYS = {"action_id", "tool", "args", "ts", "effect", "rule_ids", "reason_code", "summary", "evidence",
              "latency_ms", "held", "approval", "completed", "rendered"}
 INBOX_KEYS = {"session_id", "to", "subject", "body", "ts", "column", "oracle_leak"}

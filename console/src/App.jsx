@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   cancelRun, confirmRun, createRun, getRecordings, initAuth, listRuns, tamperAudit, verifyAudit,
 } from './api.js'
-import { pickDefaultRecording, presenterNext } from './lib/derive.js'
+import { mascotFor, pickDefaultRecording, presenterNext } from './lib/derive.js'
 import { useRun } from './hooks/useRun.js'
 import { AuditBar, TopBar } from './chrome/Chrome.jsx'
 import { SlipScreen, StartScreen } from './screens/Screens.jsx'
@@ -74,7 +74,15 @@ export default function App() {
     else { setRunId(null); setReceipts(true) }
   }, [plIndex, createFromPlaylist])
 
-  const doVerify = useCallback(() => guard(async () => setVerify(await verifyAudit())), [guard])
+  const [verifiedFlash, setVerifiedFlash] = useState(false) // the mascot shows "verified" for three seconds
+  const doVerify = useCallback(() => guard(async () => {
+    const v = await verifyAudit()
+    setVerify(v)
+    if (v.ok) {
+      setVerifiedFlash(true)
+      setTimeout(() => setVerifiedFlash(false), 3000)
+    }
+  }), [guard])
   const doTamper = useCallback(() => guard(async () => { await tamperAudit(); setVerify(await verifyAudit()) }), [guard])
 
   const screen = !runId ? 'start' : view?.status === 'awaiting_confirmation' ? 'slip' : view ? 'stage' : 'loading'
@@ -118,7 +126,8 @@ export default function App() {
 
   return (
     <div className="app">
-      <TopBar view={view} lost={lost} />
+      <TopBar view={view} lost={lost}
+        mascot={verifiedFlash && verify?.ok ? { state: 'verified', message: 'Audit log intact.' } : mascotFor(view, verify)} />
       <main className="main">
         {screen === 'start' && !receipts ? (
           <StartScreen onCreate={create} error={error} busy={busy} playlist={PLAYLIST} />
@@ -139,7 +148,7 @@ export default function App() {
       {screen === 'stage' && view?.status === 'finished' && !verdictOpen ? (
         <div className="nextbar">
           <button className="btn" onClick={() => { setRunId(null); setReceipts(false) }}>Back to scenarios</button>
-          {hasVerdict ? <button className="btn btn-primary" onClick={() => setVerdictOpen(true)}>Why was it stopped? (Enter)</button> : null}
+          {hasVerdict ? <button className="btn btn-primary" onClick={() => setVerdictOpen(true)}>Why was it denied? (Enter)</button> : null}
           <button className="btn" onClick={advance}>{plIndex < PLAYLIST.length ? 'Next in the guided demo (N)' : 'Show the receipts (N)'}</button>
         </div>
       ) : null}

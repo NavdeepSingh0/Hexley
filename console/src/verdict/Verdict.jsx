@@ -1,4 +1,4 @@
-import { TOOL_LABEL, RULE_LABEL, chainLinks, firstBlockedStep, highlightTokens } from '../lib/derive.js'
+import { DECISION_WORD, TOOL_LABEL, RULE_LABEL, chainLinks, firstBlockedStep, highlightTokens } from '../lib/derive.js'
 
 export function verdictFor(view) {
   for (const lane of view.lanes) {
@@ -35,10 +35,10 @@ export default function Verdict({ view, onClose }) {
   const { segments, unlocated } = highlightTokens(String(message), tokens)
   const frozen = step.effect === 'FREEZE'
   return (
-    <div className="verdict" role="dialog" aria-label="Why Sentinel stopped it">
-      <div className="verdict-card">
+    <div className="verdict" role="dialog" aria-label="Why Sentinel denied it">
+      <div className={`verdict-card ${frozen ? 'verdict-card-quarantined' : ''}`}>
         <div className="verdict-top">
-          <div className="verdict-kicker">{frozen ? 'FROZEN' : 'STOPPED'} · {(step.rule_ids || []).join(' + ')} · {lane.title}</div>
+          <div className="verdict-kicker">{DECISION_WORD[step.effect] ?? 'DENIED'} · {(step.rule_ids || []).join(' + ')} · {lane.title}</div>
           <button className="btn btn-primary" onClick={onClose}>Continue (Enter)</button>
         </div>
         <h2 className="verdict-title">{(step.rule_ids || []).map((r) => RULE_LABEL[r] ?? r).join(' · ')}</h2>

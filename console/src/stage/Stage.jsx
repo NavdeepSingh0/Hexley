@@ -60,7 +60,7 @@ function ApprovalCard({ approval, onDecided }) {
   }
   return (
     <div className="approval">
-      <div className="approval-title">Officer approval needed</div>
+      <div className="approval-title">NEEDS APPROVAL: the officer decides</div>
       <div className="approval-body">
         Change <b>{approval.args.vendor}</b>’s bank account to <b>{approval.args.account_number}</b>?
         <span className="approval-note"> Runs only if you approve this exact request.</span>
@@ -136,7 +136,7 @@ function Lane({ lane, view, tokens, refresh }) {
   // The paraphrase the value matcher cannot see: shown plainly, it is the declared gap that hardened mode closes (D-028/D-029).
   const paraphraseNote = view.scenario.id === 'hardened' && lane.mode === 'fingerprint' && (lane.inbox || []).length > 0
   return (
-    <section className={`lane lane-${lane.column} ${lane.freeze ? 'lane-frozen' : ''}`}>
+    <section className={`lane lane-${lane.column} ${lane.freeze ? 'lane-quarantined' : ''}`}>
       <header className="lane-head">
         <div className="lane-title">{lane.title}</div>
         {lane.badge ? <div className="badge">{lane.badge}</div> : null}
@@ -146,7 +146,7 @@ function Lane({ lane, view, tokens, refresh }) {
       <div className="lane-counts">
         {lane.column === 'r1_only' && counts.calls && counts.allowed === counts.calls
           ? `${calls} · all allowed by access control`
-          : `${calls} · ${counts.allowed} allowed · ${counts.stopped} stopped${counts.frozen ? ` · ${counts.frozen} froze the agent` : ''}`}
+          : `${calls} · ${counts.allowed} allowed · ${counts.denied} denied${counts.quarantined ? ` · ${counts.quarantined} quarantined the agent` : ''}`}
       </div>
       {lane.freeze ? <div className="lane-counts">Permission slip revoked: this agent can do nothing more.</div> : null}
       {paraphraseNote ? (

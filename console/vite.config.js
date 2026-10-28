@@ -12,6 +12,7 @@ export default defineConfig({
   server: {
     port: 5173,
     strictPort: true,
+    fs: { allow: ['..'] }, // design/tokens.css lives one level up and is shared with the website
     proxy: Object.fromEntries(apiPaths.map((p) => [p, { target: API, changeOrigin: true }])),
   },
   test: { environment: 'node', include: ['src/**/*.test.js'] },

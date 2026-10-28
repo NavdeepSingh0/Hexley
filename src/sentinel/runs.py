@@ -517,8 +517,8 @@ class RunManager:
                 "steps": build_steps(events), "freeze": freeze,
                 "approvals": [a.card() for a in self.rt.approvals.pending() if a.session_id == lane.session_id],
                 "contract": {**{k: c[k] for k in ("objective", "allowed_tools", "allowed_recipient_domains",
-                                                  "work_item_id", "resolved_vendor", "mode", "max_messages",
-                                                  "contract_hash")},
+                                                  "internal_destinations", "work_item_id", "resolved_vendor", "mode",
+                                                  "max_messages", "contract_hash")},
                              # the fixed message a hardened agent can cause to be sent (None for free-text slips)
                              "egress_template": ({"subject": c["egress_templates"][0]["subject"],
                                                   "body": c["egress_templates"][0]["body"]}
