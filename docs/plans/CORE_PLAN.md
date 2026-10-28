@@ -49,7 +49,7 @@ The core works on one measured scenario (poisoned quotation → e-mail): gateway
 - **(d) Tool onboarding:** `config/upstreams.yaml` (several upstream MCP servers behind one gateway); unknown tools keep the conservative default (`registry.py`); `GET /api/v1/tools`, `POST /api/v1/tools/{name}/classify` (officer) → `data/registry.local.yaml` overlay merged by `load_registry`.
 - **(e) Slip builder:** `POST /api/v1/slips` (objective, tools, destinations, data classes, budgets, TTL) validated against the registry; existing templates become presets.
 - **Tests:** `test_r7_taint.py`, `test_matcher_generic.py`, `test_onboarding.py`, `test_slip_builder.py`; mutation entries for R7 and the destination check.
-- **QA:** all tests green; `python -m sentinel eval --agent scripted` still shows 0/31 through and 0 false blocks.
+- **QA:** all tests green; `python -m sentinel eval --agent scripted` still shows 0 through and 0 false blocks.
 
 ### B3. Tool families and general scenarios (Wed 28 → Thu 29)
 - **Mock, synthetic, sandboxed** (`tools/server.py`, `fixtures.py`): `list_documents`, `read_document(path)` (real PDFs in a sandbox folder, text via `pypdf`), `write_file`, `fetch_url` (local mock web pages, one poisoned), `http_post` (outbound sink, recorded like mail), `query_db` (in-memory SQLite: customers and salaries, confidential), `run_command` (approval-only, never executes anything). Registry entries for each.
@@ -83,4 +83,4 @@ The core works on one measured scenario (poisoned quotation → e-mail): gateway
 - **QA:** a full rehearsal without intervention; the fallback video plays offline.
 
 ## Verification (whole system)
-`python -m uv run pytest`; `npm --prefix console run test`; `npm --prefix site run build`; `python -m sentinel eval --agent scripted` (0/31 through, 0 false blocks); red-team result file; fresh clone on unused ports; real-client screenshots; three rehearsals.
+`python -m uv run pytest`; `npm --prefix console run test`; `npm --prefix site run build`; `python -m sentinel eval --agent scripted` (0 through, 0 false blocks); red-team result file; fresh clone on unused ports; real-client screenshots; three rehearsals.

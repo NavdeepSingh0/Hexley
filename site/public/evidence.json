@@ -1,24 +1,24 @@
 [
   {
-    "label": "Disguised leaks that got past Sentinel (scripted corpus)",
-    "value": "0 of 31",
-    "n": 31,
+    "label": "Attempts to get secrets out that got past Sentinel (scripted corpus)",
+    "value": "0 of 41",
+    "n": 41,
     "ci95": [
       0.0,
-      0.11
+      0.086
     ],
-    "source_file": "eval/results/scripted-20261026T185710.json",
-    "caveat": "Cases were written from the matcher's own documented list: this shows it does what we say, not that no other disguise exists."
+    "source_file": "eval/results/scripted-20261028T053039.json",
+    "caveat": "Cases were written by us from the matcher's documented list and the routes we built: this shows it does what we say, not that no other route exists. Our own mock tools."
   },
   {
     "label": "The same cases with no protection",
-    "value": "31 of 31",
-    "n": 31,
+    "value": "41 of 41",
+    "n": 41,
     "ci95": [
-      0.89,
+      0.914,
       1.0
     ],
-    "source_file": "eval/results/scripted-20261026T185710.json",
+    "source_file": "eval/results/scripted-20261028T053039.json",
     "caveat": "Scripted attacker, mock tools, synthetic data."
   },
   {

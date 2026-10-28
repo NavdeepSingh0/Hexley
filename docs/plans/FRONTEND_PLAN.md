@@ -32,7 +32,7 @@ This plan is everything you need to build Sentinel's website, chat page, mascot 
 | Officer approval for risky actions (e.g. changing a vendor's bank account) | Built |
 | Hardened mode (agent can only trigger one fixed message) | Built |
 | Three-column demo console (`/console/`) | Built, minimum look (we restyle it to the deck look) |
-| Evaluation: 31 disguised leaks, 0 got through Sentinel, 31 of 31 got through without it | Measured, `eval/results/` |
+| Evaluation: 41 attempts to get secrets out, 0 got through Sentinel, 41 of 41 got through without it | Measured, `eval/results/` (the site reads the numbers from `evidence.json`; never type them) |
 | Real AI model (NVIDIA nemotron): leaked 13 of 13 usable runs unprotected, 0 of 9 behind Sentinel | Measured, small sample |
 | **Real Claude.ai connected to Sentinel**: a send containing secret stock figures was denied and Claude told the user why | Done 27 Oct, one run (`docs/brief/real-claude-blocked-by-sentinel.png`) |
 

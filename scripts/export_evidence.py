@@ -38,9 +38,9 @@ def main() -> None:
     un = fe["unprotected"]["through_rate"]
     pu, ps = delivered["poisoned/unprotected"], delivered["poisoned/sentinel"]
     evidence = [
-        stat("Disguised leaks that got past Sentinel (scripted corpus)", sc["k"], sc["n"], sc["ci95"], scripted_path,
-             "Cases were written from the matcher's own documented list: this shows it does what we say, "
-             "not that no other disguise exists."),
+        stat("Attempts to get secrets out that got past Sentinel (scripted corpus)", sc["k"], sc["n"], sc["ci95"], scripted_path,
+             "Cases were written by us from the matcher's documented list and the routes we built: this shows it does what "
+             "we say, not that no other route exists. Our own mock tools."),
         stat("The same cases with no protection", un["k"], un["n"], un["ci95"], scripted_path,
              "Scripted attacker, mock tools, synthetic data."),
         stat("Real model, poisoned quotation: lanes that leaked with no protection", pu["k"], pu["n"], pu["ci95"],
