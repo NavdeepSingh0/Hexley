@@ -21,13 +21,18 @@ The art and the widget are the team's (frontend plan, phase A6). **When** the ma
 
 Rules: no network requests except its own sprite files; `prefers-reduced-motion: reduce` shows the first frame only; works in plain HTML with no build step.
 
-## Sprites
-`site/public/mascot/<state>.png`: frames left to right, each **32×32 px**, transparent background, crisp edges, no anti-aliasing. `site/public/mascot/mascot.json`:
-```json
-{"idle": {"file": "idle.png", "frames": 4, "fps": 4, "loop": true},
- "denied": {"file": "denied.png", "frames": 3, "fps": 6, "loop": false}}
-```
-Character: an original pixel sentry or gatekeeper; mostly off-white and greys with a dark outline; no red on the body; not Claude's mascot, not a Minecraft character, no logos.
+## Art (revised 28 Oct 2026: vector, not pixel sprites)
+The mascot is an inline **SVG drawn and animated by the component itself** (CSS keyframes), so motion is fluid (squash and stretch, blinking, eye scanning, shake) and it is crisp at any `size`. There are no sprite sheets, no `mascot.json` and no image files; the `sprites` attribute and `image-rendering: pixelated` above no longer apply, and `size` may be any pixel value (default 64).
+
+Character (agreed with Navdeep): an original retro-monitor robot. Glossy white body with an angled side and a foot, a dark screen with a faint pixel grid and two blocky eyes, a small dark badge tile whose dot takes the decision colour, a slot and a light on the chin. Inspired by the proportions and mood of Navdeep's reference images; **not** copied (no caret badge or other brand mark), not a Supercell character, not Claude's mascot.
+
+Rules for the art:
+- The screen is always dark, so face colours are fixed bright values (white, violet, green, blue, amber) in both page themes; only the body and the shadow follow the theme.
+- No red on the body. The tamper state may use the `--harm` red on the screen only.
+- Quarantined inverts the body (black body, white screen) so it reads as a different object, not just a colour change.
+- A state only changes the face, the badge dot and a small motion; the body shape never changes between states.
+- `prefers-reduced-motion: reduce` stops all animation (static frame).
+- Prototype: scratch file `mascot_proto/index.html`, reviewed in both themes on 28 Oct 2026.
 
 ## Event → state (owned by the backend)
 | Real event | State | Holds |
