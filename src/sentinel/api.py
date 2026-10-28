@@ -21,6 +21,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.websockets import WebSocketClose
 
 from .approvals import ApprovalError
+from .chat import ChatError, ChatManager
 from .audit import AuditError
 from .confirm import ConfirmError, confirm_draft
 from .connect import connect_view, issue_header_token
@@ -97,6 +98,17 @@ class OAuthDecision(BaseModel):
     officer_code: str = ""
 
 
+class ChatRequest(BaseModel):
+    preset: str
+    mode: Literal["auto", "live", "scripted", "replay"] = "auto"  # auto: a live model when a key is set, else a scripted agent
+    recording: dict | None = None  # for mode=replay: an export of an earlier chat (GET /api/v1/chat/{id}/recording)
+    officer: str = "Col. R. Menon"
+
+
+class ChatMessageRequest(BaseModel):
+    text: str
+
+
 class RunRequest(BaseModel):
     scenario: str
     source: Literal["live", "replay", "scripted"] = "scripted"
@@ -168,6 +180,8 @@ def create_api(rt: Runtime, console_dir: Path | None = None, site_dir: Path | No
 
     runs = RunManager(rt)
     rt.runs = runs
+    chats = ChatManager(rt)
+    rt.chats = chats
 
     def run_errors(fn):
         @functools.wraps(fn)  # keeps the signature, so FastAPI still reads the parameters from it
@@ -341,6 +355,52 @@ def create_api(rt: Runtime, console_dir: Path | None = None, site_dir: Path | No
             raise HTTPException(status_code=422, detail=str(e)) from e
         except ConfirmError as e:
             raise HTTPException(status_code=e.status, detail=e.detail) from e
+
+
+    # ---- Sentinel Chat (core plan B5; docs/contracts/API.md) -----------------------------------------------------------
+    def chat_error(e: ChatError) -> HTTPException:
+        return HTTPException(status_code=e.status, detail=e.detail)
+
+    @app.get("/api/v1/chat/presets", dependencies=[Depends(require_token)])
+    async def chat_presets():
+        return chats.presets()
+
+    @app.post("/api/v1/chat", status_code=201, dependencies=[Depends(require_token)])
+    async def chat_create(req: ChatRequest):
+        try:
+            chat = await chats.create(req.preset, req.mode, req.recording, req.officer)
+            return chats.view(chat.chat_id)
+        except ChatError as e:
+            raise chat_error(e) from e
+
+    @app.post("/api/v1/chat/{chat_id}/confirm", dependencies=[Depends(require_token)])
+    async def chat_confirm(chat_id: str):
+        try:
+            await chats.confirm(chat_id)
+            return chats.view(chat_id)
+        except ChatError as e:
+            raise chat_error(e) from e
+
+    @app.post("/api/v1/chat/{chat_id}/messages", status_code=202, dependencies=[Depends(require_token)])
+    async def chat_send(chat_id: str, req: ChatMessageRequest):
+        try:
+            return {"message_id": await chats.send(chat_id, req.text)}
+        except ChatError as e:
+            raise chat_error(e) from e
+
+    @app.get("/api/v1/chat/{chat_id}", dependencies=[Depends(require_token)])
+    async def chat_view(chat_id: str):
+        try:
+            return chats.view(chat_id)
+        except ChatError as e:
+            raise chat_error(e) from e
+
+    @app.get("/api/v1/chat/{chat_id}/recording", dependencies=[Depends(require_token)])
+    async def chat_recording(chat_id: str):
+        try:
+            return chats.recording(chat_id)
+        except ChatError as e:
+            raise chat_error(e) from e
 
     # ---- tool onboarding: nothing new runs until the officer has classified it (core plan B2) -------------------------
     async def upstream_tools():

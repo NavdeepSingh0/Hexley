@@ -42,7 +42,8 @@ The site calls these through `site/src/api/client.js`. Until a backend phase lan
 
 ## Sentinel Chat (core phase B5)
 - `GET /api/v1/chat/presets` → `[{"id": "quotation", "title": "Process a vendor quotation", "prompt": "…", "description": "…"}]`
-- `POST /api/v1/chat` body `{"preset": "quotation"}` → **ChatView** (status `awaiting_confirmation`)
+- `POST /api/v1/chat` body `{"preset": "quotation", "mode": "auto"}` → **ChatView** (status `awaiting_confirmation`), `201`. `mode` is optional: `auto` (default: a live model when an NVIDIA key is configured, otherwise a scripted agent), `live` (`400` with a plain message if no key), `scripted` (a fixed sequence of calls for the preset's attack, no model) or `replay` (the model replies of an earlier real chat, returned in order; Sentinel's decisions are still computed live). For `replay` the body may carry `"recording": {...}` (the export below); without it the newest committed `recordings/chat/<preset>-*.json` is used (`404` if there is none). `officer` is optional (default "Col. R. Menon"). Presets: `quotation`, `own-pdf`, `poisoned-web`, `bank-change`.
+- `GET /api/v1/chat/{id}/recording` → `{"schema": "sentinel.chat-recording/1", "model", "preset", "recorded_at", "messages": [the model's own messages]}`: an export that can be committed under `recordings/chat/` or posted back with `mode: replay`.
 - `POST /api/v1/chat/{id}/confirm` → **ChatView** (status `ready`)
 - `POST /api/v1/chat/{id}/messages` body `{"text": "…"}` → `202 {"message_id": "msg_…"}`
 - `GET /api/v1/chat/{id}` → **ChatView**. Poll every 700 ms while `thinking` or `model_busy`, otherwise every 2.5 s.
@@ -67,7 +68,7 @@ The site calls these through `site/src/api/client.js`. Until a backend phase lan
   "retry": null
 }
 ```
-`retry` is `{"attempt": 2, "waiting_s": 8}` while `status` is `model_busy`. `role` ∈ `user | assistant | system`.
+`retry` is `{"attempt": 2, "waiting_s": 8}` while `status` is `model_busy` (the model client is waiting on a rate limit, a resting key or a backoff). `role` ∈ `user | assistant | system` (a `system` message is the host saying the model could not be reached; it has no actions). The view also carries `mode` (`live | scripted | replay`) and `preset`. Everything on it is built from gateway events: each action's `decision`, `rules` and `reason` are the gateway's own `decision` event (the host adds no words), the `mascot` is a pure function of the session's events (the table in `MASCOT.md`; while the model is waiting it is `idle` with "The model is busy; trying again."), and `status` is `quarantined` once the session is frozen and `ended` once the slip has expired. Errors: `404` unknown preset or chat, `409` message before the officer confirmed the slip, while an answer is being written, or after quarantine, `410` slip expired, `422` empty or over-long text (2000 characters), `429` more than 30 messages in one chat. All chat routes need the officer token. A held action (`NEEDS_APPROVAL`) carries its `approval_id`; the chat waits until the officer resolves it with `POST /approvals/{id}`.
 
 ## Tools and slips for any task (core phase B2, built)
 All of these need the API token (officer actions).
