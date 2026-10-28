@@ -65,6 +65,7 @@ class Runtime:
     bus: EventBus = field(default_factory=lambda: EventBus(history=5000))  # a whole run stays in history
     store: SessionStore = field(default_factory=SessionStore)
     registry: Registry = field(default_factory=load_registry)
+    registry_overlay: Path | None = None  # where officer-classified tools are saved (next to the audit log)
     templates: dict = field(default_factory=load_templates)
     drafts: dict[str, TaskContract] = field(default_factory=dict)
 
@@ -76,6 +77,7 @@ def build_runtime(*, tools_url: str, gateway_url: str, downstream_token: str, ap
     if not downstream_token or not api_token:
         raise ValueError("both the downstream token and the API token are required")
     audit = AuditLog(Path(audit_dir) / "audit.jsonl", load_or_create_audit_key(Path(audit_dir)), deadline=audit_deadline)
+    overlay = Path(audit_dir) / "registry.local.yaml"
     return Runtime(key=key or Ed25519PrivateKey.generate(), tools_url=tools_url, gateway_url=gateway_url,
                    downstream_token=downstream_token, api_token=api_token, audit=audit, allow_tamper=allow_tamper,
-                   approval_wait=approval_wait)
+                   approval_wait=approval_wait, registry=load_registry(overlay=overlay), registry_overlay=overlay)

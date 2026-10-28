@@ -91,9 +91,21 @@ async def test_a_list_of_recipients_is_checked_member_by_member(stack):
     assert [m for m in stack.sink.snapshot() if m["session_id"] == s["session_id"]] == []
 
 
-# ---- declared limit ---------------------------------------------------------------------------------------------
-async def test_declared_limit_an_unseen_address_on_the_allowed_domain_is_not_caught(stack):
-    """R3 is provenance, not authorisation: an address no untrusted document mentioned, on an allowed domain,
-    passes. (Hardened mode removes the agent's say in the recipient altogether.)"""
-    err, rows, _ = await run(stack, "sentinel", "Q-1042", body("accounts@shakti.example"))
+# ---- a former declared limit, closed by R7 ----------------------------------------------------------------------
+async def test_r3_alone_does_not_catch_an_unseen_address_but_r7_now_asks_the_officer(stack, monkeypatch):
+    """R3 is provenance, not authorisation: an address no untrusted document mentioned, on an allowed domain, is not R3's
+    business, and used to pass. R7 closes that: the session read an untrusted quotation, and accounts@shakti.example is
+    neither the vendor on file nor an internal destination, so the send waits for the officer (here: nobody answers,
+    and silence is a denial). The R1-only column, which runs no R7, still lets it through."""
+    monkeypatch.setattr(stack.rt, "approval_wait", 0.5)
+    s = await stack.start_session(column="sentinel")
+    async with stack.client(s["session_token"]) as c:
+        await c.call_tool("read_quotation", {"quote_id": "Q-1042"})
+        with pytest.raises(Exception, match="approval"):
+            await c.call_tool("send_email", body("accounts@shakti.example"))
+    asked = [e.payload for e in stack.rt.bus.recent() if e.session_id == s["session_id"] and e.type == "decision"
+             and e.payload["effect"] == "ASK"]
+    assert len(asked) == 1 and asked[0]["rule_ids"] == ["R7"] and asked[0]["reason_code"] == "TAINTED_ACTION"
+    assert [m for m in stack.sink.snapshot() if m["session_id"] == s["session_id"]] == []
+    err, rows, _ = await run(stack, "r1_only", "Q-1042", body("accounts@shakti.example"))
     assert err is None and len(rows) == 1

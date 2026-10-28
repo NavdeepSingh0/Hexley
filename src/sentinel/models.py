@@ -6,7 +6,7 @@ import hashlib
 import json
 from datetime import datetime
 from enum import StrEnum
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -41,6 +41,7 @@ class RuleId(StrEnum):
     R4 = "R4"
     R5 = "R5"
     R6 = "R6"
+    R7 = "R7"
 
 
 class ReasonCode(StrEnum):
@@ -54,6 +55,7 @@ class ReasonCode(StrEnum):
     HUMAN_VERIFICATION = "HUMAN_VERIFICATION"  # R4
     VOLUME_EXCEEDED = "VOLUME_EXCEEDED"  # R5
     BLOCK_THRESHOLD_FREEZE = "BLOCK_THRESHOLD_FREEZE"  # R6
+    TAINTED_ACTION = "TAINTED_ACTION"  # R7: a consequential action after the session read untrusted content
     SESSION_INVALID = "SESSION_INVALID"
     AUDIT_UNAVAILABLE = "AUDIT_UNAVAILABLE"  # no durable audit record, so the action was not run
     FAIL_CLOSED = "FAIL_CLOSED"
@@ -99,6 +101,7 @@ class ToolEntry(_Model):
     output_confidentiality: Confidentiality
     fingerprint_fields: list[str] = Field(default_factory=list)
     destination_args: list[str] = Field(default_factory=list)  # arguments that name where data is going
+    destination_kind: Literal["email", "url", "path"] = "email"  # how those arguments are read (destinations.keys_in)
     requires_human_verification: bool = False
     egress_template: str | None = None  # a tool that sends only through this fixed template (hardened mode)
     local: bool = False  # implemented inside the gateway, not forwarded to the tool server
@@ -128,7 +131,11 @@ class TaskContract(_Model):
     mode: Mode = Mode.FINGERPRINT
     allowed_tools: list[str]
     resource_classes: list[str]
+    # Where this task may send things: e-mail/URL domains, or "path:/prefix" entries (destinations.allowed).
     allowed_recipient_domains: list[str]
+    # Inside the organisation: restricted data may go here (R2 does not apply) and an action after untrusted content
+    # needs no extra approval (R7). A subset of the destinations above, named by the officer; empty means nowhere.
+    internal_destinations: list[str] = Field(default_factory=list)
     max_records: int
     max_messages: int
     max_records_out: int

@@ -32,18 +32,29 @@ def decide(action: AgentAction, session: Session, registry: Registry, approved: 
                       summary_plain="Allowed: no policy enforcement in this column (instrumented baseline).")
     try:
         entry = registry.get(action.tool)
-        recipients, unparseable = destinations.recipients_in(
-            [action.args[k] for k in entry.destination_args if k in action.args]) if entry.outbound else ([], [])
+        recipients, unparseable = destinations.keys_in(
+            [action.args[k] for k in entry.destination_args if k in action.args],
+            entry.destination_kind) if entry.outbound else ([], [])
         results = [rules.rule_r1(action, session.contract, entry),
                    rules.rule_r1_recipient(action, entry, session.contract, recipients, unparseable),
                    rules.rule_r1_egress(action, entry, session.contract)]
         if session.column == Column.SENTINEL:  # the R1-only baseline runs R1 and nothing else
             matches = session.index.scan_args(action.args) if entry.outbound else []
+            # An address that IS the recipient is not a leak of itself (you may write to a customer who is in the database).
+            matches = [m for m in matches if not (m.kind == "email" and m.canonical in recipients)]
+            if recipients and not unparseable and all(
+                    destinations.allowed(r, session.contract.internal_destinations) for r in recipients):
+                matches = []  # restricted data may go to a destination the officer named as internal (the slip says so)
             results.append(rules.rule_r2(action, entry, matches))
             results.append(rules.rule_r3(action, entry, recipients, session.untrusted_destinations,
                                          session.trusted_addresses))
             results.append(rules.rule_r4(action, entry, approved))
             results.append(rules.rule_r5(action, entry, session.contract, session.messages_out))
+            if not any(r is not None and r.effect == Effect.BLOCK for r in results):
+                # R7 asks only when nothing else has already said no: a block outranks a question, and the evidence of
+                # the blocking rule (not a second, redundant question) is what the officer and the log should see.
+                results.append(rules.rule_r7(action, entry, session.tainted_by, recipients, session.contract,
+                                             session.trusted_addresses, approved))
         fired = [r for r in results if r is not None]
         verdict = rules.combine(fired)
         if verdict is not None and verdict.effect == Effect.BLOCK and session.column == Column.SENTINEL:
@@ -52,7 +63,9 @@ def decide(action: AgentAction, session: Session, registry: Registry, approved: 
                 fired.append(freeze)
                 verdict = rules.combine(fired)
         if verdict is None:
-            if approved and entry.requires_human_verification:
+            if approved:
+                # `approved` is True only when the officer approved THIS exact call, which was asked for because R4 or R7
+                # fired; every other rule has just run and found nothing.
                 return finish(effect=Effect.ALLOW, reason_code=ReasonCode.ALLOWED,
                               summary_plain=f"Allowed: the officer approved this exact '{action.tool}' request.",
                               evidence=[Evidence(kind="approval", detail="the officer approved this exact action",

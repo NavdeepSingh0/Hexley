@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from . import egress
+from . import destinations, egress
 from .destinations import domain_of
 from .matcher import Match
 from .models import EFFECT_PRECEDENCE, AgentAction, Effect, Evidence, ReasonCode, RuleId, TaskContract, ToolEntry
@@ -41,26 +41,32 @@ def rule_r1(action: AgentAction, contract: TaskContract, entry: ToolEntry) -> Ru
     return None
 
 
+_KIND_NOUN = {"email": "e-mail address", "url": "web address", "path": "file path"}
+
+
 def rule_r1_recipient(action: AgentAction, entry: ToolEntry, contract: TaskContract, recipients: list[str],
                       unparseable: list[str]) -> RuleResult | None:
-    """R1 (destination part): every recipient must be a real address inside the slip's allowed domains.
-    This also stops a model that invents an address ("vendor email", vendor@example.com)."""
+    """R1 (destination part): every destination must be a real one inside the slip's allowed list (e-mail domains,
+    URL hosts or sandbox paths, by the tool's `destination_kind`). This also stops a model that invents an address
+    ("vendor email", vendor@example.com) or sends a malformed or ambiguous URL or path."""
     if not entry.outbound:
         return None
-    allowed = {d.lower() for d in contract.allowed_recipient_domains}
-    outside = sorted({domain_of(r) for r in recipients if domain_of(r) not in allowed})
+    allowed_list = sorted({d.lower() for d in contract.allowed_recipient_domains})
+    noun = _KIND_NOUN.get(entry.destination_kind, "destination")
+    only = "replies" if entry.destination_kind == "email" else "sending"
     if unparseable:
         return RuleResult(
             RuleId.R1, Effect.BLOCK, ReasonCode.NOT_IN_SLIP,
-            f"Blocked: the recipient is not a valid e-mail address. This task's permission slip allows replies "
-            f"only to: {', '.join(sorted(allowed)) or 'nobody'}.",
-            [Evidence(kind="recipient", detail="no e-mail address found in the recipient field")])
+            f"Blocked: the destination is not a valid {noun}. This task's permission slip allows {only} "
+            f"only to: {', '.join(allowed_list) or 'nobody'}.",
+            [Evidence(kind="recipient", detail=f"no valid {noun} found in the destination field")])
+    outside = sorted({domain_of(r) for r in recipients if not destinations.allowed(r, allowed_list)})
     if outside:
         return RuleResult(
             RuleId.R1, Effect.BLOCK, ReasonCode.NOT_IN_SLIP,
-            f"Blocked: this task's permission slip allows replies only to {', '.join(sorted(allowed))}; "
+            f"Blocked: this task's permission slip allows {only} only to {', '.join(allowed_list) or 'nobody'}; "
             f"{', '.join(outside)} is outside it.",
-            [Evidence(kind="recipient", detail=f"domain {d} is not an allowed recipient domain") for d in outside])
+            [Evidence(kind="recipient", detail=f"{d} is not an allowed destination") for d in outside])
     return None
 
 
@@ -87,7 +93,9 @@ def rule_r3(action: AgentAction, entry: ToolEntry, recipients: list[str], untrus
     refused, even inside an allowed domain. Value-level provenance, not general flow tracking."""
     if not entry.outbound:
         return None
-    bad = [r for r in recipients if r in untrusted and r not in trusted]
+    # Only e-mail addresses: for a URL host or a path, the officer's allow-list in the slip is the control (R1), and a
+    # document naming the very host the officer allowed must not make it unusable.
+    bad = [r for r in recipients if "@" in r and r in untrusted and r not in trusted]
     if not bad:
         return None
     return RuleResult(
@@ -111,7 +119,31 @@ def rule_r4(action: AgentAction, entry: ToolEntry, approved: bool) -> RuleResult
         [Evidence(kind="approval", detail=f"'{action.tool}' requires human verification", source_ref=action.tool)])
 
 
-_KIND_LABEL = {"number": "quantity", "code": "depot code", "date": "date"}
+def rule_r7(action: AgentAction, entry: ToolEntry, tainted_by: dict[str, str], recipients: list[str],
+            contract: TaskContract, trusted: frozenset[str], approved: bool) -> RuleResult | None:
+    """R7: once the session has read untrusted content (a document, a web page, an e-mail), a consequential action needs
+    the officer's approval of that exact call, UNLESS it goes only to a destination the officer named in the slip as
+    internal, or to a vendor on file, or is Sentinel's own fixed template. Read-only actions never ask.
+
+    This needs no knowledge of what the untrusted content says, which is the point: a compromised PDF nobody has seen
+    can still steer the agent, but it cannot make a consequential action happen without a human saying yes."""
+    if approved or not tainted_by or not entry.consequential:
+        return None
+    if entry.egress_template is not None:
+        return None  # a fixed message to a vendor resolved by Sentinel: nothing the content wrote can be in it
+    if recipients and all(r in trusted or destinations.allowed(r, contract.internal_destinations) for r in recipients):
+        return None
+    source = sorted(tainted_by)[0]
+    return RuleResult(
+        RuleId.R7, Effect.ASK, ReasonCode.TAINTED_ACTION,
+        f"Approval needed: this session has read untrusted content (from {source}), so '{action.tool}' "
+        "needs the officer to approve this exact request. It will run only if the officer says yes.",
+        [Evidence(kind="taint", detail=f"untrusted content was read from {s} earlier in this session", source_ref=s)
+         for s in sorted(tainted_by)])
+
+
+_KIND_LABEL = {"number": "quantity", "code": "depot code", "date": "date", "email": "e-mail address",
+               "digits": "long number (phone or account)", "id": "identifier", "text": "passage of text"}
 
 
 def rule_r2(action: AgentAction, entry: ToolEntry, matches: list[Match]) -> RuleResult | None:

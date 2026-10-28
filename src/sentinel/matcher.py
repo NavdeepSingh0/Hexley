@@ -12,6 +12,7 @@ restricted value happens to equal an ordinary figure; that trade-off is delibera
 
 from __future__ import annotations
 
+import hashlib
 import html
 import re
 import unicodedata
@@ -22,7 +23,14 @@ from typing import Any
 
 MIN_NUMBER = 100  # smaller numbers are too common to be useful fingerprints
 
-FIELD_KINDS = {"quantity": "number", "depot_code": "code", "dispatch_date": "date"}
+FIELD_KINDS = {"quantity": "number", "depot_code": "code", "dispatch_date": "date",
+               # generic kinds, for confidential data that is not our stock register (core plan B2)
+               "number": "number", "date": "date", "email": "email", "phone": "digits", "account": "digits",
+               "id": "id", "text": "text"}
+# `fingerprint_fields: [all]` indexes every generic kind. The weak "code" pattern (two to four letters and a short number)
+# is deliberately NOT included: on arbitrary text it would index "page 12" and "item 7" and block innocent messages.
+ALL_KINDS = frozenset({"number", "date", "email", "digits", "id", "text"})
+SHINGLE_WORDS = 7  # a copied passage is recognised by seven consecutive words; shorter runs are common phrases
 
 _UNITS = {w: i for i, w in enumerate(
     "zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen "
@@ -159,6 +167,42 @@ class Match:
     path: str = ""
 
 
+_EMAIL_RE = re.compile(r"[a-z0-9._%+\-]+@[a-z0-9\-]+(?:\.[a-z0-9\-]+)+")
+_DIGITS_RUN = re.compile(r"(?<!\d)\+?\d(?:[\s().\-]?\d){8,14}(?!\d)")  # 9 to 15 digits, however separated (phones, accounts)
+_ID_RE = re.compile(r"\b([a-z]{2,6})[-_ ]?(\d{3,})\b")  # CUST-00123, emp 4471, ACCT_99231
+
+
+def _digits_key(run: str) -> str:
+    d = re.sub(r"\D", "", run)
+    return d[-10:] if len(d) >= 10 else d  # +91 98765 43210 and 9876543210 are the same number
+
+
+def _id_key(letters: str, number: str) -> str:
+    return f"{letters}{int(number)}"  # leading zeros do not make a different identifier
+
+
+def _shingles(norm: str) -> list[str]:
+    words = re.findall(r"[a-z0-9']+", norm)
+    return [" ".join(words[i:i + SHINGLE_WORDS]) for i in range(len(words) - SHINGLE_WORDS + 1)]
+
+
+def _shingle_key(shingle: str) -> str:
+    return hashlib.sha1(shingle.encode()).hexdigest()[:16]  # the index keeps hashes, not copies of confidential prose
+
+
+def _generic_candidates(norm: str, kinds: set[str]) -> list[Candidate]:
+    out: list[Candidate] = []
+    if "email" in kinds:
+        out += [Candidate("email", m, m) for m in dict.fromkeys(_EMAIL_RE.findall(norm))]
+    if "digits" in kinds:
+        out += [Candidate("digits", _digits_key(m.group()), m.group().strip()) for m in _DIGITS_RUN.finditer(norm)]
+    if "id" in kinds:
+        out += [Candidate("id", _id_key(m[1], m[2]), m.group()) for m in _ID_RE.finditer(norm)]
+    if "text" in kinds:
+        out += [Candidate("text", _shingle_key(s), s) for s in dict.fromkeys(_shingles(norm))]
+    return out
+
+
 @dataclass
 class FingerprintIndex:
     """Per-session set of restricted values seen in tool results, each with where it came from."""
@@ -166,8 +210,12 @@ class FingerprintIndex:
     entries: dict[tuple[str, str], str] = field(default_factory=dict)
 
     def add(self, result_text: str, fields: list[str], source_ref: str) -> None:
-        wanted = {FIELD_KINDS[f] for f in fields if f in FIELD_KINDS}
-        for c in candidates(normalise(result_text)):
+        wanted = set(ALL_KINDS) if "all" in fields else {FIELD_KINDS[f] for f in fields if f in FIELD_KINDS}
+        norm = normalise(result_text)
+        # Without "code" among the wanted kinds, switch the weak code pattern off entirely: left on, "owes 48,500" is read
+        # as the code "owes48" and the number is indexed as 500. (`candidates` skips codes that are not in the known set.)
+        known_codes = None if "code" in wanted else frozenset()
+        for c in [*candidates(norm, known_codes), *_generic_candidates(norm, wanted)]:
             if c.kind not in wanted:
                 continue
             if c.kind == "number" and int(c.canonical) < MIN_NUMBER:
@@ -176,8 +224,11 @@ class FingerprintIndex:
 
     def scan_text(self, text: str, path: str = "") -> list[Match]:
         codes = frozenset(canonical for kind, canonical in self.entries if kind == "code")
-        return [Match(c.kind, c.canonical, self.entries[(c.kind, c.canonical)], c.snippet, path)
-                for c in candidates(normalise(text), codes) if (c.kind, c.canonical) in self.entries]
+        norm = normalise(text)
+        present = {kind for kind, _ in self.entries}
+        found = [*candidates(norm, codes), *_generic_candidates(norm, present & ALL_KINDS)]
+        return [Match(c.kind, c.canonical, self.entries[(c.kind, c.canonical)], c.snippet[:60], path)
+                for c in found if (c.kind, c.canonical) in self.entries]
 
     def scan_args(self, value: Any, path: str = "") -> list[Match]:
         """Walk every field of the arguments (strings, numbers, nested dicts and lists)."""

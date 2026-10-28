@@ -14,17 +14,21 @@ from fastapi import Depends, FastAPI, Header, HTTPException, WebSocket, WebSocke
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import PlainTextResponse, Response
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
+from fastmcp import Client
+from fastmcp.client.transports import StreamableHttpTransport
+from pydantic import BaseModel, ConfigDict
 
 from .approvals import ApprovalError
 from .audit import AuditError
 from .confirm import ConfirmError, confirm_draft
 from .connect import connect_view, issue_header_token
-from .contracts import SlipError, draft_contract
+from .contracts import SlipError, draft_contract, draft_custom
+from .matcher import FIELD_KINDS
 from .oauth import OAuthError
+from .registry import save_overlay, suggest_classification
 from .runs import SCENARIOS, RunError, RunManager, list_recordings
 from .events import make_event
-from .models import Column, Mode
+from .models import Capability, Column, Confidentiality, Integrity, Mode, ToolEntry
 from .runtime import Runtime
 from .tools.server import TOKEN_HEADER
 
@@ -56,6 +60,34 @@ class ApprovalDecision(BaseModel):
 
 class ConnectTokenRequest(BaseModel):
     preset: str = "quotation_processing"
+
+
+class ToolClassification(BaseModel):
+    """What the officer says about a tool. No `local` and no `egress_template`: a classification labels risk, nothing more."""
+
+    model_config = ConfigDict(extra="forbid")
+    capability: Capability
+    resource_class: str | None = None
+    outbound: bool
+    consequential: bool
+    output_integrity: Integrity
+    output_confidentiality: Confidentiality
+    fingerprint_fields: list[str] = []
+    destination_args: list[str] = []
+    destination_kind: Literal["email", "url", "path"] = "email"
+    requires_human_verification: bool = False
+
+
+class SlipRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    objective: str
+    allowed_tools: list[str]
+    allowed_destinations: list[str] = []
+    internal_destinations: list[str] = []
+    max_messages: int = 1
+    ttl_seconds: int = 900
+    officer: str = "Col. R. Menon"
+    confirm: bool = False
 
 
 class OAuthDecision(BaseModel):
@@ -303,6 +335,87 @@ def create_api(rt: Runtime, console_dir: Path | None = None) -> FastAPI:
             raise HTTPException(status_code=422, detail=str(e)) from e
         except ConfirmError as e:
             raise HTTPException(status_code=e.status, detail=e.detail) from e
+
+    # ---- tool onboarding: nothing new runs until the officer has classified it (core plan B2) -------------------------
+    async def upstream_tools():
+        try:
+            async with Client(StreamableHttpTransport(rt.tools_url, headers={TOKEN_HEADER: rt.downstream_token})) as c:
+                return await asyncio.wait_for(c.list_tools(), timeout=10)
+        except Exception as e:  # noqa: BLE001 - reported plainly, never leaked as a stack trace
+            raise HTTPException(status_code=503, detail="Sentinel could not read the tool list from the tool server.") from e
+
+    def schema_of(tool) -> dict:
+        return getattr(tool, "input_schema", None) or getattr(tool, "inputSchema", None) or {}
+
+    @app.get("/api/v1/tools", dependencies=[Depends(require_token)])
+    async def list_tools_for_onboarding():
+        """Every tool the tool server offers, whether Sentinel has classified it, and a SUGGESTION for the ones it has not.
+        An unclassified tool is invisible to agents and refused by R1 until the officer classifies it."""
+        out = []
+        for t in await upstream_tools():
+            known = rt.registry.is_known(t.name)
+            out.append({"name": t.name, "description": t.description or "", "arguments": list(schema_of(t).get("properties", {})),
+                        "classified": known, "builtin": rt.registry.is_builtin(t.name),
+                        "labels": rt.registry.get(t.name).model_dump(mode="json", exclude={"name"}) if known else None,
+                        "suggested": None if known else suggest_classification(t.name, t.description or "", schema_of(t))})
+        return {"tools": out, "unclassified": sum(1 for x in out if not x["classified"])}
+
+    @app.post("/api/v1/tools/{name}/classify", dependencies=[Depends(require_token)])
+    async def classify_tool(name: str, body: ToolClassification):
+        """The officer labels one tool. Built-in entries cannot be changed; the record is written to the audit log first."""
+        tools = {t.name: t for t in await upstream_tools()}
+        if name not in tools:
+            raise HTTPException(status_code=404, detail=f"The tool server has no tool called '{name}'.")
+        if rt.registry.is_builtin(name):
+            raise HTTPException(status_code=409, detail=f"'{name}' is a built-in tool and cannot be reclassified.")
+        bad = [f for f in body.fingerprint_fields if f != "all" and f not in FIELD_KINDS]
+        if bad:
+            raise HTTPException(status_code=422, detail=f"Unknown fingerprint field(s): {', '.join(bad)}. "
+                                                        f"Use 'all' or any of: {', '.join(sorted(FIELD_KINDS))}.")
+        args = set(schema_of(tools[name]).get("properties", {}))
+        unknown = [a for a in body.destination_args if a not in args]
+        if unknown:
+            raise HTTPException(status_code=422, detail=f"'{name}' has no argument called {', '.join(unknown)}.")
+        if body.outbound and not body.destination_args:
+            raise HTTPException(status_code=422, detail="An outbound tool must say which argument names the destination, "
+                                                        "otherwise Sentinel cannot check where it sends data.")
+        entry = ToolEntry(name=name, resource_class=body.resource_class or name, **body.model_dump(exclude={"resource_class"}))
+        try:
+            await rt.audit.append("registry.classified", payload={"tool": name, "labels": entry.model_dump(mode="json", exclude={"name"})})
+        except AuditError as e:
+            raise HTTPException(status_code=503, detail="The audit log is unavailable, so the classification was not saved.") from e
+        rt.registry.add(entry)
+        if rt.registry_overlay is not None:
+            save_overlay(rt.registry, rt.registry_overlay)
+        await rt.bus.publish(make_event("registry.classified", None, None, {"tool": name}))
+        return {"name": name, "classified": True, "labels": entry.model_dump(mode="json", exclude={"name"})}
+
+    # ---- the slip builder: a permission slip for ANY task ---------------------------------------------------------
+    @app.post("/api/v1/slips", status_code=201, dependencies=[Depends(require_token)])
+    async def build_slip(req: SlipRequest):
+        """The officer defines a slip from tools the registry knows. With `confirm: true` it is confirmed at once and a token
+        for a client is returned; otherwise confirm it with POST /tasks/{contract_id}/confirm."""
+        try:
+            contract = draft_custom(rt.registry, objective=req.objective, allowed_tools=req.allowed_tools,
+                                    allowed_destinations=req.allowed_destinations,
+                                    internal_destinations=req.internal_destinations, max_messages=req.max_messages,
+                                    ttl_seconds=req.ttl_seconds, officer=req.officer)
+        except SlipError as e:
+            raise HTTPException(status_code=422, detail=str(e)) from e
+        rt.drafts[contract.contract_id] = contract
+        slip = {"objective": contract.objective, "allowed_tools": contract.allowed_tools,
+                "allowed_destinations": contract.allowed_recipient_domains,
+                "internal_destinations": contract.internal_destinations, "max_messages": contract.max_messages,
+                "ttl_seconds": req.ttl_seconds}
+        out = {"contract_id": contract.contract_id, "contract_hash": contract.contract_hash, "slip": slip, "confirmed": False}
+        if req.confirm:
+            try:
+                done = await confirm_draft(rt, contract.contract_id, Column.SENTINEL)
+            except ConfirmError as e:
+                raise HTTPException(status_code=e.status, detail=e.detail) from e
+            out.update(confirmed=True, session_id=done["session_id"], header_value=f"Bearer {done['session_token']}",
+                       expires_at=done["expires_at"])
+        return out
 
     # The consent endpoints are NOT behind the API token: the officer code is the credential. The officer's browser reaches
     # them from the AI client's sign-in redirect, where the console's token may not be present.

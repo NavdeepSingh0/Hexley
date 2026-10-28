@@ -106,8 +106,8 @@ class SentinelMiddleware(Middleware):
                 approval = approvals.request(session.session_id, action.tool, action.args, decision.summary_plain)
             decision = await self._record_decision(action, decision, session, protected)
             if decision.effect == Effect.ALLOW:
-                if granted is not None and entry.requires_human_verification:
-                    approvals.consume(ahash)  # one-time: a second identical call needs a new approval
+                if granted is not None:
+                    approvals.consume(ahash)  # one-time: a second identical call needs a new approval (R4 and R7 alike)
                 if entry.outbound:
                     session.messages_out += 1  # reserved now; a failed send still counts (conservative)
             elif decision.effect != Effect.ASK and counts_toward_freeze(decision):
@@ -196,6 +196,7 @@ class SentinelMiddleware(Middleware):
             session.index.add(text, entry.fingerprint_fields, source_ref=tool)
         # Addresses found in untrusted content are remembered so R3 can refuse them as destinations later.
         if protected and entry.output_integrity == Integrity.UNTRUSTED:
+            session.tainted_by.setdefault(tool, "read untrusted content")  # R7: from now on consequential actions ask
             for address in extract_destinations(text):
                 session.untrusted_destinations.setdefault(address, tool)  # remember the first source
         return result

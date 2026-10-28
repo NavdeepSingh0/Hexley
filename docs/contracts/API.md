@@ -69,6 +69,26 @@ The site calls these through `site/src/api/client.js`. Until a backend phase lan
 ```
 `retry` is `{"attempt": 2, "waiting_s": 8}` while `status` is `model_busy`. `role` ∈ `user | assistant | system`.
 
+## Tools and slips for any task (core phase B2, built)
+All of these need the API token (officer actions).
+
+`GET /api/v1/tools` lists every tool the tool server offers and whether Sentinel has classified it. An unclassified tool is invisible to agents and refused by R1 until the officer classifies it.
+```json
+{"tools": [
+  {"name": "read_quotation", "description": "…", "arguments": ["quote_id"], "classified": true, "builtin": true,
+   "labels": {"capability": "read", "resource_class": "quotation_doc", "outbound": false, "consequential": false,
+              "output_integrity": "untrusted", "output_confidentiality": "internal", "fingerprint_fields": [],
+              "destination_args": [], "destination_kind": "email", "requires_human_verification": false}, "suggested": null},
+  {"name": "delete_records", "description": "…", "arguments": ["table"], "classified": false, "builtin": false, "labels": null,
+   "suggested": {"capability": "write", "consequential": true, "outbound": false, "reasons": ["the name or description suggests it changes something"]}}
+ ], "unclassified": 1}
+```
+`suggested` is a first guess for the officer to review; it is never applied automatically.
+
+`POST /api/v1/tools/{name}/classify` body: `capability` (`read|write|send`), `outbound`, `consequential`, `output_integrity` (`trusted|untrusted`), `output_confidentiality` (`public|internal|restricted`), optional `resource_class`, `fingerprint_fields` (`["all"]` or any of `quantity, depot_code, dispatch_date, number, date, email, phone, account, id, text`), `destination_args`, `destination_kind` (`email|url|path`), `requires_human_verification`. Returns `{name, classified: true, labels}`. Errors: `404` unknown tool, `409` built-in tool, `422` an invalid label (an outbound tool must name its destination argument), `503` audit log unavailable (nothing is saved without a durable record).
+
+`POST /api/v1/slips` body: `objective` (5 to 500 characters), `allowed_tools`, `allowed_destinations` (domains, `path:/folder`), `internal_destinations` (domains, addresses or paths, a subset of the allowed ones: restricted data may go there and R7 does not ask), `max_messages` (0 to 50, default 1), `ttl_seconds` (60 to 86400, default 900), optional `confirm: true`. Returns `{contract_id, contract_hash, slip, confirmed}`; with `confirm: true` also `session_id`, `header_value`, `expires_at`. Without `confirm`, confirm with `POST /tasks/{contract_id}/confirm`. Refused with `422` and a plain message when a tool is unclassified or built in, an outbound tool has no destination or no message budget, or an entry is vague (wildcards, web addresses with paths).
+
 ## Evidence (core phase B8)
 Static file `site/public/evidence.json`, generated from `eval/results/` by `scripts/export_evidence.py`. The site never types a number.
 ```json

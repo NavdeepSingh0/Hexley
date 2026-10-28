@@ -98,7 +98,7 @@ class ModelEndpoint:
 
 
 def _openai_tool(tool) -> dict:
-    schema = getattr(tool, "inputSchema", None) or getattr(tool, "input_schema", None) or {"type": "object"}
+    schema = getattr(tool, "input_schema", None) or getattr(tool, "inputSchema", None) or {"type": "object"}
     return {"type": "function", "function": {"name": tool.name, "description": tool.description or "",
                                               "parameters": schema}}
 

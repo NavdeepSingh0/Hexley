@@ -7,6 +7,8 @@ contract hash. The agent only ever holds the token. See ARCHITECTURE.md section 
 from __future__ import annotations
 
 import asyncio
+import posixpath
+import re
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
@@ -16,7 +18,7 @@ import jwt
 import yaml
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey, Ed25519PublicKey
 
-from . import fixtures
+from . import destinations, fixtures
 from .matcher import FingerprintIndex
 from .models import Column, EgressTemplate, Mode, SessionStatus, TaskContract
 
@@ -100,6 +102,75 @@ def draft_contract(templates: dict[str, dict], template: str, officer: str, now:
     return contract.model_copy(update={"contract_hash": contract.compute_hash()})
 
 
+_DOMAIN = re.compile(r"[a-z0-9](?:[a-z0-9\-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9\-]*[a-z0-9])?)+")
+_ADDRESS = re.compile(r"[a-z0-9._%+\-]+@[a-z0-9](?:[a-z0-9\-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9\-]*[a-z0-9])?)+")
+
+
+def normalise_destination_entry(entry: str) -> str:
+    """One destination an officer typed into a slip: a domain, an e-mail address, or `path:/folder`. Anything else
+    (wildcards, schemes, spaces, `..`) is refused, never interpreted."""
+    e = (entry or "").strip().lower()
+    if _DOMAIN.fullmatch(e) or _ADDRESS.fullmatch(e):
+        return e
+    if e.startswith("path:/") and ".." not in e.split("/") and "\x00" not in e and "\\" not in e and "*" not in e:
+        return "path:" + posixpath.normpath(e.removeprefix("path:"))
+    raise SlipError(f"'{entry}' is not a valid destination: use a domain (example.com), an address (boss@example.com) "
+                    "or a folder (path:/reports). Wildcards and web addresses with paths are not accepted.")
+
+
+def _covered(entry: str, allowed_list: list[str]) -> bool:
+    if entry.startswith("path:") or "@" in entry:
+        return destinations.allowed(entry, allowed_list)
+    return entry in allowed_list  # a domain is covered only by the same domain
+
+
+def draft_custom(registry, *, objective: str, allowed_tools: list[str], allowed_destinations: list[str],
+                 internal_destinations: list[str] | None = None, max_messages: int = 1, ttl_seconds: int = 900,
+                 officer: str, now: datetime | None = None) -> TaskContract:
+    """Build a pending slip for ANY task from what the officer chose (the slip builder). The officer's choices are the
+    boundary, so vague or contradictory ones are refused with a plain message instead of being accepted and guessed at."""
+    objective = " ".join((objective or "").split())
+    if not 5 <= len(objective) <= 500:
+        raise SlipError("describe the task in 5 to 500 characters: it is what the officer is approving")
+    tools = list(dict.fromkeys(allowed_tools or []))
+    if not tools or len(tools) > 20:
+        raise SlipError("choose between 1 and 20 tools for this task")
+    entries = []
+    for t in tools:
+        if not registry.is_known(t):
+            raise SlipError(f"'{t}' is not a classified tool: classify it first, then allow it")
+        entry = registry.get(t)
+        if entry.local:
+            raise SlipError(f"'{t}' is a built-in fixed-template tool and needs its own hardened slip template")
+        entries.append(entry)
+    allowed = list(dict.fromkeys(normalise_destination_entry(d) for d in (allowed_destinations or [])))
+    internal = list(dict.fromkeys(normalise_destination_entry(d) for d in (internal_destinations or [])))
+    if len(allowed) > 20 or len(internal) > 20:
+        raise SlipError("a slip may name at most 20 destinations of each kind")
+    sends = [e.name for e in entries if e.outbound]
+    if sends and not allowed:
+        raise SlipError(f"{', '.join(sends)} can send data outside: name at least one destination it may go to")
+    if sends and max_messages < 1:
+        raise SlipError(f"{', '.join(sends)} needs a message limit of at least 1")
+    outside = [i for i in internal if not _covered(i, allowed)]
+    if outside:
+        raise SlipError(f"internal destination {', '.join(outside)} is not in the allowed destinations: "
+                        "internal destinations must be a subset of where the task may send")
+    if not 0 <= max_messages <= 50:
+        raise SlipError("the message limit must be between 0 and 50")
+    if not 60 <= ttl_seconds <= 86_400:
+        raise SlipError("a slip must last between 1 minute and 24 hours")
+    now = now or datetime.now(timezone.utc)
+    contract = TaskContract(
+        contract_id=f"tc_{uuid.uuid4().hex[:12]}", template="custom", objective=objective, officer=officer,
+        mode=Mode.FINGERPRINT, allowed_tools=tools,
+        resource_classes=list(dict.fromkeys(e.resource_class for e in entries)),
+        allowed_recipient_domains=allowed, internal_destinations=internal,
+        max_records=100, max_messages=max_messages, max_records_out=0,
+        issued_at=now, expires_at=now + timedelta(seconds=ttl_seconds), status=SessionStatus.PENDING)
+    return contract.model_copy(update={"contract_hash": contract.compute_hash()})
+
+
 # ---- tokens ------------------------------------------------------------------------------------
 @dataclass(frozen=True)
 class SessionClaims:
@@ -170,6 +241,8 @@ class Session:
     index: FingerprintIndex = field(default_factory=FingerprintIndex)  # restricted values read so far
     # addresses seen in untrusted tool results, each mapped to the tool whose result contained it first
     untrusted_destinations: dict[str, str] = field(default_factory=dict)
+    # tools whose untrusted output this session has read (tool -> short note). Non-empty means "tainted" for R7.
+    tainted_by: dict[str, str] = field(default_factory=dict)
     trusted_addresses: frozenset[str] = frozenset()  # vendor-master addresses (trusted records), set at confirmation
     # Held across "decide + reserve budget + count the block", so concurrent calls cannot both take the last slot.
     lock: asyncio.Lock = field(default_factory=asyncio.Lock, repr=False)
