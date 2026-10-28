@@ -10,7 +10,7 @@ The site calls these through `site/src/api/client.js`. Until a backend phase lan
 - Decision words are always one of `ALLOWED`, `DENIED`, `NEEDS_APPROVAL`, `QUARANTINED`, `PENDING` (display with spaces: "NEEDS APPROVAL").
 
 ## Connect (core phase B1, B8)
-`GET /api/v1/connect`
+`GET /api/v1/connect` (public)
 ```json
 {
   "public_url": "https://example.trycloudflare.com",
@@ -25,7 +25,7 @@ The site calls these through `site/src/api/client.js`. Until a backend phase lan
   ]
 }
 ```
-(Claude.ai is `tested` by both routes: OAuth on a free account and the header on a Pro account, both verified on 27 Oct 2026.) `public_url` is `null` when Sentinel runs locally only (no tunnel). `status` ∈ `tested | should_work | planned`; only `tested` may carry a `screenshot`. `snippet` placeholders: `{mcp_url}`, `{header_value}`.
+(Claude.ai is `tested` by the OAuth route only: a free account, 27 Oct 2026. The header route is `should_work` until a real client has been connected with it, D-041.) `GET /api/v1/connect` needs no token (it holds no secret); `POST /api/v1/connect/token` does. `public_url` is `null` when Sentinel runs locally only (no tunnel). `status` ∈ `tested | should_work | planned`; only `tested` may carry a `screenshot`. `snippet` placeholders: `{mcp_url}`, `{header_value}`.
 
 `POST /api/v1/connect/token` body `{"preset": "quotation_processing"}` → officer action
 ```json

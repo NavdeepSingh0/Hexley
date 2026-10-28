@@ -17,7 +17,7 @@ export const CONNECT = {
       steps: ['Open Customize → Connectors → Add custom connector', 'Paste the URL', 'Choose “Sign in now”', 'Approve the permission slip with the officer code'],
     },
     {
-      id: 'header', status: 'tested',
+      id: 'header', status: 'should_work',
       steps: ['Create a slip and token below', 'Add a header named Authorization with the value shown'],
     },
   ],
@@ -29,7 +29,8 @@ export const CONNECT = {
     { id: 'vscode', name: 'VS Code (MCP)', kind: 'ide', status: 'should_work', method: 'header',
       snippet: '{ "servers": { "sentinel": { "type": "http", "url": "{mcp_url}", "headers": { "Authorization": "{header_value}" } } } }',
       screenshot: null },
-    { id: 'local', name: 'Local model through an MCP-capable client', kind: 'local', status: 'planned', method: 'header', snippet: null, screenshot: null },
+    { id: 'local', name: 'A local model through an MCP-capable client', kind: 'local', status: 'planned', method: 'header', snippet: null, screenshot: null },
+    { id: 'other-agents', name: 'Agents that do not use MCP', kind: 'other', status: 'planned', method: 'none', snippet: null, screenshot: null },
   ],
 }
 

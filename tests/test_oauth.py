@@ -361,13 +361,18 @@ async def test_connect_endpoints(ostack):
         assert v["public_url"] == base(ostack) and v["mcp_url"].endswith("/mcp")
         assert [m["id"] for m in v["methods"]] == ["oauth", "header"]
         assert all(c["screenshot"] is None for c in v["clients"] if c["status"] != "tested")
+        assert {m["id"]: m["status"] for m in v["methods"]} == {"oauth": "tested", "header": "should_work"}  # only OAuth has a live session behind it
+        assert [c["id"] for c in v["clients"] if c["status"] == "tested"] == ["claude-web"]
         tok = (await api.post("/api/v1/connect/token", json={"preset": "quotation_processing"})).json()
         assert tok["header_value"].startswith("Bearer ") and tok["slip"]["max_messages"] == 1
         assert (await api.post("/api/v1/connect/token", json={"preset": "nope"})).status_code == 422
     async with mcp(ostack, tok["header_value"].removeprefix("Bearer ")) as client:
         assert len(await client.list_tools()) == 3
     async with httpx.AsyncClient(base_url=ostack.api_url) as anon:
-        assert (await anon.get("/api/v1/connect")).status_code == 401
+        r = await anon.get("/api/v1/connect")  # public by design (D-041): statuses, steps and the connector address only
+        assert r.status_code == 200 and r.json()["mcp_url"] == v["mcp_url"]
+        assert tok["header_value"].removeprefix("Bearer ") not in r.text
+        assert (await anon.post("/api/v1/connect/token", json={"preset": "quotation_processing"})).status_code == 401  # the token still needs the officer
 
 
 async def test_oauth_endpoints_report_clearly_when_oauth_is_off(stack):

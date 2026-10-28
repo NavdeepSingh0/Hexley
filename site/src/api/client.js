@@ -39,7 +39,7 @@ export async function api(path, { method = 'GET', body } = {}) {
   try {
     r = await fetch(path, {
       method,
-      headers: { Authorization: `Bearer ${token ?? ''}`, ...(body ? { 'Content-Type': 'application/json' } : {}) },
+      headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}), ...(body ? { 'Content-Type': 'application/json' } : {}) },
       body: body ? JSON.stringify(body) : undefined,
     })
   } catch {
@@ -58,7 +58,8 @@ export async function api(path, { method = 'GET', body } = {}) {
 }
 
 // ---- the endpoints the site uses (docs/contracts/API.md) ---------------------------------------------------------
-export const getConnect = () => api('/api/v1/connect')
+export const getConnect = () => api('/api/v1/connect') // public: no token needed
+export const hasToken = () => Boolean(token)
 export const createConnectToken = (preset) => api('/api/v1/connect/token', { method: 'POST', body: { preset } })
 export const getOAuthRequest = (id) => api(`/api/v1/oauth/requests/${id}`)
 export const decideOAuthRequest = (id, decision, officer_code) =>

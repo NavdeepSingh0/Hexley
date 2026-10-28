@@ -20,12 +20,15 @@ CLIENTS = [
      '{ "servers": { "sentinel": { "type": "http", "url": "{mcp_url}", "headers": { "Authorization": "{header_value}" } } } }',
      None),
     ("local", "A local model through an MCP-capable client", "local", "planned", "header", None, None),
+    ("other-agents", "Agents that do not use MCP", "other", "planned", "none", None, None),
 ]
 
 # What we have verified for each way of connecting (update when a live check passes).
 # oauth: verified 27 Oct 2026 with a real Claude.ai free account (Sign in now + automatic registration): the slip was
 # approved with the officer code, a send containing restricted data was denied (R2), nothing was delivered.
-METHOD_STATUS = {"oauth": "tested", "header": "tested"}
+# header: the token route is covered by tests (a session token opens the gateway) but no real client has been connected
+# with it yet (F8 matrix), so it is "should_work", not "tested" (corrected 28 Oct 2026).
+METHOD_STATUS = {"oauth": "tested", "header": "should_work"}
 
 OAUTH_STEPS = ["Open Customize → Connectors → Add custom connector", "Paste the connector URL",
                "Choose “Sign in now”", "Approve the permission slip with the officer code shown in the Sentinel terminal"]

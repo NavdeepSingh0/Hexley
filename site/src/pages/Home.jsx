@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { INTEGRATIONS, STATUS_LABEL } from '../data/integrations.js'
+import Story from '../components/Story.jsx'
+import { StatusBadge } from '../components/Ui.jsx'
+import { STATUS_MEANING, groupByStatus, useConnect } from '../lib/connect.js'
 import { formatInterval, groupEvidence } from '../lib/evidence.js'
 
 const STEPS = [
@@ -30,17 +32,6 @@ const STEPS = [
   },
 ]
 
-function Shot({ name, alt }) {
-  // One picture per theme; the other is hidden by CSS and, being lazy, never downloaded.
-  const common = { width: 1280, height: 720, loading: 'lazy', alt }
-  return (
-    <>
-      <img className="shot shot-dark" src={`/img/console-${name}-dark.png`} {...common} />
-      <img className="shot shot-light" src={`/img/console-${name}-light.png`} {...common} />
-    </>
-  )
-}
-
 function Hero() {
   return (
     <section className="hero" aria-labelledby="hero-title">
@@ -57,26 +48,12 @@ function Hero() {
   )
 }
 
-function Story() {
+function HowItWorksStrip() {
   return (
     <section className="block" aria-labelledby="story-title">
       <p className="s-label">How it works</p>
       <h2 id="story-title" className="block-title">One job, checked at every step</h2>
-      <ol className="story">
-        {STEPS.map((s, i) => (
-          <li key={s.n} className={`story-step${i % 2 ? ' is-flipped' : ''}`}>
-            <div className="story-copy">
-              <span className="story-n" aria-hidden="true">{s.n}</span>
-              <h3 className="story-title">{s.title}</h3>
-              <p className="story-text">{s.text}</p>
-            </div>
-            <figure className="story-fig">
-              <Shot name={s.shot} alt={s.alt} />
-              <figcaption>{s.caption}</figcaption>
-            </figure>
-          </li>
-        ))}
-      </ol>
+      <Story steps={STEPS} />
     </section>
   )
 }
@@ -126,19 +103,25 @@ function Evidence() {
 }
 
 function Integrations() {
+  const { status, data } = useConnect()
+  const groups = groupByStatus(data?.clients)
   return (
     <section className="block" aria-labelledby="int-title">
       <p className="s-label">Works with</p>
       <h2 id="int-title" className="block-title">Built on the MCP standard</h2>
-      <ul className="int-list">
-        {INTEGRATIONS.map((i) => (
-          <li key={i.id} className="int-item">
-            <span className={`s-badge${i.status === 'tested' ? ' s-badge--tested' : i.status === 'planned' ? ' s-badge--planned' : ''}`}>{STATUS_LABEL[i.status]}</span>
-            <span className="int-name">{i.name}</span>
-            <span className="int-note">{i.note}</span>
-          </li>
-        ))}
-      </ul>
+      {status === 'loading' && <p className="muted" role="status">Loading...</p>}
+      {status === 'error' && <p className="muted" role="status">The list of clients could not be loaded from Sentinel.</p>}
+      {groups.length > 0 && (
+        <ul className="int-list">
+          {groups.map((g) => (
+            <li key={g.status} className="int-item">
+              <StatusBadge status={g.status} />
+              <span className="int-name">{g.clients.map((c) => c.name).join(', ')}</span>
+              <span className="int-note">{STATUS_MEANING[g.status]}</span>
+            </li>
+          ))}
+        </ul>
+      )}
       <p className="evidence-more"><Link to="/integrations">All integrations</Link></p>
     </section>
   )
@@ -148,7 +131,7 @@ export default function Home() {
   return (
     <main>
       <Hero />
-      <Story />
+      <HowItWorksStrip />
       <Evidence />
       <Integrations />
     </main>

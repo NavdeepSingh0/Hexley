@@ -1,17 +1,16 @@
 import { Route, Routes } from 'react-router-dom'
 import Layout from './components/Layout.jsx'
 import Home from './pages/Home.jsx'
+import HowItWorks from './pages/HowItWorks.jsx'
+import Integrations from './pages/Integrations.jsx'
+import Connect from './pages/Connect.jsx'
 import Styleguide from './pages/Styleguide.jsx'
 import Mascot from './pages/Mascot.jsx'
 
 // Pages that a later phase builds (docs/plans/BUILD_PLAN.md). Until then each says so plainly instead of pretending.
 const LATER = [
-  ['/how-it-works', 'How it works', 'F4'],
-  ['/integrations', 'Integrations', 'F4'],
-  ['/connect', 'Connect', 'F4'],
   ['/docs/*', 'Docs', 'F5'],
   ['/chat', 'Sentinel Chat', 'F7b'],
-  ['/oauth/consent', 'Officer approval', 'F4'],
   ['/pricing', 'Pricing', 'F8'],
 ]
 
@@ -30,6 +29,9 @@ export default function App() {
     <Routes>
       <Route element={<Layout />}>
         <Route index element={<Home />} />
+        <Route path="/how-it-works" element={<HowItWorks />} />
+        <Route path="/integrations" element={<Integrations />} />
+        <Route path="/connect" element={<Connect />} />
         <Route path="/styleguide" element={<Styleguide />} />
         <Route path="/mascot" element={<Mascot />} />
         {LATER.map(([to, title, phase]) => <Route key={to} path={to} element={<Soon title={title} phase={phase} />} />)}

@@ -11,6 +11,8 @@ export default defineConfig({
   base: '/',
   plugins: [react()],
   test: { environment: 'node', include: ['src/**/*.test.js'] },
+  // `vite preview` of a production build forwards the API the same way, so a built site can be checked against a real gateway.
+  preview: { proxy: Object.fromEntries(apiPaths.map((p) => [p, { target: API, changeOrigin: true }])) },
   server: {
     port: 5174,
     strictPort: true,

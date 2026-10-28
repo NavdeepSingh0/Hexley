@@ -323,7 +323,9 @@ def create_api(rt: Runtime, console_dir: Path | None = None) -> FastAPI:
             unsubscribe()
 
     # ---- connecting a real client (docs/contracts/API.md; core plan phase B1) --------------------------------------
-    @app.get("/api/v1/connect", dependencies=[Depends(require_token)])
+    # Public on purpose (D-041): it holds no secret (statuses, steps, the address an AI client is meant to paste), so the
+    # site's Connect and Integrations pages work without the officer token. Creating a token below still needs it.
+    @app.get("/api/v1/connect")
     async def connect():
         return connect_view(rt)
 
