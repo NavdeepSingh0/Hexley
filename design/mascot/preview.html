@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sentinel mascot preview</title>
+<style>
+  /* A plain page with no build step: it loads the component with one script tag. Colours match design/tokens.css. */
+  :root { --bg: #07070a; --panel: #15151e; --ink: #fff; --muted: #a9a9bc; --brand: #a98bff; }
+  html[data-theme="light"] { --bg: #fff; --panel: #f5f4fa; --ink: #0a0a10; --muted: #55556b; --brand: #6226d6; }
+  body { margin: 0; padding: 24px; background: var(--bg); color: var(--ink); font: 16px/1.4 "Helvetica Neue", Helvetica, Arial, sans-serif; }
+  h1 { margin: 0 0 4px; font-size: 28px; letter-spacing: -0.01em; }
+  p.sub { margin: 0 0 20px; color: var(--muted); }
+  .bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 20px; }
+  button, select, input { font: inherit; color: var(--ink); background: transparent; border: 1px solid var(--muted); border-radius: 10px; padding: 6px 12px; }
+  button { cursor: pointer; font-weight: 700; }
+  button.on { border-color: var(--brand); color: var(--brand); }
+  input { min-width: 280px; background: var(--panel); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 16px; }
+  .card { background: var(--panel); border-radius: 18px; padding: 28px 12px 14px; text-align: center; }
+  .card b { display: block; margin-top: 14px; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+  #stage { background: var(--panel); border-radius: 18px; padding: 24px 24px 24px 320px; margin-bottom: 20px; display: flex; justify-content: flex-end; min-height: 120px; align-items: center; }
+</style>
+</head>
+<body>
+<h1>Sentinel mascot</h1>
+<p class="sub">A plain HTML page: one script tag, no build step. Pick a state, type a message, switch theme and size.</p>
+
+<div class="bar" id="states"></div>
+<div class="bar">
+  <input id="msg" placeholder="What it says (90 characters at most)" maxlength="200">
+  <select id="size"><option>48</option><option selected>64</option><option>96</option><option>128</option></select>
+  <select id="place"><option value="left">bubble left</option><option value="below">bubble below</option><option value="above">bubble above</option></select>
+  <button id="theme">Theme: dark</button>
+  <button id="tour">Play a tour</button>
+</div>
+
+<div id="stage"><sentinel-mascot id="live" state="idle" size="64" theme="dark"></sentinel-mascot></div>
+<div class="grid" id="grid"></div>
+
+<script type="module" src="./sentinel-mascot.js"></script>
+<script type="module">
+  import { STATES } from './sentinel-mascot.js'
+  const SAY = { sleeping: '', idle: '', checking: '', allowed: 'Checked: allowed.', denied: "That would send restricted data out.",
+    'needs-approval': "This needs the officer's approval.", quarantined: 'Too many denied attempts: quarantined.', verified: 'Audit log intact.', tamper: 'The audit log was altered!' }
+  const live = document.getElementById('live')
+  const grid = document.getElementById('grid')
+  const bar = document.getElementById('states')
+  const set = (state, message = SAY[state]) => {
+    live.setAttribute('state', state); live.setAttribute('message', message); document.getElementById('msg').value = message
+    for (const b of bar.children) b.classList.toggle('on', b.dataset.s === state)
+  }
+  for (const s of STATES) {
+    const b = Object.assign(document.createElement('button'), { textContent: s }); b.dataset.s = s; b.onclick = () => set(s); bar.append(b)
+    const c = document.createElement('div'); c.className = 'card'; c.innerHTML = `<sentinel-mascot state="${s}" size="96" theme="dark"></sentinel-mascot><b>${s}</b>`; grid.append(c)
+  }
+  document.getElementById('msg').oninput = (e) => live.setAttribute('message', e.target.value)
+  document.getElementById('size').onchange = (e) => live.setAttribute('size', e.target.value)
+  document.getElementById('place').onchange = (e) => live.setAttribute('placement', e.target.value)
+  document.getElementById('theme').onclick = (e) => {
+    const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'
+    document.documentElement.dataset.theme = next; e.target.textContent = `Theme: ${next}`
+    document.querySelectorAll('sentinel-mascot').forEach((m) => m.setAttribute('theme', next))
+  }
+  document.getElementById('tour').onclick = async () => {
+    for (const s of ['sleeping', 'idle', 'checking', 'allowed', 'checking', 'denied', 'needs-approval', 'idle', 'checking', 'denied', 'quarantined', 'verified', 'tamper', 'idle']) { set(s); await new Promise((r) => setTimeout(r, 1800)) }
+  }
+  set('idle', '')
+</script>
+</body>
+</html>

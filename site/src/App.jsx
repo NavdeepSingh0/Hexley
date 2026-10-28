@@ -1,6 +1,7 @@
 import { Link, Route, Routes } from 'react-router-dom'
 import { getTheme, setTheme } from './theme.js'
 import Styleguide from './pages/Styleguide.jsx'
+import Mascot from './pages/Mascot.jsx'
 
 // B0 scaffold: every route is a placeholder. The teammates build the real pages in phases A1 to A8
 // (docs/plans/FRONTEND_PLAN.md). Keep the route list in sync with section 6 of that plan.
@@ -47,7 +48,8 @@ export default function App() {
       <Nav />
       <Routes>
         <Route path="/styleguide" element={<Styleguide />} />
-        {ROUTES.filter(([to]) => to !== '/styleguide').map(([to, title, phase]) => (
+        <Route path="/mascot" element={<Mascot />} />
+        {ROUTES.filter(([to]) => to !== '/styleguide' && to !== '/mascot').map(([to, title, phase]) => (
           <Route key={to} path={to === '/docs' ? '/docs/*' : to} element={<Placeholder title={title} phase={phase} />} />
         ))}
         <Route path="*" element={<Placeholder title="Not found" phase="-" />} />

@@ -1,4 +1,5 @@
 import { createElement, useEffect, useState } from 'react'
+import '../../../design/mascot/sentinel-mascot.js'
 import { verifyView } from '../lib/derive.js'
 import { getTheme, setTheme } from '../theme.js'
 
@@ -18,18 +19,11 @@ export function ThemeToggle() {
   )
 }
 
-// The mascot is a framework-free Web Component the website ships (docs/contracts/MASCOT.md), served at /mascot/ once the API
-// serves the site. If it is not there the slot simply stays empty: nothing in the console depends on it. It sits in the top bar,
-// never over the stage, so it cannot cover the evidence. Its state comes only from real data (derive.mascotFor).
+// The mascot is a framework-free Web Component (design/mascot/sentinel-mascot.js, docs/contracts/MASCOT.md), bundled with the
+// console, so it needs no network. It sits in the top bar, never over the stage, so it cannot cover the evidence, and its
+// words appear below it. Its state comes only from real data (derive.mascotFor): it decides nothing.
 export function MascotSlot({ state, message }) {
-  useEffect(() => {
-    if (customElements.get('sentinel-mascot')) return
-    // the website's copy first, then one next to the console (so the console also works on its own)
-    const sources = ['/mascot/sentinel-mascot.js', `${import.meta.env.BASE_URL}mascot/sentinel-mascot.js`]
-    sources.reduce((tried, url) => tried.catch(() => import(/* @vite-ignore */ url)), Promise.reject()).catch(() => {})
-  }, [])
-  const theme = document.documentElement.dataset.theme === 'light' ? 'light' : 'dark'
-  return <div className="mascot-slot">{createElement('sentinel-mascot', { state, message, size: 64, theme })}</div>
+  return <div className="mascot-slot">{createElement('sentinel-mascot', { state, message, size: 52, placement: 'below' })}</div>
 }
 
 // The top bar holds only: the name, where the agent's behaviour comes from, help, theme, the mascot.

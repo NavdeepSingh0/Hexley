@@ -20,8 +20,8 @@ p, h1, h2, dl, dd, ol, ul { margin: 0; }
 .spacer { flex: 1; }
 .help-btn { min-width: 36px; padding: 0; }
 .lost { border-color: var(--harm); color: var(--harm); }
-/* The widget is 64 px tall; the negative margin lets it use the bar's own padding so the bar stays slim. */
-.mascot-slot { display: flex; align-items: center; margin: -8px 0; max-width: 320px; }
+/* The mascot is 52 px in a 64 px bar; its speech bubble opens below it and overlays the page for a few seconds. */
+.mascot-slot { display: flex; align-items: center; }
 
 /* the "?" panel */
 .help { position: absolute; top: 64px; right: var(--space-4); z-index: 15; width: min(460px, calc(100vw - 32px)); max-height: calc(100vh - 140px); overflow: auto; box-shadow: var(--highlight), 0 24px 60px rgba(0, 0, 0, 0.45); }
