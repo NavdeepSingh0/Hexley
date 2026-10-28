@@ -20,7 +20,7 @@ from pathlib import Path
 
 import uvicorn
 
-from .api import create_api
+from .api import SITE_DIST, create_api
 from .gateway import build_gateway
 from .runtime import build_runtime, rotate_audit_log
 
@@ -90,13 +90,19 @@ async def _up(args: argparse.Namespace) -> None:
     env = {**os.environ, "SENTINEL_DOWNSTREAM_TOKEN": downstream, "SENTINEL_TOOLS_PORT": str(args.tools_port)}
     tools = subprocess.Popen([sys.executable, "-m", "sentinel.tools.server"], env=env)
     console_url = f"http://127.0.0.1:{args.api_port}/console/#token={api_token}"
+    site_url = f"http://127.0.0.1:{args.api_port}/#token={api_token}"
+    site_built = (SITE_DIST / "index.html").is_file()
     print(f"Sentinel up. API http://127.0.0.1:{args.api_port}  gateway {rt.gateway_url}  tools pid {tools.pid}")
+    if site_built:
+        print(f"Website and console (the token is in the link, not on screen once it opens): {site_url}")
+    else:
+        print("The website is not built (npm --prefix site ci && npm --prefix site run build); opening the console only.")
     print(f"Console (the token is in the link, not on screen once it opens): {console_url}")
     if public_url:
         print(f"Connector URL for an AI client: {public_url.rstrip('/')}/mcp   (Sign in, then enter the officer code printed here)")
     if not args.no_browser:
         # Open it ourselves so this terminal, which shows the token, never has to be on the projector.
-        asyncio.get_running_loop().call_later(1.5, webbrowser.open, console_url)
+        asyncio.get_running_loop().call_later(1.5, webbrowser.open, site_url if site_built else console_url)
     try:
         await asyncio.gather(_serve(build_gateway(rt).http_app(), args.gateway_port),
                              _serve(api_app, args.api_port))

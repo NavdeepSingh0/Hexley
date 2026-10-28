@@ -35,6 +35,8 @@ const SETUP = `python -m pip install --user uv
 python -m uv sync
 npm --prefix console ci
 npm --prefix console run build
+npm --prefix site ci
+npm --prefix site run build
 python -m uv run python -m sentinel up --demo`
 
 const CLASSIFY = `curl -X POST http://127.0.0.1:8000/api/v1/tools/update_vendor_bank/classify \\
@@ -64,7 +66,7 @@ export default function Docs() {
           <Section id="getting-started" title="Getting started" source="README.md (Setup, Console), docs/MVP.md.">
             <p>Sentinel runs on your computer. You need Python, the <code>uv</code> package manager and Node. The demo uses synthetic data and needs no model API key in its scripted and replay modes; the live mode with a real model needs a key, which you keep in a local <code>.env</code> file that is never committed.</p>
             <CopyField label="Run it" value={SETUP} block />
-            <p>The last command starts the tool server, the gateway and the API, and prints a link to the console. The link carries the officer token in its address; the page moves it out of the address bar as soon as it opens. <code>--demo</code> turns on the tamper button and starts a fresh audit log (the old one is kept aside).</p>
+            <p>The last command starts the tool server, the gateway and the API, and opens this website, served by the same program, and prints the links. The link carries the officer token in its address; the page moves it out of the address bar as soon as it opens, and the console (the "See it work" button) reuses it. <code>--demo</code> turns on the tamper button and starts a fresh audit log (the old one is kept aside).</p>
             <p>To let an AI app on the internet reach your gateway, add <code>--tunnel</code> (needs <code>cloudflared</code>) or <code>--public-url</code>. The address changes on every start.</p>
           </Section>
 

@@ -31,3 +31,23 @@ export function groupEvidence(items) {
   }
   return { groups: [...groups.values()].filter((g) => g.protectedItem), dropped }
 }
+
+// Build-time check (scripts/check-evidence.mjs): every problem that would make the home page drop or mislead, as plain
+// sentences. An empty list means the file is fit to ship. The build fails otherwise, so no bare number reaches a page.
+export function validateEvidence(items) {
+  if (!Array.isArray(items) || items.length === 0) return ['evidence.json is empty or not a list']
+  const problems = []
+  items.forEach((item, i) => {
+    const name = `entry ${i + 1}${item && item.label ? ` ("${item.label}")` : ''}`
+    if (!isComplete(item)) {
+      const missing = FIELDS.filter((f) => !item || item[f] === undefined || item[f] === null || item[f] === '')
+      problems.push(`${name} is incomplete${missing.length ? `: missing ${missing.join(', ')}` : ' (bad n, interval or arm)'}`)
+      return
+    }
+    const m = /^(\d+) of (\d+)$/.exec(item.value)
+    if (!m || Number(m[2]) !== item.n || Number(m[1]) > item.n) problems.push(`${name}: value "${item.value}" does not match n = ${item.n}`)
+    if (item.ci95[0] > item.ci95[1] || item.ci95[0] < 0 || item.ci95[1] > 1) problems.push(`${name}: the interval is not between 0 and 1`)
+  })
+  if (problems.length === 0 && groupEvidence(items).groups.length === 0) problems.push('no group has a protected figure, so the home page would show no number')
+  return problems
+}

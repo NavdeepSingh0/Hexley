@@ -12,11 +12,13 @@ from typing import Literal
 import httpx
 from fastapi import Depends, FastAPI, Header, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import PlainTextResponse, Response
+from fastapi.responses import FileResponse, PlainTextResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastmcp import Client
 from fastmcp.client.transports import StreamableHttpTransport
 from pydantic import BaseModel, ConfigDict
+from starlette.exceptions import HTTPException as StarletteHTTPException
+from starlette.websockets import WebSocketClose
 
 from .approvals import ApprovalError
 from .audit import AuditError
@@ -104,10 +106,12 @@ class RunRequest(BaseModel):
 
 
 CONSOLE_DIST = Path(__file__).resolve().parents[2] / "console" / "dist"
+SITE_DIST = Path(__file__).resolve().parents[2] / "site" / "dist"
 
 
-def create_api(rt: Runtime, console_dir: Path | None = None) -> FastAPI:
-    app = FastAPI(title="Sentinel API", version="0.1")
+def create_api(rt: Runtime, console_dir: Path | None = None, site_dir: Path | None = None) -> FastAPI:
+    # FastAPI's own /docs, /redoc and /openapi.json are off: /docs is the website's documentation page (core plan, F6).
+    app = FastAPI(title="Sentinel API", version="0.1", docs_url=None, redoc_url=None, openapi_url=None)
     app.add_middleware(CORSMiddleware, allow_origins=[CONSOLE_ORIGIN], allow_methods=["*"], allow_headers=["*"])
 
     def authorised(token: str) -> bool:
@@ -441,6 +445,7 @@ def create_api(rt: Runtime, console_dir: Path | None = None) -> FastAPI:
             raise HTTPException(status_code=e.status, detail=e.detail) from e
 
     mount_console(app, console_dir)
+    mount_site(app, site_dir)  # last: it answers every path nothing above matched
     return app
 
 
@@ -460,3 +465,43 @@ def mount_console(app: FastAPI, directory: Path | None = None) -> None:
     """Serve the built console at /console, so `python -m sentinel up` is the only command a demo needs."""
     app.mount("/console", ConsoleFiles(directory=directory or CONSOLE_DIST, html=True, check_dir=False),
               name="console")
+
+
+# Paths that belong to the API. An unknown one is a plain 404, never the website's page, so a mistyped API call is not
+# answered with HTML.
+API_PREFIXES = ("/api/", "/runs", "/approvals", "/audit", "/scenarios", "/recordings", "/sessions", "/tasks",
+                "/killswitch", "/inbox", "/health", "/oauth", "/mcp", "/ws", "/console")
+
+
+class SiteFiles(StaticFiles):
+    """The built website, with the single-page-app fallback: a path that is not a file and not an API path (for example
+    /docs or /how-it-works) gets index.html, and the page's own router takes over. A missing build is a 404 with an
+    instruction, as for the console."""
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] == "websocket":
+            await WebSocketClose()(scope, receive, send)
+            return
+        if not Path(str(self.directory)).is_dir():
+            await PlainTextResponse("The website is not built yet. Run: npm --prefix site run build",
+                                    status_code=404)(scope, receive, send)
+            return
+        await super().__call__(scope, receive, send)
+
+    async def get_response(self, path: str, scope):
+        try:
+            return await super().get_response(path, scope)
+        except StarletteHTTPException as e:  # Starlette's own class: FastAPI's HTTPException is only a subclass of it
+            url_path = scope.get("path", "/")
+            is_asset = "." in url_path.rsplit("/", 1)[-1]
+            if e.status_code != 404 or is_asset or url_path.startswith(API_PREFIXES):
+                raise
+            index = Path(str(self.directory)) / "index.html"
+            if not index.is_file():
+                raise
+            return FileResponse(index)
+
+
+def mount_site(app: FastAPI, directory: Path | None = None) -> None:
+    """Serve the built website at /, so `python -m sentinel up` shows the site and the console from one address."""
+    app.mount("/", SiteFiles(directory=directory or SITE_DIST, html=True, check_dir=False), name="site")

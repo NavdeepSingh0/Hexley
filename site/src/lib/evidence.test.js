@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatInterval, groupEvidence, isComplete } from './evidence.js'
+import { formatInterval, groupEvidence, isComplete, validateEvidence } from './evidence.js'
 
 const item = (over = {}) => ({
   group: 'g', group_title: 'G', arm: 'protected', label: 'l', value: '0 of 41', n: 41, ci95: [0, 0.086], source_file: 'eval/results/x.json', caveat: 'c',
@@ -49,4 +49,29 @@ describe('groupEvidence', () => {
     expect(r.groups).toHaveLength(0)
   })
   it('tolerates a non-array', () => expect(groupEvidence(null)).toEqual({ groups: [], dropped: [] }))
+})
+
+describe('validateEvidence', () => {
+  const good = () => [item(), item({ arm: 'unprotected', value: '41 of 41' })]
+  it('passes a complete file', () => expect(validateEvidence(good())).toEqual([]))
+  it('fails a number with no sample size and names the field', () => {
+    const bad = good()
+    delete bad[0].n
+    const p = validateEvidence(bad)
+    expect(p).toHaveLength(1)
+    expect(p[0]).toMatch(/missing n/)
+  })
+  it('fails a value that disagrees with its n', () => {
+    expect(validateEvidence([item({ value: '0 of 40' })]).join(' ')).toMatch(/does not match n = 41/)
+  })
+  it('fails an interval outside 0 to 1', () => {
+    expect(validateEvidence([item({ ci95: [0, 1.4] })]).join(' ')).toMatch(/interval/)
+  })
+  it('fails an empty or non-list file', () => {
+    expect(validateEvidence([])).not.toEqual([])
+    expect(validateEvidence({})).not.toEqual([])
+  })
+  it('fails when nothing could be shown (only unprotected figures)', () => {
+    expect(validateEvidence([item({ arm: 'unprotected', value: '41 of 41' })]).join(' ')).toMatch(/no group/)
+  })
 })
