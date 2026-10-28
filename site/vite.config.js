@@ -10,6 +10,7 @@ const apiPaths = ['/api', '/runs', '/scenarios', '/recordings', '/approvals', '/
 export default defineConfig({
   base: '/',
   plugins: [react()],
+  test: { environment: 'node', include: ['src/**/*.test.js'] },
   server: {
     port: 5174,
     strictPort: true,

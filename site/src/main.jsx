@@ -8,6 +8,7 @@ import '../../design/tokens.css'
 import '../../design/primitives.css'
 import '../../design/mascot/sentinel-mascot.js'
 import './styles/base.css'
+import './styles/site.css'
 
 applySavedTheme()
 initAuth()

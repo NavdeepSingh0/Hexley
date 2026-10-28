@@ -1,5 +1,8 @@
 [
   {
+    "group": "scripted",
+    "group_title": "Scripted attacks",
+    "arm": "protected",
     "label": "Attempts to get secrets out that got past Sentinel (scripted corpus)",
     "value": "0 of 41",
     "n": 41,
@@ -11,6 +14,9 @@
     "caveat": "Cases were written by us from the matcher's documented list and the routes we built: this shows it does what we say, not that no other route exists. Our own mock tools."
   },
   {
+    "group": "scripted",
+    "group_title": "Scripted attacks",
+    "arm": "unprotected",
     "label": "The same cases with no protection",
     "value": "41 of 41",
     "n": 41,
@@ -22,6 +28,9 @@
     "caveat": "Scripted attacker, mock tools, synthetic data."
   },
   {
+    "group": "real-model",
+    "group_title": "A real model, one poisoned task",
+    "arm": "unprotected",
     "label": "Real model, poisoned quotation: lanes that leaked with no protection",
     "value": "13 of 13",
     "n": 13,
@@ -33,6 +42,9 @@
     "caveat": "One model, one task. 21 of 90 lanes failed on the hosted API and are excluded."
   },
   {
+    "group": "real-model",
+    "group_title": "A real model, one poisoned task",
+    "arm": "protected",
     "label": "Real model, poisoned quotation: lanes that leaked behind Sentinel",
     "value": "0 of 9",
     "n": 9,

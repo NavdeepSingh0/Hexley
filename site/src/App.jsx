@@ -1,59 +1,40 @@
-import { Link, Route, Routes } from 'react-router-dom'
-import { getTheme, setTheme } from './theme.js'
+import { Route, Routes } from 'react-router-dom'
+import Layout from './components/Layout.jsx'
+import Home from './pages/Home.jsx'
 import Styleguide from './pages/Styleguide.jsx'
 import Mascot from './pages/Mascot.jsx'
 
-// B0 scaffold: every route is a placeholder. The teammates build the real pages in phases A1 to A8
-// (docs/plans/FRONTEND_PLAN.md). Keep the route list in sync with section 6 of that plan.
-const ROUTES = [
-  ['/', 'Home', 'A2'],
-  ['/how-it-works', 'How it works', 'A3'],
-  ['/integrations', 'Integrations', 'A3'],
-  ['/docs', 'Docs', 'A4'],
-  ['/pricing', 'Pricing', 'A5'],
-  ['/connect', 'Connect', 'A5'],
-  ['/chat', 'Sentinel Chat', 'A7'],
-  ['/oauth/consent', 'OAuth consent', 'A8'],
-  ['/styleguide', 'Styleguide (dev)', 'A1'],
-  ['/mascot', 'Mascot (dev)', 'A6b'],
+// Pages that a later phase builds (docs/plans/BUILD_PLAN.md). Until then each says so plainly instead of pretending.
+const LATER = [
+  ['/how-it-works', 'How it works', 'F4'],
+  ['/integrations', 'Integrations', 'F4'],
+  ['/connect', 'Connect', 'F4'],
+  ['/docs/*', 'Docs', 'F5'],
+  ['/chat', 'Sentinel Chat', 'F7b'],
+  ['/oauth/consent', 'Officer approval', 'F4'],
+  ['/pricing', 'Pricing', 'F8'],
 ]
 
-function Placeholder({ title, phase }) {
+function Soon({ title, phase }) {
   return (
-    <main className="placeholder">
-      <p className="label">Placeholder · phase {phase}</p>
+    <main className="page-soon">
+      <p className="s-label">Not built yet</p>
       <h1>{title}</h1>
-      <p className="muted">This page is built in phase {phase} of the frontend plan.</p>
+      <p className="muted">This page is built in phase {phase} of the plan.</p>
     </main>
-  )
-}
-
-function Nav() {
-  const toggle = () => setTheme(getTheme() === 'dark' ? 'light' : 'dark')
-  return (
-    <header className="nav">
-      <Link to="/" className="brand">SENTINEL</Link>
-      <nav>
-        {ROUTES.slice(1, 7).map(([to, label]) => <Link key={to} to={to}>{label}</Link>)}
-        <a href="/console/">See it work</a>
-      </nav>
-      <button className="ghost" onClick={toggle} aria-label="Toggle theme">Theme</button>
-    </header>
   )
 }
 
 export default function App() {
   return (
-    <>
-      <Nav />
-      <Routes>
+    <Routes>
+      <Route element={<Layout />}>
+        <Route index element={<Home />} />
         <Route path="/styleguide" element={<Styleguide />} />
         <Route path="/mascot" element={<Mascot />} />
-        {ROUTES.filter(([to]) => to !== '/styleguide' && to !== '/mascot').map(([to, title, phase]) => (
-          <Route key={to} path={to === '/docs' ? '/docs/*' : to} element={<Placeholder title={title} phase={phase} />} />
-        ))}
-        <Route path="*" element={<Placeholder title="Not found" phase="-" />} />
-      </Routes>
-    </>
+        {LATER.map(([to, title, phase]) => <Route key={to} path={to} element={<Soon title={title} phase={phase} />} />)}
+        <Route path="*" element={<Soon title="Page not found" phase="-" />} />
+      </Route>
+    </Routes>
   )
 }
