@@ -40,6 +40,7 @@
 .s-btn--ghost { border-color: var(--muted); }
 .s-btn--ghost:hover { border-color: var(--ink); background: var(--raised); }
 .s-btn--small { min-height: 36px; padding: 0 var(--space-3); font-size: var(--size-small); }
+.s-btn--big { min-height: 56px; padding: 0 var(--space-5); font-size: 22px; }
 
 /* Panels. Quiet by default; the active one gets the top highlight and a brand outline. */
 .s-panel {
@@ -64,6 +65,7 @@
 .s-verdict--denied { color: var(--denied); --glow: var(--glow-denied); }
 .s-verdict--approval { color: var(--approval); --glow: var(--glow-approval); }
 .s-verdict--harm { color: var(--harm); --glow: var(--glow-harm); }
+.s-verdict--muted { color: var(--muted); }
 .s-verdict--quarantined {
   display: inline-block;
   padding: 0.1em 0.35em;
@@ -108,6 +110,9 @@
   text-align: center;
   color: var(--ink);
 }
+
+/* A key shown on a filled button must follow the button's text colour (white would fail on the dark violet fill). */
+.s-btn--primary .s-kbd { color: inherit; border-color: currentColor; }
 
 @media (prefers-reduced-motion: reduce) {
   .s-btn { transition: none; }

@@ -55,7 +55,7 @@ SENTINEL   quotation task          [?]  [theme]  [mascot]      <- top bar: nothi
 +------------------+ +---------------------+ +----------------+
 Audit chain verified   [Verify] [Tamper]          step 2 of 3   <- footer
 ```
-- Clicking a denied step opens a **right-hand drawer**: the plain reason, the matched value highlighted, the chain "document -> stock register -> e-mail", the rule in one sentence. Nothing of this is on the stage until then.
+- **Show steps** on a lane opens a **right-hand drawer** listing that lane's steps and what reached the outside (the lanes themselves never grow, so all three stay the same height). "Why?" on a denied step goes one level deeper, with a way back; Enter on the step list only closes it. The deeper drawer holds: the plain reason, the matched value highlighted, the chain "document -> stock register -> e-mail", the rule in one sentence. Nothing of this is on the stage until then.
 - Officer approval is a modal with exactly: what, to where, which data, Approve, Deny.
 - Presenter keys live under `[?]`. The slip screen keeps: task, allowed tools, where restricted data may go, limits, one confirm button.
 

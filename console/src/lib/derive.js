@@ -306,6 +306,93 @@ export function presenterNext({ screen, runStatus, verdictOpen, hasVerdict, play
 
 export function verifyView(v) {
   if (!v) return { tone: 'idle', text: 'Not checked yet' }
-  if (v.ok) return { tone: 'ok', text: `Chain intact · ${v.checked} records` }
+  if (v.ok) return { tone: 'ok', text: `Chain intact · ${v.checked} ${v.checked === 1 ? 'record' : 'records'}` }
   return { tone: 'bad', text: `TAMPERED at record #${v.first_bad_seq}: ${v.reason}` }
+}
+
+// ---- The stage, one lane at a time (docs/DESIGN_BRIEF.md): a single verdict word, one plain sentence, one count line. ----
+// Everything is derived from laneHeadline and the lane's own steps and mail; nothing is invented. `kind` picks the colour
+// (it maps to the shared tokens) and is the only thing the stylesheet needs.
+
+const COLUMN_LABEL = { unprotected: 'Unprotected', r1_only: 'Standard access' }
+
+export function laneLabel(lane, scenarioId) {
+  if (COLUMN_LABEL[lane.column]) return COLUMN_LABEL[lane.column]
+  if (scenarioId === 'hardened') return lane.mode === 'hardened' ? 'Sentinel · hardened mode' : 'Sentinel · value matching'
+  return 'Sentinel'
+}
+
+// The delivered paraphrase the value matcher cannot see: the declared gap that hardened mode closes (D-028/D-029).
+export function isParaphraseGap(lane, scenarioId) {
+  return scenarioId === 'hardened' && lane.mode === 'fingerprint' && (lane.inbox || []).length > 0
+}
+
+export function laneVerdict(lane, scenarioId) {
+  const head = laneHeadline(lane)
+  const isSentinel = lane.column === 'sentinel'
+  const rows = (lane.inbox || []).map((r) => inboxRowView(r, lane.contract))
+  const banks = bankChanges(lane)
+  switch (head.tone) {
+    case 'leak':
+      if (rows.some((r) => r.leak)) return { kind: 'harm', word: 'LEAKED', sentence: 'Restricted data reached the outside.' }
+      if (rows.some((r) => r.misdirected)) return { kind: 'harm', word: 'MISDIRECTED', sentence: 'The reply went to the address the document asked for.' }
+      return { kind: 'harm', word: 'CHANGED', sentence: `The bank account was changed to ${banks[0]?.account} and nobody was asked.` }
+    case 'denied': {
+      const triedBank = (lane.steps || []).some((s) => s.tool === 'update_vendor_bank')
+      if (lane.outcome === 'recovered') return { kind: 'denied', word: 'DENIED', sentence: 'The unsafe message was stopped, then only a clean one was sent.' }
+      return { kind: 'denied', word: 'DENIED', sentence: triedBank ? 'The change was not made.' : 'Nothing left the building.' }
+    }
+    case 'quarantined':
+      return {
+        kind: 'quarantined', word: 'QUARANTINED',
+        sentence: lane.status !== 'finished' ? 'The agent is frozen.' : `The agent was frozen after ${lane.blocks} denied attempts.`,
+      }
+    case 'needs-approval':
+      return { kind: 'approval', word: 'NEEDS APPROVAL', sentence: 'Waiting for the officer.' }
+    case 'sent':
+      if (isParaphraseGap(lane, scenarioId)) {
+        return { kind: 'neutral', word: 'SENT', sentence: 'Delivered in a wording the value matcher cannot recognise: a declared limit.' }
+      }
+      if (banks.length && isSentinel) return { kind: 'allowed', word: 'ALLOWED', sentence: 'The bank account changed only after the officer approved.' }
+      return isSentinel
+        ? { kind: 'allowed', word: 'ALLOWED', sentence: 'Only a clean message went out.' }
+        : { kind: 'neutral', word: 'SENT', sentence: 'Only a clean message went out.' }
+    case 'running':
+      return { kind: 'running', word: 'WORKING', sentence: 'Each action is checked as it happens.' }
+    case 'error':
+      return {
+        kind: 'error', word: 'STOPPED',
+        sentence: lane.outcome === 'diverged' ? 'The live decision differed from the recording.' : 'The agent stopped with an error.',
+      }
+    default:
+      return { kind: 'neutral', word: 'FINISHED', sentence: '' }
+  }
+}
+
+export function laneCountLine(lane) {
+  const c = laneCounts(lane)
+  if (!c.calls) return 'No actions yet'
+  const n = `${c.calls} ${c.calls === 1 ? 'action' : 'actions'}`
+  if (lane.column === 'r1_only' && c.allowed === c.calls) return `${n} · all allowed by access control`
+  const parts = [n]
+  if (c.denied) parts.push(`${c.denied} denied`)
+  if (c.quarantined) parts.push('agent quarantined')
+  return parts.join(' · ')
+}
+
+// The line under a lane's name: what is and is not being evaluated, so no baseline is mistaken for a protected one.
+export function laneCaption(lane, view) {
+  const agent = `agent actions ${{ scripted: 'scripted', replay: 'replayed', live: 'live' }[view.source] ?? view.source}`
+  if (lane.column === 'unprotected') return `No policy evaluated · ${agent}`
+  if (lane.column === 'r1_only') return `Permission slip checks only · ${agent}`
+  return `${agent} · decisions made live`
+}
+
+// What the officer is being asked, in words (the approval modal): what, the detail, why it was held.
+export function approvalView(approval) {
+  return {
+    what: TOOL_ALLOWS[approval.tool] ?? approval.tool,
+    detail: shortArgs({ tool: approval.tool, args: approval.args }),
+    why: approval.summary,
+  }
 }
