@@ -63,6 +63,7 @@ Measured model results (matched trials, six models) are in [docs/spikes/M0-resul
 ## Docs
 - [docs/MVP.md](docs/MVP.md): what we build and present (source of truth)
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): layout, interfaces, build order
+- [docs/THREAT_MODEL.md](docs/THREAT_MODEL.md): what Sentinel guarantees and what it does not (trusted components, confidentiality versus integrity versus availability, routes outside the gateway)
 - [docs/ADVERSARIAL_TESTS.md](docs/ADVERSARIAL_TESTS.md): attack matrix that becomes test oracles
 - [docs/spikes/M0-results.md](docs/spikes/M0-results.md): measured spike results
 
