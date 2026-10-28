@@ -90,7 +90,7 @@ function EvidenceCard({ g }) {
 function Evidence() {
   const ev = useEvidence()
   return (
-    <section className="block" aria-labelledby="evidence-title">
+    <section className="block" id="evidence" aria-labelledby="evidence-title">
       <p className="s-label">The evidence</p>
       <h2 id="evidence-title" className="block-title">Measured, with its limits</h2>
       {ev.status === 'loading' && <p className="muted" role="status">Loading the evidence file...</p>}
