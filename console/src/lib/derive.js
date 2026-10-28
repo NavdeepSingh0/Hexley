@@ -8,6 +8,13 @@ export const TOOL_LABEL = {
   send_quote_ack: "Asked Sentinel to send its fixed acknowledgement",
   update_vendor_bank: "Changed the vendor's bank account",
   delete_records: 'Tried to delete records',
+  list_documents: 'Listed the documents',
+  read_document: 'Read a document',
+  query_db: 'Queried the customer database',
+  fetch_url: 'Fetched a web page',
+  http_post: 'Posted to a web address',
+  write_file: 'Wrote a file',
+  run_command: 'Tried to run a command',
 }
 
 // The same tools, worded as permissions (the slip says what the agent MAY do; the timeline says what it DID).
@@ -17,6 +24,13 @@ export const TOOL_ALLOWS = {
   send_email: 'Send an e-mail',
   send_quote_ack: "Send Sentinel's fixed acknowledgement",
   update_vendor_bank: "Change a vendor's bank account",
+  list_documents: 'List documents',
+  read_document: 'Read documents',
+  query_db: 'Query the customer database',
+  fetch_url: 'Fetch web pages',
+  http_post: 'Post to a web address',
+  write_file: 'Write files',
+  run_command: 'Run commands (the officer must approve each)',
 }
 
 export const RULE_LABEL = {
@@ -26,6 +40,7 @@ export const RULE_LABEL = {
   R4: 'Needs the officer',
   R5: 'Message limit reached',
   R6: 'Too many blocked attempts',
+  R7: 'Needs the officer after reading untrusted content',
 }
 
 const truncate = (s, n) => (s.length > n ? s.slice(0, n - 1) + '…' : s)
@@ -83,10 +98,10 @@ export function laneHeadline(lane) {
     return { tone: 'stopped', text: triedBank ? 'STOPPED: the change was not made' : 'STOPPED: nothing left the building' }
   }
   if (lane.outcome === 'recovered') {
-    return { tone: 'stopped', text: 'STOPPED, then only a clean acknowledgement was sent' }
+    return { tone: 'stopped', text: 'STOPPED, then only a clean message was sent' }
   }
   if (lane.outcome === 'agent_error') return { tone: 'error', text: 'The agent stopped with an error' }
-  if (rows.length) return { tone: 'sent', text: 'SENT: clean acknowledgement only' }
+  if (rows.length) return { tone: 'sent', text: 'SENT: clean message only' }
   return { tone: 'neutral', text: 'Finished' }
 }
 
@@ -123,6 +138,20 @@ export function shortArgs(step) {
       return `to ${a.to} — “${truncate(String(a.body ?? ''), 90)}”`
     case 'update_vendor_bank':
       return `${a.vendor} → account ${a.account_number}`
+    case 'list_documents':
+      return `folder ${a.folder ?? 'reports'}`
+    case 'read_document':
+      return `document ${a.path}`
+    case 'query_db':
+      return `SQL: ${truncate(String(a.sql ?? ''), 70)}`
+    case 'fetch_url':
+      return `page ${a.url}`
+    case 'http_post':
+      return `to ${a.url} — “${truncate(String(a.body ?? ''), 80)}”`
+    case 'write_file':
+      return `file ${a.path} — “${truncate(String(a.content ?? ''), 60)}”`
+    case 'run_command':
+      return `command ${truncate(String(a.command ?? ''), 80)}`
     default:
       return truncate(JSON.stringify(a), 100)
   }
@@ -181,7 +210,10 @@ export function highlightTokens(text, tokens) {
   return { segments: segments.length ? segments : [{ text, hit: false }], unlocated }
 }
 
-// Links between steps, ONLY where the matcher or R3 recorded the source tool in its evidence.
+// Links between steps, ONLY where the matcher or R3 recorded where the value came from in its evidence.
+// The evidence names the exact call (`source_action_id`) whenever the gateway knew it, so two documents read with the same
+// tool are two different sources and the arrow points at the right one. Recordings made before that field existed only name
+// the tool, and for those the earliest earlier completed call of that tool is used (the old, less precise behaviour).
 // Baseline lanes evaluate no data flow, so they never get any.
 export function chainLinks(lane) {
   if (lane.column !== 'sentinel') return []
@@ -189,11 +221,15 @@ export function chainLinks(lane) {
   const links = []
   steps.forEach((step, to) => {
     if (step.effect !== 'BLOCK' && step.effect !== 'FREEZE') return
-    const sources = new Set(
-      (step.evidence || []).filter((e) => e.kind === 'fingerprint' || e.kind === 'provenance').map((e) => e.source_ref))
-    for (const ref of sources) {
-      const from = steps.findIndex((s, i) => i < to && s.tool === ref && s.completed)
-      if (from >= 0) links.push({ from, to, source: ref })
+    const seen = new Set()
+    for (const e of step.evidence || []) {
+      if (e.kind !== 'fingerprint' && e.kind !== 'provenance') continue
+      const from = e.source_action_id
+        ? steps.findIndex((s) => s.action_id === e.source_action_id && s.completed)
+        : steps.findIndex((s, i) => i < to && s.tool === e.source_ref && s.completed)
+      if (from < 0 || from >= to || seen.has(from)) continue
+      seen.add(from)
+      links.push({ from, to, source: e.source_ref })
     }
   })
   return links

@@ -33,7 +33,8 @@ async def main():
         stack.rt.runs.pace = 0.0
         stack.rt.approval_wait = 30.0
         async with stack.api() as api:
-            for scenario in ("poisoned", "clean", "redirect", "stranger", "freeze", "hardened"):
+            for scenario in ("poisoned", "clean", "redirect", "stranger", "freeze", "hardened", "compromised_pdf",
+                             "poisoned_web"):
                 run_id = (await api.post("/runs", json={"scenario": scenario, "source": "scripted"})).json()["run_id"]
                 if scenario == "poisoned":  # the slip screen, before the officer confirms
                     (OUT / "poisoned_awaiting.json").write_text(json.dumps((await api.get(f"/runs/{run_id}")).json(), indent=2))

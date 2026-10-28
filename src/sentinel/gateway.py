@@ -193,12 +193,14 @@ class SentinelMiddleware(Middleware):
         # Label what came back from the registry (never from the content) and remember restricted values,
         # so a later outbound call can be checked against them (R2).
         if protected and entry.output_confidentiality == Confidentiality.RESTRICTED and entry.fingerprint_fields:
-            session.index.add(text, entry.fingerprint_fields, source_ref=tool)
+            session.index.add(text, entry.fingerprint_fields, source_ref=tool, action_id=action.action_id)
         # Addresses found in untrusted content are remembered so R3 can refuse them as destinations later.
         if protected and entry.output_integrity == Integrity.UNTRUSTED:
             session.tainted_by.setdefault(tool, "read untrusted content")  # R7: from now on consequential actions ask
             for address in extract_destinations(text):
-                session.untrusted_destinations.setdefault(address, tool)  # remember the first source
+                if address not in session.untrusted_destinations:  # remember the first source, and the exact call
+                    session.untrusted_destinations[address] = tool
+                    session.untrusted_actions[address] = action.action_id
         return result
 
 

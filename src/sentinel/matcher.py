@@ -165,6 +165,7 @@ class Match:
     source_ref: str
     snippet: str
     path: str = ""
+    source_action: str | None = None  # the call whose result first held this value
 
 
 _EMAIL_RE = re.compile(r"[a-z0-9._%+\-]+@[a-z0-9\-]+(?:\.[a-z0-9\-]+)+")
@@ -208,8 +209,9 @@ class FingerprintIndex:
     """Per-session set of restricted values seen in tool results, each with where it came from."""
 
     entries: dict[tuple[str, str], str] = field(default_factory=dict)
+    actions: dict[tuple[str, str], str | None] = field(default_factory=dict)  # (kind, value) -> the call that produced it
 
-    def add(self, result_text: str, fields: list[str], source_ref: str) -> None:
+    def add(self, result_text: str, fields: list[str], source_ref: str, action_id: str | None = None) -> None:
         wanted = set(ALL_KINDS) if "all" in fields else {FIELD_KINDS[f] for f in fields if f in FIELD_KINDS}
         norm = normalise(result_text)
         # Without "code" among the wanted kinds, switch the weak code pattern off entirely: left on, "owes 48,500" is read
@@ -220,14 +222,17 @@ class FingerprintIndex:
                 continue
             if c.kind == "number" and int(c.canonical) < MIN_NUMBER:
                 continue
-            self.entries.setdefault((c.kind, c.canonical), source_ref)
+            if (c.kind, c.canonical) not in self.entries:
+                self.entries[(c.kind, c.canonical)] = source_ref
+                self.actions[(c.kind, c.canonical)] = action_id
 
     def scan_text(self, text: str, path: str = "") -> list[Match]:
         codes = frozenset(canonical for kind, canonical in self.entries if kind == "code")
         norm = normalise(text)
         present = {kind for kind, _ in self.entries}
         found = [*candidates(norm, codes), *_generic_candidates(norm, present & ALL_KINDS)]
-        return [Match(c.kind, c.canonical, self.entries[(c.kind, c.canonical)], c.snippet[:60], path)
+        return [Match(c.kind, c.canonical, self.entries[(c.kind, c.canonical)], c.snippet[:60], path,
+                      self.actions.get((c.kind, c.canonical)))
                 for c in found if (c.kind, c.canonical) in self.entries]
 
     def scan_args(self, value: Any, path: str = "") -> list[Match]:

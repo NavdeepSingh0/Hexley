@@ -97,7 +97,7 @@ function Effects({ lane, view, tokens }) {
   const rows = lane.inbox || []
   return (
     <div className="effects">
-      <div className="effects-title">What reached the outside (vendor-side inbox)</div>
+      <div className="effects-title">What reached the outside</div>
       {rows.length === 0 ? <div className="effect-empty">Nothing was delivered.</div> : rows.map((r, i) => {
         const v = inboxRowView(r, lane.contract)
         const registered = lane.contract?.resolved_vendor?.email
@@ -108,7 +108,7 @@ function Effects({ lane, view, tokens }) {
             <div className="mail-flag">
               {v.leak ? 'Restricted data delivered (measured by the evaluation oracle)'
                 : v.misdirected ? `Not the registered vendor address (${registered})`
-                : 'Clean acknowledgement: no restricted data (evaluation oracle)'}
+                : 'Clean message: no restricted data (evaluation oracle)'}
             </div>
           </div>
         )

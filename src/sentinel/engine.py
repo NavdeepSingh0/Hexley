@@ -47,7 +47,7 @@ def decide(action: AgentAction, session: Session, registry: Registry, approved: 
                 matches = []  # restricted data may go to a destination the officer named as internal (the slip says so)
             results.append(rules.rule_r2(action, entry, matches))
             results.append(rules.rule_r3(action, entry, recipients, session.untrusted_destinations,
-                                         session.trusted_addresses))
+                                         session.trusted_addresses, session.untrusted_actions))
             results.append(rules.rule_r4(action, entry, approved))
             results.append(rules.rule_r5(action, entry, session.contract, session.messages_out))
             if not any(r is not None and r.effect == Effect.BLOCK for r in results):

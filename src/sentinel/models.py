@@ -175,6 +175,9 @@ class Evidence(_Model):
     detail: str
     matched_tokens: list[str] = Field(default_factory=list)
     source_ref: str | None = None
+    # The exact earlier call whose result held the value or address, so the console can link to THAT call and not merely to
+    # the first call that used the same tool (two documents read with read_document are two different sources).
+    source_action_id: str | None = None
 
 
 class Decision(_Model):

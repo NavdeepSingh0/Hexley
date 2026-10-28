@@ -49,6 +49,71 @@ tools:
     output_integrity: trusted
     output_confidentiality: internal
 
+  # ---- the general-purpose tools (core plan B3). Mock and sandboxed; labels follow docs/DECISIONS.md D-037. ----
+  list_documents:
+    capability: read
+    resource_class: document_index
+    outbound: false
+    consequential: false
+    output_integrity: untrusted       # file names are chosen by whoever put the files there
+    output_confidentiality: internal
+
+  read_document:
+    capability: read
+    resource_class: document
+    outbound: false
+    consequential: false
+    output_integrity: untrusted       # a document can carry hidden instructions: reading one taints the session (R7)
+    output_confidentiality: internal
+
+  query_db:
+    capability: read
+    resource_class: customer_database
+    outbound: false
+    consequential: false
+    output_integrity: trusted
+    output_confidentiality: restricted   # customers and salaries: shown as SECRET
+    fingerprint_fields: [all]
+
+  fetch_url:
+    capability: read
+    resource_class: web
+    outbound: true                    # a web address can carry data out in its query string, so it is checked like a send
+    consequential: true
+    output_integrity: untrusted
+    output_confidentiality: internal
+    destination_args: [url]
+    destination_kind: url
+
+  http_post:
+    capability: send
+    resource_class: web_post
+    outbound: true
+    consequential: true
+    output_integrity: trusted
+    output_confidentiality: internal
+    destination_args: [url]
+    destination_kind: url
+
+  write_file:
+    capability: write
+    resource_class: file
+    outbound: true                    # writing data to a place others can read is data leaving
+    consequential: true
+    output_integrity: trusted
+    output_confidentiality: internal
+    destination_args: [path]
+    destination_kind: path
+
+  run_command:
+    capability: write
+    resource_class: shell
+    outbound: false
+    consequential: true
+    requires_human_verification: true  # R4: a person confirms every command (this demo never runs one)
+    output_integrity: trusted
+    output_confidentiality: internal
+
   update_vendor_bank:
     capability: write
     resource_class: vendor_bank_details

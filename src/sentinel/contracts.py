@@ -91,6 +91,7 @@ def draft_contract(templates: dict[str, dict], template: str, officer: str, now:
         allowed_tools=list(spec["allowed_tools"]),
         resource_classes=list(spec["resource_classes"]),
         allowed_recipient_domains=list(spec["allowed_recipient_domains"]),
+        internal_destinations=list(spec.get("internal_destinations", [])),
         max_records=spec["max_records"],
         max_messages=spec["max_messages"],
         max_records_out=spec["max_records_out"],
@@ -241,6 +242,7 @@ class Session:
     index: FingerprintIndex = field(default_factory=FingerprintIndex)  # restricted values read so far
     # addresses seen in untrusted tool results, each mapped to the tool whose result contained it first
     untrusted_destinations: dict[str, str] = field(default_factory=dict)
+    untrusted_actions: dict[str, str] = field(default_factory=dict)  # the same addresses -> the exact call that returned them
     # tools whose untrusted output this session has read (tool -> short note). Non-empty means "tainted" for R7.
     tainted_by: dict[str, str] = field(default_factory=dict)
     trusted_addresses: frozenset[str] = frozenset()  # vendor-master addresses (trusted records), set at confirmation

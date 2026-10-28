@@ -92,6 +92,21 @@ MUTATIONS = [
     ("generic indexing reads 'owes 48,500' as the code owes48 and indexes 500", "src/sentinel/matcher.py",
      '        known_codes = None if "code" in wanted else frozenset()', "        known_codes = None",
      "tests/test_matcher_generic.py", "numbers_and_dates"),
+    # ---- B3: general-purpose tools ----
+    ("the database can be changed (the agent switches query_only off)", "src/sentinel/tools/server.py",
+     '    db.set_authorizer(read_only)  # query_only alone could be switched off by the agent with "PRAGMA query_only=OFF"',
+     "    pass",
+     "tests/test_general_tools.py", "database_answers_reads_and_can_never_be_changed"),
+    ("a path may climb out of the sandbox", "src/sentinel/tools/server.py",
+     '        if ".." in p.split("/") or "\\x00" in p:', "        if False:",
+     "tests/test_general_tools.py", "sandbox_holds or paths_stay_inside"),
+    ("the provenance link names the wrong call", "src/sentinel/gateway.py",
+     "                    session.untrusted_actions[address] = action.action_id",
+     '                    session.untrusted_actions[address] = "act_unknown"',
+     "tests/test_general_tools.py", "compromised_pdf_leaks"),
+    ("a fingerprint forgets which call produced it", "src/sentinel/matcher.py",
+     "                self.actions[(c.kind, c.canonical)] = action_id", "                self.actions[(c.kind, c.canonical)] = None",
+     "tests/test_general_tools.py", "compromised_pdf_leaks"),
 ]
 
 

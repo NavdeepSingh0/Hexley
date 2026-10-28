@@ -88,7 +88,7 @@ def rule_r1_egress(action: AgentAction, entry: ToolEntry, contract: TaskContract
 
 
 def rule_r3(action: AgentAction, entry: ToolEntry, recipients: list[str], untrusted: dict[str, str] | set[str],
-            trusted: frozenset[str]) -> RuleResult | None:
+            trusted: frozenset[str], untrusted_actions: dict[str, str] | None = None) -> RuleResult | None:
     """R3: a destination that appears only in untrusted content (and not in the trusted vendor records) is
     refused, even inside an allowed domain. Value-level provenance, not general flow tracking."""
     if not entry.outbound:
@@ -105,7 +105,8 @@ def rule_r3(action: AgentAction, entry: ToolEntry, recipients: list[str], untrus
         [Evidence(kind="provenance", detail=f"{r} was found in untrusted content and in no trusted source",
                   # the tool whose result held it, so the console can draw an honest link; a plain set carries no source
                   source_ref=untrusted.get(r, "untrusted tool result") if isinstance(untrusted, dict)
-                  else "untrusted tool result") for r in bad])
+                  else "untrusted tool result",
+                  source_action_id=(untrusted_actions or {}).get(r)) for r in bad])
 
 
 def rule_r4(action: AgentAction, entry: ToolEntry, approved: bool) -> RuleResult | None:
@@ -157,7 +158,8 @@ def rule_r2(action: AgentAction, entry: ToolEntry, matches: list[Match]) -> Rule
     sources = sorted({m.source_ref for m in matches})
     evidence = [Evidence(kind="fingerprint",
                          detail=f"{_KIND_LABEL.get(m.kind, m.kind)} from {m.source_ref} found in argument '{m.path or action.tool}'",
-                         matched_tokens=[m.snippet], source_ref=m.source_ref) for m in matches]
+                         matched_tokens=[m.snippet], source_ref=m.source_ref, source_action_id=m.source_action)
+                for m in matches]
     return RuleResult(
         RuleId.R2, Effect.BLOCK, ReasonCode.SECRET_EGRESS,
         f"Blocked: this {action.tool} would send {len(matches)} restricted value(s) "
