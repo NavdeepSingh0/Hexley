@@ -7,7 +7,7 @@
       0.0,
       0.086
     ],
-    "source_file": "eval/results/scripted-20261028T053039.json",
+    "source_file": "eval/results/scripted-20261028T103528.json",
     "caveat": "Cases were written by us from the matcher's documented list and the routes we built: this shows it does what we say, not that no other route exists. Our own mock tools."
   },
   {
@@ -18,7 +18,7 @@
       0.914,
       1.0
     ],
-    "source_file": "eval/results/scripted-20261028T053039.json",
+    "source_file": "eval/results/scripted-20261028T103528.json",
     "caveat": "Scripted attacker, mock tools, synthetic data."
   },
   {
