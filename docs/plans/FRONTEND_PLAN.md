@@ -1,5 +1,7 @@
 # Sentinel frontend plan (for the team)
 
+> **Superseded in part, 28 Oct 2026.** The teammates are no longer part of the build; Navdeep and Claude build all the frontend. The **look, palette and layouts** in this plan are replaced by [../DESIGN_BRIEF.md](../DESIGN_BRIEF.md). The page list, the API contracts, the honesty rules and the QA checklist below still apply. A one-person phase plan follows; until it exists, treat the phases below as a menu, not a schedule.
+
 **Written 27 Oct 2026.** Owner of this document: Navdeep. Questions: ask Navdeep (who works with Claude Code on the core).
 
 This plan is everything you need to build Sentinel's website, chat page, mascot and sign-in screens. Read sections 0 to 4 once before you start; sections 5 to 9 are your reference while you work.
