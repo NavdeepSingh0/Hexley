@@ -67,7 +67,7 @@ export const decideOAuthRequest = (id, decision, officer_code) =>
 export const getChatPresets = () => api('/api/v1/chat/presets')
 export const createChat = (preset, mode = 'auto') => api('/api/v1/chat', { method: 'POST', body: { preset, mode } })
 export const confirmChat = (id) => api(`/api/v1/chat/${id}/confirm`, { method: 'POST' })
-export const sendChatMessage = (id, text) => api(`/api/v1/chat/${id}/messages`, { method: 'POST', body: { text } })
+export const sendChatMessage = (id, text, attachments = []) => api(`/api/v1/chat/${id}/messages`, { method: 'POST', body: { text, attachments } })
 export const getChat = (id) => api(`/api/v1/chat/${id}`)
 export const decideApproval = (id, decision) => api(`/approvals/${id}`, { method: 'POST', body: { decision } })
 export const getChatRecording = (id) => api(`/api/v1/chat/${id}/recording`)

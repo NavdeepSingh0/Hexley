@@ -18,6 +18,7 @@ export default function Chat() {
   const [presets, setPresets] = useState({ status: 'loading', list: [], error: '' })
   const [mode, setMode] = useState('auto')
   const [view, setView] = useState(null)
+  const [attached, setAttached] = useState([]) // files picked for the next message (plan Q10)
   const [gone, setGone] = useState(false)
   const [draft, setDraft] = useState('')
   const [busy, setBusy] = useState(false)
@@ -38,6 +39,7 @@ export default function Chat() {
 
   // Open the chat named in the address (a reload, a link, the sidebar); go back to the empty state when it is removed.
   useEffect(() => {
+    setAttached([])
     if (!chatParam) { setView(null); setGone(false); setDraft(''); setDetailsOpen(false); return undefined }
     if (view?.chat_id === chatParam) return undefined
     let live = true
@@ -109,10 +111,23 @@ export default function Chat() {
     const text = draft.trim()
     if (!text) return
     stick.current = true
-    await sendChatMessage(view.chat_id, text)
+    await sendChatMessage(view.chat_id, text, attached.filter((a) => a.status === 'ready').map((a) => a.name))
     setDraft('')
+    setAttached([])
     setView(await getChat(view.chat_id))
   })
+  // A picked PDF is uploaded at once and shown in the box; it goes with the next message.
+  const attach = async (file) => {
+    const temp = { name: file.name, status: 'uploading' }
+    setAttached((list) => [...list.filter((a) => a.name !== file.name), temp])
+    try {
+      const d = await uploadChatDocument(view.chat_id, file)
+      setAttached((list) => [...list.filter((a) => a !== temp && a.name !== d.name), { ...d, status: 'ready' }])
+    } catch (e) {
+      setAttached((list) => list.map((a) => (a === temp ? { ...a, status: 'error', error: e.message } : a)))
+    }
+  }
+  const detach = (name) => setAttached((list) => list.filter((a) => a.name !== name))
   const decide = (decision) => run(async () => {
     await decideApproval(pendingApproval(view).approval_id, decision)
     setView(await getChat(view.chat_id))
@@ -182,8 +197,8 @@ export default function Chat() {
         </div>
 
         <Composer draft={draft} setDraft={setDraft} onSend={send} block={view ? block : 'Pick a task above to start'} busy={busy} disclosure={view?.disclosure ?? DEFAULT_DISCLOSURE}
-          documents={view?.documents ?? []}
-          onUpload={view?.can_upload && view.status !== 'awaiting_confirmation' ? async (file) => { const d = await uploadChatDocument(view.chat_id, file); setView(await getChat(view.chat_id)); return d } : null} />
+          attachments={attached} onDetach={detach}
+          onAttach={view?.can_upload && view.status !== 'awaiting_confirmation' ? attach : null} />
       </div>
       {detailsOpen && view && <Details view={view} onClose={() => setDetailsOpen(false)} />}
     </div>

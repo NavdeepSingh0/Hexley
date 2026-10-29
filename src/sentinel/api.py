@@ -123,6 +123,7 @@ class ChatRequest(BaseModel):
 
 class ChatMessageRequest(BaseModel):
     text: str
+    attachments: list[str] = []  # names of documents uploaded into this chat, sent with this message (plan Q10)
 
 
 class RunRequest(BaseModel):
@@ -458,7 +459,7 @@ def create_api(rt: Runtime, console_dir: Path | None = None, site_dir: Path | No
     @app.post("/api/v1/chat/{chat_id}/messages", status_code=202, dependencies=[Depends(require_token)])
     async def chat_send(chat_id: str, req: ChatMessageRequest):
         try:
-            return {"message_id": await chats.send(chat_id, req.text)}
+            return {"message_id": await chats.send(chat_id, req.text, req.attachments)}
         except ChatError as e:
             raise chat_error(e) from e
 

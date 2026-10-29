@@ -402,7 +402,7 @@ class ChatManager:
         expires = datetime.fromisoformat(chat.contract["expires_at"])
         return "ended" if datetime.now(timezone.utc) >= expires else ""
 
-    async def send(self, chat_id: str, text: str) -> str:
+    async def send(self, chat_id: str, text: str, attachments: list[str] | None = None) -> str:
         chat = self._get(chat_id)
         text = (text or "").strip()
         if not text:
@@ -420,9 +420,19 @@ class ChatManager:
             raise ChatError(409, "wait for the current answer")
         if sum(1 for m in chat.messages if m["role"] == "user") >= MAX_USER_MESSAGES:
             raise ChatError(429, f"a chat is limited to {MAX_USER_MESSAGES} messages; start a new one")
+        docs = {d["name"]: d for d in chat.documents}
+        unknown = [a for a in (attachments or []) if a not in docs]
+        if unknown:
+            raise ChatError(422, f"no uploaded document called {', '.join(unknown)}")
+        attached = [docs[a] for a in dict.fromkeys(attachments or [])]
         message_id = f"msg_{len(chat.messages) + 1}"
-        chat.messages.append({"id": message_id, "role": "user", "text": text, "ts": _now(), "step_from": None})
-        chat.model_messages.append({"role": "user", "content": text})
+        chat.messages.append({"id": message_id, "role": "user", "text": text, "ts": _now(), "step_from": None,
+                              "attachments": [{"name": d["name"], "path": d["path"], "pages": d["pages"]} for d in attached]})
+        # The model is told which file is attached and where; its content still comes only through read_document, so the
+        # gateway sees it arrive and labels it untrusted (plan Q10). Pasting the text into the prompt would bypass that.
+        note = "".join(f"\n\n[Attached file: {d['path']} ({d['pages']} page{'s' if d['pages'] != 1 else ''}). "
+                       "Read it with the read_document tool.]" for d in attached)
+        chat.model_messages.append({"role": "user", "content": text + note})
         chat.status = "thinking"
         chat.turn = asyncio.create_task(self._turn(chat))
         return message_id
@@ -471,7 +481,7 @@ class ChatManager:
             if m["role"] == "assistant" and m.get("step_from") is not None:
                 actions = [action_view(s) for s in steps[m["step_from"]: m["step_to"]]]
             messages.append({"id": m["id"], "role": m["role"], "text": m["text"], "ts": m["ts"], "actions": actions,
-                             "checks": m.get("checks", [])})
+                             "checks": m.get("checks", []), "attachments": m.get("attachments", [])})
         state = self.session_state(chat)
         retry = None
         if chat.retry:

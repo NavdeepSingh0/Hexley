@@ -135,7 +135,7 @@
 
 /* ---- composer ---- */
 .cx-composer-wrap { padding: 0 20px 14px; background: linear-gradient(to bottom, transparent, var(--bg) 22%); }
-.cx-composer { display: flex; align-items: flex-end; gap: 10px; max-width: 760px; margin: 0 auto; padding: 10px 10px 10px 18px; border-radius: 26px; background: var(--panel); border: 1px solid var(--card-border); }
+.cx-composer { display: flex; flex-direction: column; gap: 10px; max-width: 760px; margin: 0 auto; padding: 10px 10px 10px 18px; border-radius: 26px; background: var(--panel); border: 1px solid var(--card-border); }
 .cx-composer:focus-within { border-color: var(--muted); }
 .cx-composer textarea { flex: 1; min-width: 0; resize: none; border: 0; outline: 0; background: none; color: var(--ink); font: inherit; font-size: 16px; line-height: 1.5; padding: 6px 0; max-height: 220px; }
 .cx-composer textarea::placeholder { color: var(--muted); }
@@ -184,14 +184,26 @@
 @media (prefers-reduced-motion: reduce) { .cx-side, .cx-tools-chev { transition: none; } }
 /* plan Q6: an address Sentinel removed from a reply, said in plain words under the reply */
 .cx-check { margin: 0; padding: 10px 14px; border-radius: 12px; background: var(--panel); border: 1px solid var(--card-border); color: var(--muted); font-size: 14.5px; line-height: 1.5; }
-/* plan Q10: documents uploaded into a chat */
-.cx-docs { list-style: none; margin: 0 0 8px; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
-.cx-doc { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 999px; background: var(--panel); border: 1px solid var(--card-border); font-size: 13.5px; }
-.cx-upload-note { margin: 0 0 8px; font-size: 13.5px; color: var(--muted); }
-.cx-upload-note.is-error { color: var(--harm); }
+/* plan Q10: files attached to a message */
 .cx-attach { flex: none; align-self: flex-end; display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: 999px; border: 1px solid var(--card-border); background: transparent; color: var(--ink); cursor: pointer; }
 .cx-attach:hover:not(:disabled) { background: var(--raised); }
 .cx-attach:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 .cx-attach:disabled { opacity: 0.5; cursor: progress; }
 .cx-doc-text summary { cursor: pointer; font-size: 14px; padding: 4px 0; }
 .cx-doc-text pre { margin: 6px 0 0; padding: 10px 12px; max-height: 280px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; font-family: var(--mono); font-size: 12.5px; line-height: 1.5; background: var(--bg); border: 1px solid var(--card-border); border-radius: 10px; }
+.cx-composer-row { display: flex; align-items: flex-end; gap: 10px; }
+.cx-files { display: flex; flex-wrap: wrap; gap: 8px; }
+.cx-files--sent { justify-content: flex-end; }
+.cx-file { position: relative; display: flex; align-items: center; gap: 10px; min-width: 0; max-width: 300px; padding: 8px 34px 8px 8px; border-radius: 14px; background: var(--bg); border: 1px solid var(--card-border); }
+.cx-files--sent .cx-file { padding-right: 14px; background: var(--panel); }
+.cx-file-icon { flex: none; display: inline-grid; place-items: center; width: 38px; height: 38px; border-radius: 10px; background: var(--brand-fill); color: var(--on-brand-fill); }
+.cx-file-text { display: grid; min-width: 0; }
+.cx-file-name { font-size: 14.5px; font-weight: var(--weight-bold); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cx-file-meta { font-size: 12.5px; color: var(--muted); }
+.cx-file.is-uploading .cx-file-icon { background: var(--raised); color: var(--muted); }
+.cx-file.is-error { border-color: var(--harm); }
+.cx-file.is-error .cx-file-meta { color: var(--harm); white-space: normal; }
+.cx-file-remove { position: absolute; top: 6px; right: 6px; display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; border: 0; background: var(--raised); color: var(--ink); cursor: pointer; }
+.cx-file-remove:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.cx-user { display: grid; justify-items: end; gap: 8px; max-width: min(82%, 600px); }
+.cx-user .cx-bubble { max-width: 100%; }

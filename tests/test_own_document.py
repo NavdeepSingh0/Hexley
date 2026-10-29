@@ -96,3 +96,32 @@ async def test_an_obedient_model_reading_the_uploaded_pdf_is_contained_and_the_h
     assert hook[1] == "DENIED" and "R2" in hook[2]  # customer data to an allowed but not internal place
     delivered = [m["to"] for m in stack.sink.snapshot() if m.get("session_id") and m["to"] in (OUTSIDER, fixtures.STATUS_HOOK, fixtures.MANAGER)]
     assert OUTSIDER not in delivered and fixtures.STATUS_HOOK not in delivered and fixtures.MANAGER in delivered
+
+
+async def test_an_attachment_travels_with_the_message_and_the_model_is_told_the_path_never_the_content(stack):
+    seen = []
+
+    class Records:
+        model = "fake/records"
+
+        async def chat(self, client, messages, tools, on_wait=None):
+            seen.append(messages[-1]["content"])
+            return {"role": "assistant", "content": "ok"}
+
+    stack.rt.chats.endpoint_factory = lambda: Records()
+    async with stack.api() as api:
+        cid = await _chat(api, mode="live")
+        assert (await _upload(api, cid)).status_code == 201
+        r = await api.post(f"/api/v1/chat/{cid}/messages", json={"text": "Summarise this.", "attachments": ["My-checklist-v2.pdf"]})
+        assert r.status_code == 202
+        for _ in range(100):
+            v = (await api.get(f"/api/v1/chat/{cid}")).json()
+            if v["status"] == "ready" and len(v["messages"]) >= 2:
+                break
+            await asyncio.sleep(0.05)
+        user = v["messages"][0]
+        assert user["text"] == "Summarise this." and user["attachments"] == [{"name": "My-checklist-v2.pdf", "path": "uploads/My-checklist-v2.pdf", "pages": 1}]
+        assert "[Attached file: uploads/My-checklist-v2.pdf (1 page). Read it with the read_document tool.]" in seen[0]
+        assert OUTSIDER not in seen[0]  # the content is not pasted into the prompt: it can only arrive through the gateway
+        bad = await api.post(f"/api/v1/chat/{cid}/messages", json={"text": "again", "attachments": ["nope.pdf"]})
+        assert bad.status_code == 422

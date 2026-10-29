@@ -1,5 +1,6 @@
 // Pieces of the chat page that sit in the conversation: messages, the one-line tool summary, the slip and approval cards, the
 // welcome screen. Everything shown comes from the ChatView the gateway builds; nothing here decides a decision.
+import { FileCard } from './Composer.jsx'
 import { Fragment } from 'react'
 import { Icon } from '../Blocks.jsx'
 import { decisionKind, decisionWord, ruleLabel, toolSummary } from '../../lib/chat.js'
@@ -60,7 +61,16 @@ export function ToolGroup({ actions, live }) {
 
 export function Message({ m, working }) {
   if (m.role === 'user') {
-    return <div className="cx-turn cx-turn--user"><div className="cx-bubble"><Inline text={m.text} /></div></div>
+    return (
+      <div className="cx-turn cx-turn--user">
+        <div className="cx-user">
+          {m.attachments?.length > 0 && (
+            <div className="cx-files cx-files--sent">{m.attachments.map((a) => <FileCard key={a.name} file={{ ...a, status: 'ready' }} />)}</div>
+          )}
+          <div className="cx-bubble"><Inline text={m.text} /></div>
+        </div>
+      </div>
+    )
   }
   if (m.role === 'system') {
     return <div className="cx-turn"><p className="cx-system"><Inline text={m.text} /></p></div>
