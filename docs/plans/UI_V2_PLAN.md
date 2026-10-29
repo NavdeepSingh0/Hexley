@@ -67,7 +67,7 @@ Client cards in a grid like Kiro's "choose your surface" (name, kind, status, me
 - **How it works:** the same alternating feature sections with more substance, a flow figure (agent, Sentinel, tool, the four outcomes), the rules card, the approval, quarantine and audit sections, and the "what Sentinel does not cover" link.
 - **Integrations and Pricing:** restyled to the same containers and type; Integrations' screenshots are Navdeep's to supply.
 
-### U7 Sweep and close
+### U7 Sweep and close. Done 29 Oct 2026
 Run every page at 1280x720, 1440x900 and 390x844 in both themes; keyboard walk; link check; the production build, tests and the development-only check; a fresh clone; update the docs, the log and the README; push on Navdeep's word.
 
 ### U8 The mascot with boosters (asked for by Navdeep on 29 Oct 2026; done last, on purpose)
