@@ -32,6 +32,6 @@ export const FAQ = [
   },
   {
     q: 'Can I check that the log was not edited?',
-    a: <>Yes. In the console, finish the guided run and use Verify, then Change one record, then Verify again; in the chat, open Details and use Verify the log.</>,
+    a: <>Yes. In the console, finish the guided run and use Verify, then Tamper (change one record), then Verify again, and Restore to put the record back and carry on; in the chat, open Details and use Verify the log.</>,
   },
 ]

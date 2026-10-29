@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
-  cancelRun, confirmRun, createRun, getRecordings, initAuth, listRuns, tamperAudit, verifyAudit,
+  cancelRun, confirmRun, createRun, getRecordings, initAuth, listRuns, restoreAudit, tamperAudit, verifyAudit,
 } from './api.js'
 import { mascotFor, pickDefaultRecording, presenterNext } from './lib/derive.js'
 import { useRun } from './hooks/useRun.js'
@@ -90,6 +90,16 @@ export default function App() {
     }
   }), [guard])
   const doTamper = useCallback(() => guard(async () => { await tamperAudit(); setVerify(await verifyAudit()) }), [guard])
+  // Put back the record the demo changed, so the log reads INTACT again and the demo can go on (or be rehearsed again).
+  const doRestore = useCallback(() => guard(async () => {
+    await restoreAudit()
+    const v = await verifyAudit()
+    setVerify(v)
+    if (v.ok) {
+      setVerifiedFlash(true)
+      setTimeout(() => setVerifiedFlash(false), 3000)
+    }
+  }), [guard])
 
   const screen = !runId ? 'start' : view?.status === 'awaiting_confirmation' ? 'slip' : view ? 'stage' : 'loading'
   const first = view ? verdictFor(view) : null
@@ -111,7 +121,7 @@ export default function App() {
   // Presenter keys, via refs so the listener is registered once and always sees current state.
   const live = useRef({})
   live.current = {
-    screen, view, verdictOpen: Boolean(target), stepsOpen: Boolean(stepsLane), hasVerdict, plIndex, advance, createFromPlaylist, confirm, doVerify, doTamper, verify, receipts,
+    screen, view, verdictOpen: Boolean(target), stepsOpen: Boolean(stepsLane), hasVerdict, plIndex, advance, createFromPlaylist, confirm, doVerify, doTamper, doRestore, verify, receipts,
     openVerdict,
   }
   useEffect(() => {
@@ -123,7 +133,8 @@ export default function App() {
       const k = e.key.toLowerCase()
       if (e.key === '?') setHelpOpen((o) => !o)
       else if (k === 'v') s.doVerify()
-      else if (k === 't' && (s.receipts || s.screen === 'start') && s.verify?.tamper_enabled) s.doTamper()
+      else if (k === 't' && (s.receipts || s.screen === 'start') && s.verify?.tamper_enabled && !s.verify?.restorable) s.doTamper()
+      else if (k === 'r' && s.verify?.restorable) s.doRestore()
       else if (k === 'n') {
         if (s.view && s.view.status !== 'finished') await cancelRun(s.view.run_id).catch(() => {})
         s.advance()
@@ -166,7 +177,7 @@ export default function App() {
             <h1 className="screen-title">The receipts</h1>
             <p className="screen-sub">Every decision was written to a signed, hash-chained log before anything was forwarded.
               Verify it, change one record, and verify again.</p>
-            <AuditPanel verify={verify} onVerify={doVerify} onTamper={doTamper} busy={busy} />
+            <AuditPanel verify={verify} onVerify={doVerify} onTamper={doTamper} onRestore={doRestore} busy={busy} />
           </div>
         ) : null}
         {screen === 'slip' ? <SlipScreen view={view} onConfirm={confirm} busy={busy} error={error} /> : null}
@@ -199,7 +210,7 @@ export default function App() {
           onBack={drawer.from === 'steps' ? () => setDrawer({ laneId: drawer.laneId }) : undefined} />
       ) : null}
       {pending ? <ApprovalModal approval={pending} onDecided={refresh} /> : null}
-      <AuditBar verify={verify} onVerify={doVerify} onTamper={doTamper} busy={busy} />
+      <AuditBar verify={verify} onVerify={doVerify} onTamper={doTamper} onRestore={doRestore} busy={busy} />
     </div>
   )
 }

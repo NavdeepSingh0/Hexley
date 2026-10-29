@@ -274,7 +274,8 @@ def create_api(rt: Runtime, console_dir: Path | None = None, site_dir: Path | No
         caller supplies the chain head it saw earlier."""
         res = rt.audit.verify(expected_head)
         return {"ok": res.ok, "checked": res.checked, "head": res.head, "first_bad_seq": res.first_bad_seq,
-                "reason": res.reason, "tamper_enabled": rt.allow_tamper}
+                "reason": res.reason, "tamper_enabled": rt.allow_tamper,
+                "restorable": bool(rt.allow_tamper and rt.audit.altered)}
 
     @app.get("/audit/export", dependencies=[Depends(require_token)])
     async def audit_export():
@@ -288,10 +289,21 @@ def create_api(rt: Runtime, console_dir: Path | None = None, site_dir: Path | No
             raise HTTPException(status_code=403, detail="tamper demo is disabled")
         try:
             seq = req.seq if req.seq is not None else rt.audit.latest_block_seq()
-            action_id = rt.audit.tamper(seq)
+            action_id = await rt.audit.tamper_locked(seq)
         except AuditError as e:
             raise HTTPException(status_code=404, detail=str(e)) from e
         return {"tampered_seq": seq, "action_id": action_id}
+
+    @app.post("/audit/restore", dependencies=[Depends(require_token)])
+    async def audit_restore():
+        """DEMO ONLY: put back the record(s) the tamper demo altered, so Verify reads INTACT again and the demo can go on.
+        Off unless enabled at start. It cannot repair a log that was damaged any other way."""
+        if not rt.allow_tamper:
+            raise HTTPException(status_code=403, detail="tamper demo is disabled")
+        try:
+            return {"restored_seqs": await rt.audit.restore_locked()}
+        except AuditError as e:
+            raise HTTPException(status_code=404, detail=str(e)) from e
 
     @app.get("/inbox", dependencies=[Depends(require_token)])
     async def inbox(column: str | None = None):

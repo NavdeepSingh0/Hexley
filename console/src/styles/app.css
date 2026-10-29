@@ -81,15 +81,11 @@ p, h1, h2, dl, dd, ol, ul { margin: 0; }
 .lane-sentence { line-height: 1.3; }
 .lane-counts { color: var(--muted); font-size: var(--size-small); }
 .lane-toggle { margin-top: auto; flex: none; } /* the button sits at the bottom of every card, whatever the sentence length */
-.gap-note { font-size: var(--size-small); background: var(--approval-bg); border-left: 4px solid var(--approval); border-radius: var(--radius); padding: var(--space-2) var(--space-3); }
+.gap-note { font-size: var(--size-small); background: var(--approval-bg); border-radius: var(--radius); padding: var(--space-2) var(--space-3); }
 .template-box { background: var(--raised); border-radius: var(--radius); padding: var(--space-2) var(--space-3); }
 .template-body { font-size: var(--size-small); font-weight: var(--weight-bold); margin-top: 2px; }
 .steps { list-style: none; padding: 0; display: flex; flex-direction: column; gap: var(--space-2); }
-.step { background: var(--raised); border-left: 4px solid var(--muted); border-radius: var(--radius); padding: var(--space-2) var(--space-3); }
-.step-allowed { border-left-color: var(--muted); }
-.step-denied { border-left-color: var(--denied); }
-.step-quarantined { border-left-color: var(--quarantined-bg); }
-.step-needs-approval { border-left-color: var(--approval); }
+.step { background: var(--raised); border: 1px solid var(--card-border); border-radius: var(--radius); padding: var(--space-2) var(--space-3); }
 .step-top { display: flex; justify-content: space-between; gap: var(--space-2); align-items: baseline; }
 .step-tool { font-weight: var(--weight-bold); font-size: var(--size-small); font-family: var(--mono); }
 .stamp { font-size: var(--size-label); font-weight: var(--weight-bold); letter-spacing: 0.06em; white-space: nowrap; }
@@ -104,9 +100,9 @@ p, h1, h2, dl, dd, ol, ul { margin: 0; }
 /* what actually reached the outside */
 .effects { display: flex; flex-direction: column; gap: var(--space-2); }
 .effect-empty { color: var(--muted); font-size: var(--size-small); }
-.mail { background: var(--raised); border-left: 4px solid var(--muted); border-radius: var(--radius); padding: var(--space-2) var(--space-3); }
-.mail-leak { border-left-color: var(--harm); }
-.mail-wrong { border-left-color: var(--approval); }
+.mail { background: var(--raised); border: 1px solid var(--card-border); border-radius: var(--radius); padding: var(--space-2) var(--space-3); }
+.mail-leak { border-color: var(--harm); }
+.mail-wrong { border-color: var(--approval); }
 .mail-head { font-size: var(--size-small); color: var(--muted); }
 .mail-body { font-size: var(--size-small); white-space: pre-wrap; overflow-wrap: anywhere; margin: var(--space-1) 0; }
 .mail-flag { font-size: var(--size-label); font-weight: var(--weight-bold); color: var(--muted); }
@@ -115,9 +111,9 @@ p, h1, h2, dl, dd, ol, ul { margin: 0; }
 mark { background: color-mix(in srgb, var(--ink) 14%, transparent); color: inherit; padding: 0 3px; border-radius: 4px; font-weight: var(--weight-bold);
   text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 3px; text-decoration-color: var(--ink); }
 .mail-leak mark { text-decoration-color: var(--harm); }
-.effect-row { border-radius: var(--radius); padding: var(--space-2) var(--space-3); font-size: var(--size-small); background: var(--raised); border-left: 4px solid var(--muted); }
-.effect-bad { border-left-color: var(--harm); }
-.effect-ok { border-left-color: var(--allowed); }
+.effect-row { border-radius: var(--radius); padding: var(--space-2) var(--space-3); font-size: var(--size-small); background: var(--raised); border: 1px solid var(--card-border); }
+.effect-bad { border-color: var(--harm); }
+.effect-ok { border-color: var(--allowed); }
 .effect-sub { font-size: var(--size-small); font-weight: var(--weight-bold); color: var(--muted); }
 
 /* scrim, drawer and the officer's modal */

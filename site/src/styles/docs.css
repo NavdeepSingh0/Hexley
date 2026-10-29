@@ -27,8 +27,8 @@
 .dx-source { margin: var(--space-6) 0 0; padding-top: var(--space-3); border-top: 1px solid var(--line); color: var(--muted); font-size: 15px; }
 .dx-faq-note { font-size: 14px; }
 
-.dx-callout { margin: 0 0 var(--space-3); padding: 14px 18px; border-radius: 14px; background: var(--bg); border-left: 4px solid var(--brand); font-size: 16px; line-height: 1.55; }
-.dx-callout--limit { border-left-color: var(--muted); }
+.dx-callout { margin: 0 0 var(--space-3); padding: 14px 18px; border-radius: 14px; background: var(--brand-bg); border: 1px solid transparent; font-size: 16px; line-height: 1.55; }
+.dx-callout--limit { background: var(--bg); border-color: var(--card-border); }
 .dx-callout code { background: var(--panel); }
 
 .dx-figure { margin: 0 0 var(--space-4); }

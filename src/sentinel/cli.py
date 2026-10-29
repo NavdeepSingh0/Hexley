@@ -12,6 +12,7 @@ import os
 import re
 import secrets
 import shutil
+import socket
 import subprocess
 import sys
 import time
@@ -31,6 +32,60 @@ async def _serve(app, port: int) -> None:
 
 
 CLOUDFLARED_DEFAULT = r"C:\Program Files (x86)\cloudflared\cloudflared.exe"
+
+
+def port_in_use(port: int, host: str = "127.0.0.1") -> bool:
+    """True if something already listens on, or holds, this port. Checked by connecting and by binding (without
+    SO_REUSEADDR, which on Windows would let a second program share a port that is already in use)."""
+    try:
+        with socket.create_connection((host, port), timeout=0.4):
+            return True
+    except OSError:
+        pass
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        try:
+            s.bind((host, port))
+        except OSError:
+            return True
+    return False
+
+
+def check_ports(ports: dict[str, tuple[int, str]]) -> None:
+    """Refuse to start when a port is taken (by another program, or by a leftover Sentinel), before anything is started.
+    `ports` maps a name to (port, the flag that changes it). Without this the tool server fails to bind in the background
+    while the rest comes up, and every tool call then talks to nothing, or to somebody else's program on that port."""
+    seen: dict[int, str] = {}
+    problems = []
+    for name, (port, flag) in ports.items():
+        if port in seen:
+            problems.append(f"the {name} and the {seen[port]} are both set to port {port}")
+        elif port_in_use(port):
+            problems.append(f"port {port} (the {name}) is already in use by another program; choose a free one with {flag}")
+        seen[port] = name
+    if problems:
+        raise SystemExit("Nothing was started.\n  - " + "\n  - ".join(problems))
+
+
+async def wait_until_listening(port: int, proc: subprocess.Popen, name: str, timeout: float = 25.0) -> None:
+    """Wait for the child `proc` to be listening on `port`; stop with a clear message if it exits or never does."""
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        if proc.poll() is not None:
+            raise SystemExit(f"The {name} stopped at start (exit code {proc.returncode}); see the message above it.")
+        try:
+            with socket.create_connection(("127.0.0.1", port), timeout=0.4):
+                return
+        except OSError:
+            await asyncio.sleep(0.2)
+    proc.terminate()
+    raise SystemExit(f"The {name} did not start listening on port {port} within {timeout:.0f} seconds.")
+
+
+async def watch_child(proc: subprocess.Popen, name: str) -> None:
+    """If the tool server dies while Sentinel runs, say so and stop, instead of carrying on with tools that do not answer."""
+    while proc.poll() is None:
+        await asyncio.sleep(1.0)
+    raise SystemExit(f"The {name} stopped (exit code {proc.returncode}). Sentinel is stopping because its tools are gone.")
 
 
 def start_tunnel(gateway_port: int, binary: str | None = None, timeout: float = 40.0) -> tuple[subprocess.Popen, str]:
@@ -62,6 +117,8 @@ def print_officer_code(req) -> None:
 
 
 async def _up(args: argparse.Namespace) -> None:
+    check_ports({"API and console": (args.api_port, "--api-port"), "gateway": (args.gateway_port, "--gateway-port"),
+                 "tool server": (args.tools_port, "--tools-port")})
     downstream = secrets.token_urlsafe(32)
     api_token = os.environ.get("SENTINEL_API_TOKEN") or secrets.token_urlsafe(24)
     data_dir = Path(args.data_dir)
@@ -89,6 +146,13 @@ async def _up(args: argparse.Namespace) -> None:
     rt.runs.pace = args.pace  # type: ignore[union-attr]
     env = {**os.environ, "SENTINEL_DOWNSTREAM_TOKEN": downstream, "SENTINEL_TOOLS_PORT": str(args.tools_port)}
     tools = subprocess.Popen([sys.executable, "-m", "sentinel.tools.server"], env=env)
+    try:
+        await wait_until_listening(args.tools_port, tools, "tool server")
+    except BaseException:
+        tools.terminate()
+        if tunnel is not None:
+            tunnel.terminate()
+        raise
     console_url = f"http://127.0.0.1:{args.api_port}/console/#token={api_token}"
     site_url = f"http://127.0.0.1:{args.api_port}/#token={api_token}"
     site_built = (SITE_DIST / "index.html").is_file()
@@ -105,7 +169,7 @@ async def _up(args: argparse.Namespace) -> None:
         asyncio.get_running_loop().call_later(1.5, webbrowser.open, site_url if site_built else console_url)
     try:
         await asyncio.gather(_serve(build_gateway(rt).http_app(), args.gateway_port),
-                             _serve(api_app, args.api_port))
+                             _serve(api_app, args.api_port), watch_child(tools, "tool server"))
     finally:
         tools.terminate()
         if tunnel is not None:

@@ -63,7 +63,7 @@ export function PresenterHelp({ onClose, tamperEnabled }) {
     ['Enter', 'The next step of the guided demo: confirm the slip, show why it was denied, continue'],
     ['N', 'Skip to the next situation'],
     ['V', 'Verify the audit log'],
-    ...(tamperEnabled ? [['T', 'Change one record in the log, then press V to see it caught']] : []),
+    ...(tamperEnabled ? [['T', 'Change one record in the log, then press V to see it caught'], ['R', 'Put the changed record back, so the log reads intact again']] : []),
     ['?', 'Open or close this panel'],
     ['Esc', 'Close a panel without moving on'],
   ]
@@ -89,7 +89,7 @@ export function PresenterHelp({ onClose, tamperEnabled }) {
 }
 
 // The finale of the guided demo: the audit log's state as one big word, then what to press.
-export function AuditPanel({ verify, onVerify, onTamper, busy }) {
+export function AuditPanel({ verify, onVerify, onTamper, onRestore, busy }) {
   const v = verifyView(verify)
   const word = v.tone === 'ok' ? ['INTACT', 'allowed'] : v.tone === 'bad' ? ['TAMPERED', 'harm'] : null
   return (
@@ -100,7 +100,9 @@ export function AuditPanel({ verify, onVerify, onTamper, busy }) {
       <p className="lane-sentence">{word ? v.text : 'Press V to check every record against its signature and the chain.'}</p>
       <div className="audit-panel-actions">
         <button className="s-btn s-btn--primary" disabled={busy} onClick={onVerify}>Verify the log <span className="s-kbd">V</span></button>
-        {verify?.tamper_enabled ? (
+        {verify?.restorable ? (
+          <button className="s-btn s-btn--ghost" disabled={busy} onClick={onRestore}>Put the record back <span className="s-kbd">R</span></button>
+        ) : verify?.tamper_enabled ? (
           <button className="s-btn s-btn--ghost" disabled={busy} onClick={onTamper}>Change one record <span className="s-kbd">T</span></button>
         ) : null}
       </div>
@@ -108,7 +110,7 @@ export function AuditPanel({ verify, onVerify, onTamper, busy }) {
   )
 }
 
-export function AuditBar({ verify, onVerify, onTamper, busy }) {
+export function AuditBar({ verify, onVerify, onTamper, onRestore, busy }) {
   const v = verifyView(verify)
   return (
     <footer className="auditbar">
@@ -116,7 +118,9 @@ export function AuditBar({ verify, onVerify, onTamper, busy }) {
       <div className={`audit-state audit-${v.tone}`} role="status">{v.text}</div>
       <p className="s-label audit-label">Signed, hash-chained audit log</p>
       <button className="s-btn s-btn--ghost s-btn--small" disabled={busy} onClick={onVerify}>Verify <span className="s-kbd">V</span></button>
-      {verify?.tamper_enabled ? (
+      {verify?.restorable ? (
+        <button className="s-btn s-btn--ghost s-btn--small" disabled={busy} onClick={onRestore}>Restore <span className="s-kbd">R</span></button>
+      ) : verify?.tamper_enabled ? (
         <button className="s-btn s-btn--ghost s-btn--small" disabled={busy} onClick={onTamper}>Tamper <span className="s-kbd">T</span></button>
       ) : null}
     </footer>

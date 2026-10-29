@@ -13,6 +13,7 @@ not hashed).
 from __future__ import annotations
 
 import asyncio
+import copy
 import hashlib
 import json
 import os
@@ -126,6 +127,7 @@ class AuditLog:
         self.key = key
         self.deadline = deadline
         self.broken = False
+        self._altered: dict[int, dict] = {}  # DEMO ONLY: the original payload of every record tamper() changed, so it can be put back
         self._lock = asyncio.Lock()
         self._seq = -1
         self._prev = GENESIS_PREV
@@ -214,12 +216,44 @@ class AuditLog:
 
     def tamper(self, seq: int) -> str | None:
         """DEMO ONLY: alter one record on disk without re-signing it, so the console can show detection.
-        Returns the action id of the altered record, if it has one."""
+        Returns the action id of the altered record, if it has one. The original is remembered for restore()."""
         records = read_records(self.path)
         if not 1 <= seq < len(records):
             raise AuditError("no such record to tamper with")
+        self._altered.setdefault(seq, copy.deepcopy(records[seq]["payload"]))
         records[seq]["payload"]["tampered"] = True
+        self._replace_file(records)
+        return records[seq].get("action_id")
+
+    def restore(self) -> list[int]:
+        """DEMO ONLY: put back every record tamper() altered, exactly as it was, so the log verifies again and the demo can go
+        on. Returns the sequence numbers restored. It cannot repair any other damage: a log altered by anything else stays bad."""
+        if not self._altered:
+            raise AuditError("no record was altered by the demo, so there is nothing to put back")
+        records = read_records(self.path)
+        done = sorted(seq for seq in self._altered if seq < len(records))
+        for seq in done:
+            records[seq]["payload"] = self._altered[seq]
+        self._replace_file(records)
+        self._altered.clear()
+        return done
+
+    @property
+    def altered(self) -> list[int]:
+        """DEMO ONLY: the records tamper() has changed and restore() would put back."""
+        return sorted(self._altered)
+
+    def _replace_file(self, records: list[dict]) -> None:
         tmp = self.path.with_suffix(".tmp")
         tmp.write_text("".join(json.dumps(r, sort_keys=True, separators=(",", ":")) + "\n" for r in records), encoding="utf-8")
         os.replace(tmp, self.path)
-        return records[seq].get("action_id")
+
+    # The demo's rewrite takes the same lock as an append, so a decision being recorded can never be lost between the read and
+    # the replace of the file (that would break the chain for good, and restore() could not repair it).
+    async def tamper_locked(self, seq: int) -> str | None:
+        async with self._lock:
+            return await asyncio.to_thread(self.tamper, seq)
+
+    async def restore_locked(self) -> list[int]:
+        async with self._lock:
+            return await asyncio.to_thread(self.restore)

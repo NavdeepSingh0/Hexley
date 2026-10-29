@@ -280,6 +280,7 @@ export const PAGES = {
           [<code>POST /api/v1/slips</code>, 'Builds a slip for any task.'],
           [<code>POST /approvals/&#123;id&#125;</code>, 'Approve or deny one held action.'],
           [<code>GET /audit/verify</code>, 'Checks the signed chain and reports how many records were checked.'],
+          [<code>POST /audit/tamper</code>, 'Demo only (started with --demo): changes one record on disk so Verify can catch it. POST /audit/restore puts it back.'],
         ]} />
         <Note>FastAPI's own interactive documentation is switched off; this page and the repository's contract are the reference.</Note>
       </>

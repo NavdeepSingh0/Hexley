@@ -72,7 +72,7 @@
 .cx-avatar { flex: none; margin-top: 2px; }
 .cx-turn-body { min-width: 0; flex: 1; display: grid; gap: 10px; }
 .cx-text { margin: 0; font-size: 16px; line-height: 1.65; white-space: pre-wrap; overflow-wrap: anywhere; }
-.cx-system { margin: 0; padding: 10px 14px; border-left: 3px solid var(--muted); color: var(--muted); font-size: 15px; line-height: 1.5; }
+.cx-system { margin: 0; padding: 10px 14px; border-radius: 12px; background: var(--panel); color: var(--muted); font-size: 15px; line-height: 1.5; }
 .cx-dots { display: inline-flex; gap: 5px; padding: 10px 0; }
 .cx-dots i { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); animation: cx-bounce 1.2s infinite ease-in-out; }
 .cx-dots i:nth-child(2) { animation-delay: 0.15s; }
@@ -93,7 +93,7 @@
 .cx-tools-part--quarantined { background: var(--quarantined-bg); color: var(--quarantined-ink); padding: 0 6px; border-radius: 4px; }
 .cx-tools-part--pending { color: var(--muted); }
 .cx-tools-list { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 6px; }
-.cx-chip { border-radius: 12px; background: var(--panel); border-left: 4px solid var(--muted); }
+.cx-chip { border-radius: 12px; background: var(--panel); border: 1px solid var(--card-border); }
 .cx-chip summary { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 12px; padding: 9px 12px; cursor: pointer; list-style: none; }
 .cx-chip summary::-webkit-details-marker { display: none; }
 .cx-chip-word { font-size: 12.5px; font-weight: 700; letter-spacing: 0.1em; }
@@ -102,10 +102,10 @@
 .cx-chip-body { padding: 0 12px 12px; display: grid; gap: 4px; font-size: 15px; line-height: 1.5; }
 .cx-chip-body p { margin: 0; }
 .cx-chip-rules { color: var(--muted); }
-.cx-chip--allowed { border-left-color: var(--allowed); } .cx-chip--allowed .cx-chip-word { color: var(--allowed); }
-.cx-chip--denied { border-left-color: var(--denied); } .cx-chip--denied .cx-chip-word { color: var(--denied); }
-.cx-chip--approval { border-left-color: var(--approval); } .cx-chip--approval .cx-chip-word { color: var(--approval); }
-.cx-chip--quarantined { border-left-color: var(--quarantined-bg); } .cx-chip--quarantined .cx-chip-word { background: var(--quarantined-bg); color: var(--quarantined-ink); padding: 1px 8px; border-radius: 6px; }
+.cx-chip--allowed .cx-chip-word { color: var(--allowed); }
+.cx-chip--denied .cx-chip-word { color: var(--denied); }
+.cx-chip--approval .cx-chip-word { color: var(--approval); }
+.cx-chip--quarantined .cx-chip-word { background: var(--quarantined-bg); color: var(--quarantined-ink); padding: 1px 8px; border-radius: 6px; }
 .cx-chip--pending .cx-chip-word { color: var(--muted); }
 
 /* ---- cards in the stream ---- */

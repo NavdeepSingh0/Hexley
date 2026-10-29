@@ -114,6 +114,7 @@ Names follow MVP.md. Mapping to the older build-kit names: ALLOW=ALLOW, ASK=REQU
 | `POST /killswitch` | Freeze a session |
 | `GET /audit/verify` | Check the log chain |
 | `POST /audit/tamper` | Demo build flag only |
+| `POST /audit/restore` | Demo build flag only: puts back what tamper changed (D-045) |
 | `GET /inbox` | Mail-sink contents per column |
 | `GET /metrics` | Counters and latency |
 | `GET /sessions/{id}` | Session state |

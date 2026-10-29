@@ -224,5 +224,13 @@ async def test_verify_export_and_the_tamper_demo(stack):
             bad = (await api.get("/audit/verify")).json()
             assert not bad["ok"] and bad["first_bad_seq"] == 2 and "altered" in bad["reason"]
             assert (await api.post("/audit/tamper", json={"seq": 9999})).status_code == 404
+            assert bad["restorable"] is True
+            # D-045: the demo can put the record back and go on
+            restored = await api.post("/audit/restore")
+            assert restored.status_code == 200 and restored.json() == {"restored_seqs": [2]}
+            good = (await api.get("/audit/verify")).json()
+            assert good["ok"] and good["restorable"] is False
+            assert (await api.post("/audit/restore")).status_code == 404  # nothing left to put back
         finally:
             stack.rt.allow_tamper = False
+        assert (await api.post("/audit/restore")).status_code == 403  # off again: the same switch as tamper

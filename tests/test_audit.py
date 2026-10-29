@@ -210,3 +210,72 @@ def test_decision_payload_drops_matched_secret_values_but_keeps_the_explanation(
     assert "2,400" not in json.dumps(p)
     assert p["evidence"][0]["detail"].startswith("quantity from query_stock") and p["evidence"][0]["matched_tokens"] == []
     assert p["effect"] == "BLOCK" and p["rule_ids"] == ["R2"]
+
+
+# ---- the demo's tamper and its restore (D-045) --------------------------------------------------------------
+async def test_restore_puts_the_record_back_so_the_log_verifies_again(log, key):
+    await fill(log, 6)
+    assert log.tamper(3) is None and log.altered == [3]
+    bad = verify_file(log.path, key.public_key())
+    assert not bad.ok and bad.first_bad_seq == 3
+    assert log.restore() == [3] and log.altered == []
+    assert verify_file(log.path, key.public_key()).ok
+
+
+async def test_restore_works_after_more_decisions_were_recorded_on_top_of_the_altered_one(log, key):
+    await fill(log, 4)
+    log.tamper(2)
+    await fill(log, 3)  # the chain keeps growing from the real head, not from the altered record
+    assert not verify_file(log.path, key.public_key()).ok
+    log.restore()
+    res = verify_file(log.path, key.public_key())
+    assert res.ok and res.checked == 8
+
+
+async def test_altering_the_same_record_twice_still_restores_the_original(log, key):
+    await fill(log, 4)
+    log.tamper(2)
+    log.tamper(2)
+    log.restore()
+    assert verify_file(log.path, key.public_key()).ok
+
+
+async def test_several_altered_records_are_all_restored(log, key):
+    await fill(log, 6)
+    log.tamper(1)
+    log.tamper(4)
+    assert log.altered == [1, 4]
+    assert log.restore() == [1, 4]
+    assert verify_file(log.path, key.public_key()).ok
+
+
+async def test_restore_with_nothing_altered_is_an_error_and_never_fixes_other_damage(log, key):
+    await fill(log, 5)
+    with pytest.raises(AuditError):
+        log.restore()
+    recs = lines(log.path)
+    recs[3]["payload"]["i"] = 999  # damage done by something other than the demo
+    write_lines(log.path, recs)
+    with pytest.raises(AuditError):
+        log.restore()  # it does not know about this, and must not pretend to repair it
+    assert not verify_file(log.path, key.public_key()).ok
+
+
+async def test_a_decision_recorded_while_the_demo_alters_and_restores_is_never_lost(log, key):
+    await fill(log, 3)
+
+    async def writer():
+        for i in range(60):
+            await log.append("decision", session_id="ses_w", payload={"w": i})
+            await asyncio.sleep(0)
+
+    async def demo():
+        for _ in range(8):
+            await log.tamper_locked(2)
+            await asyncio.sleep(0)
+            await log.restore_locked()
+            await asyncio.sleep(0)
+
+    await asyncio.gather(writer(), demo())
+    res = verify_file(log.path, key.public_key())
+    assert res.ok and res.checked == 1 + 3 + 60  # genesis, the first three, and every concurrent one

@@ -159,6 +159,18 @@ async def test_tamper_with_no_seq_alters_the_blocked_decision_and_verify_names_i
             assert t["action_id"] == blocked["action_id"]
             bad = (await api.get("/audit/verify")).json()
             assert bad["ok"] is False and bad["first_bad_seq"] == t["tampered_seq"] and "altered" in bad["reason"]
+            assert bad["restorable"] is True
+            # a new run after the tamper still finishes (the console must not hang on a tampered log) ...
+            v2 = await run_to_end(api, "poisoned")
+            assert v2["status"] == "finished" and [len(l["steps"]) for l in v2["lanes"]] == [len(l["steps"]) for l in v["lanes"]]
+            # ... and the presenter can put the record back and show an intact log again, then do it all once more
+            assert (await api.post("/audit/restore")).json()["restored_seqs"] == [t["tampered_seq"]]
+            ok = (await api.get("/audit/verify")).json()
+            assert ok["ok"] is True and ok["restorable"] is False
+            again = (await api.post("/audit/tamper")).json()
+            assert (await api.get("/audit/verify")).json()["ok"] is False
+            assert (await api.post("/audit/restore")).json()["restored_seqs"] == [again["tampered_seq"]]
+            assert (await api.get("/audit/verify")).json()["ok"] is True
         finally:
             stack.rt.allow_tamper = False
 
