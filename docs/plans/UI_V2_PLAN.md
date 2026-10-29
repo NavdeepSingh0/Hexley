@@ -24,16 +24,16 @@ Do not borrow: their wording, their logos or ghost, three identical download but
 ## Order and why
 Navbar and footer first (every page uses them), then the home page (first impression), then chat (the biggest problem, independent of the others), then docs, connect, and the restyle of How it works, Integrations and Pricing, then one QA sweep. Each phase: build, check in a real browser in both themes at laptop and phone width, look at the screenshots, fix, commit. Three attempts per phase, as before; results in `docs/PHASE_LOG.md`.
 
-### U0 Foundations
+### U0 Foundations. Done 29 Oct 2026
 `--font-display`; larger radii; the lavender frame colour; a card surface that sits on black; shared pieces used by every page: `Frame` (violet rounded frame holding product shots), `Feature` (text on one side, product UI in a dark rounded card on the other, alternating), `Accordion` (an accessible details-based FAQ), `IconBlock` (line icon, heading, text, inline links), pill buttons already exist. A contrast check for the new surfaces. QA: the contrast test passes against the real token file; the type specimen page is kept as a dev reference.
 
-### U1 Navbar, footer and the closing band
+### U1 Navbar, footer and the closing band. Done 29 Oct 2026
 - **Navbar:** a floating rounded bar inset from the edges with a blur, always visible. Left: the mascot mark (still, small) and the wordmark. Centre: `Product` (How it works, Integrations, Connect, Chat) and `Resources` (Docs, Limits and honest scope, Questions judges ask, Evidence) as dropdowns with a title and one line each, plus `Docs` and `Pricing`. Right: a theme button (icon) and **See it work** as the solid pill. Dropdowns open by click, close on Escape, outside click, route change and focus leaving; Arrow keys move; below 860 px it becomes a menu button with a sheet.
 - **Footer:** four columns (Product, Learn, Evidence and honesty, Project) and a line saying who built it and that the data is synthetic.
 - **Closing band:** a full-width violet frame with a short headline, two buttons and the mascot peeking up from the bottom edge at its current size. Used on the home page.
 QA: keyboard-only walk through every menu; no clipped menu at 1280 and 390; the bar does not cover content when jumping to an anchor; focus rings visible.
 
-### U2 Home
+### U2 Home. Done 29 Oct 2026
 1. Hero: left-aligned mono headline (the same sentence), one paragraph, two pill buttons (**See it work**, **Read the docs**). On the right a small rail, **"What's real"**, with three short linked items drawn from facts we can show: the evidence number read from `evidence.json` with its n; "Connected for real: Claude.ai and Claude Code"; "Run it yourself: one command". The violet glow stays behind the hero.
 2. A huge violet frame around the real console screens (the three lanes and the denied drawer, overlapping), both themes.
 3. Three alternating feature sections with substance (heading, a paragraph, three specific bullets, an inline link, a real product visual): **the slip** (screenshot), **seven rules** (the rules as a card of chips with their outcomes, not a screenshot), **proof** (the denied drawer and the signed log).
@@ -44,7 +44,7 @@ QA: keyboard-only walk through every menu; no clipped menu at 1280 and 390; the 
 8. The closing band, then the footer.
 QA: nothing typed by hand that is a result (the rail's number comes from the file); screenshots at 1280 and 390 in both themes; no horizontal scroll; every link works.
 
-### U3 Chat (the biggest change)
+### U3 Chat (the biggest change). Done 29 Oct 2026, see PHASE_LOG
 A page that works like Claude or ChatGPT, in our look. **No marketing navbar or footer on this page**: it is an app screen.
 - **Sidebar (left, 280 px, a slide-over on a phone):** the wordmark and mascot mark (links home), a **New chat** button, **Chats** (the conversations started in this browser, titled by task, with a small dot for quarantined or waiting, remembered per viewer; a conversation the server no longer has is shown as gone and can be removed), then at the foot: the model source (Automatic / Live / Recorded real chat / Scripted attacker), Docs, theme.
 - **Header:** the conversation's title, a status chip (for example "Slip confirmed, expires 14:05" or "Quarantined"), and a **Details** button that opens a right-hand drawer: the permission slip, a timeline of this chat's decisions, whether the audit log is intact, and the recording download. Esc closes it.

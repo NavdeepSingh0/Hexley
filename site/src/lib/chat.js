@@ -65,3 +65,54 @@ export const MODES = [
 
 // The disclosure shown before the server has sent one (it is never absent).
 export const DEFAULT_DISCLOSURE = 'Sentinel Chat is our own demo host app. Every record and mailbox is synthetic and the tools are mocks.'
+
+// ---- the chat page the way a frontier chat shows it (UI v2, U3) -------------------------------------------------------------
+
+// One line over an assistant message's tool calls: "Used 3 tools" and, in their decision colours, how many were denied,
+// held, quarantined or still being checked. Nothing here decides anything; it counts the decisions the gateway made.
+export function toolSummary(actions) {
+  const list = actions ?? []
+  const n = list.length
+  const count = (d) => list.filter((a) => a.decision === d).length
+  const parts = [
+    ['denied', count('DENIED'), (k) => `${k} denied`],
+    ['approval', count('NEEDS_APPROVAL'), (k) => `${k} waiting for the officer`],
+    ['quarantined', count('QUARANTINED'), (k) => `${k} quarantined`],
+    ['pending', count('PENDING'), (k) => `${k} being checked`],
+  ].filter(([, k]) => k > 0).map(([kind, k, text]) => ({ kind, text: text(k) }))
+  return { n, label: n === 1 ? 'Used 1 tool' : `Used ${n} tools`, parts }
+}
+
+const clock = (iso) => {
+  const d = new Date(iso)
+  return Number.isNaN(d.getTime()) ? '' : d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+}
+
+// The small chip in the header: what state the conversation is in, in words. `kind` is only for styling, and only
+// quarantine gets a loud one (decision colours are never used for anything but a decision).
+export function statusChip(view) {
+  if (!view) return null
+  switch (view.status) {
+    case 'awaiting_confirmation': return { kind: 'wait', text: 'Waiting for the officer' }
+    case 'thinking': return { kind: 'busy', text: 'Working' }
+    case 'model_busy': return { kind: 'busy', text: 'Model busy, trying again' }
+    case 'quarantined': return { kind: 'quarantined', text: 'Quarantined' }
+    case 'ended': return { kind: 'ended', text: 'Slip expired' }
+    default: {
+      const until = clock(view.slip?.expires_at)
+      return { kind: 'ok', text: until ? `Slip confirmed until ${until}` : 'Slip confirmed' }
+    }
+  }
+}
+
+// A conversation's title: the task it was started from, else a plain default.
+export const chatTitle = (preset, view) => preset?.title ?? view?.preset ?? 'New chat'
+
+// "just now", "5 min ago", "2 h ago", "3 d ago"
+export function ago(ts, now = Date.now()) {
+  const s = Math.max(0, Math.round((now - ts) / 1000))
+  if (s < 45) return 'just now'
+  if (s < 3600) return `${Math.max(1, Math.round(s / 60))} min ago`
+  if (s < 86400) return `${Math.round(s / 3600)} h ago`
+  return `${Math.round(s / 86400)} d ago`
+}

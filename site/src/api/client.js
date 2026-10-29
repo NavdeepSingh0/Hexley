@@ -70,6 +70,8 @@ export const confirmChat = (id) => api(`/api/v1/chat/${id}/confirm`, { method: '
 export const sendChatMessage = (id, text) => api(`/api/v1/chat/${id}/messages`, { method: 'POST', body: { text } })
 export const getChat = (id) => api(`/api/v1/chat/${id}`)
 export const decideApproval = (id, decision) => api(`/approvals/${id}`, { method: 'POST', body: { decision } })
+export const getChatRecording = (id) => api(`/api/v1/chat/${id}/recording`)
+export const verifyAudit = () => api('/audit/verify')
 
 // evidence.json is a static file generated from eval/results/ (never typed by hand).
 export async function getEvidence() {

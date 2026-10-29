@@ -38,7 +38,6 @@ export default function App() {
         <Route path="/integrations" element={<Integrations />} />
         <Route path="/connect" element={<Connect />} />
         <Route path="/docs/*" element={<Docs />} />
-        <Route path="/chat" element={<Chat />} />
         <Route path="/pricing" element={<Pricing />} />
         <Route path="/styleguide" element={<Styleguide />} />
         <Route path="/mascot" element={<Mascot />} />
@@ -46,6 +45,8 @@ export default function App() {
         {LATER.map(([to, title, phase]) => <Route key={to} path={to} element={<Soon title={title} phase={phase} />} />)}
         <Route path="*" element={<Soon title="Page not found" phase="-" />} />
       </Route>
+      {/* The chat is an app screen: no marketing bar or footer around it. */}
+      <Route path="/chat" element={<Chat />} />
     </Routes>
   )
 }

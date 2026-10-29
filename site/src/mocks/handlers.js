@@ -40,6 +40,8 @@ export async function mockApi(path, method, body) {
     return { message_id: 'msg_mock' }
   }
   if (/^\/api\/v1\/chat\/[^/]+$/.test(path)) return structuredClone(chat ?? CHAT_SCENARIOS[scenarioName()])
+  if (path === '/audit/verify') return { ok: true, checked: 12, head: 'mock', first_bad_seq: null, reason: null, tamper_enabled: false }
+  if (/^\/api\/v1\/chat\/[^/]+\/recording$/.test(path)) return { schema: 'sentinel.chat-recording/1', model: 'mock', preset: 'quotation', recorded_at: '2026-10-30T10:00:00Z', messages: [] }
   if (path.startsWith('/approvals/')) return { status: body?.decision === 'approve' ? 'approved' : 'denied' }
   const e = new Error(`No mock for ${method} ${path}. Ask Navdeep before inventing an endpoint.`)
   e.status = 404
