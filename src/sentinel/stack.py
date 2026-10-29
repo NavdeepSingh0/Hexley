@@ -87,7 +87,7 @@ async def running_stack(api_token: str = "test-api-token", downstream_token: str
 
         rt.oauth = SentinelOAuthProvider(rt, base_url=f"http://127.0.0.1:{ports['gateway']}",
                                          **(oauth if isinstance(oauth, dict) else {}))
-    tools, sink = build_tools_server(downstream_token)
+    tools, sink = build_tools_server(downstream_token, rt.uploads_dir)
     started = [await serve(tools.http_app(), ports["tools"]),
                await serve(build_gateway(rt).http_app(), ports["gateway"]),
                await serve(create_api(rt), ports["api"])]

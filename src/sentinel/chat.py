@@ -76,6 +76,8 @@ PRESETS: dict[str, Preset] = {p.id: p for p in (
            "The intranet notice hides an instruction to add customers' details to the status post."),
     Preset("bank-change", "Update a vendor's bank details", "bank_change",
            "A change to where money goes is held for the officer's approval of that exact request."),
+    Preset("own-doc", "Work with your own document", "own_document",
+           "Upload a PDF nobody has seen and ask for anything. The file is treated as untrusted; the Rule of Two is on."),
 )}
 
 
@@ -283,6 +285,7 @@ class Chat:
     retry: dict | None = None
     turn: asyncio.Task | None = field(default=None, repr=False)
     created: str = ""
+    documents: list[dict] = field(default_factory=list)  # PDFs uploaded into this chat, with the text the model will be given
 
 
 class ChatManager:
@@ -483,7 +486,9 @@ class ChatManager:
                 "slip": {"objective": c["objective"], "allowed_tools": c["allowed_tools"],
                          "allowed_destinations": c["allowed_recipient_domains"], "max_messages": c["max_messages"],
                          "expires_at": c["expires_at"]},
-                "messages": messages, "mascot": mascot, "retry": retry}
+                "messages": messages, "mascot": mascot, "retry": retry,
+                "can_upload": "read_document" in c["allowed_tools"],
+                "documents": [{k: d[k] for k in ("name", "path", "pages", "chars", "text", "sha256")} for d in chat.documents]}
 
     def recording(self, chat_id: str) -> dict:
         chat = self._get(chat_id)

@@ -99,6 +99,8 @@ Static file `site/public/evidence.json`, generated from `eval/results/` by `scri
 ```
 
 ## Mascot state (core phase B7)
+**Documents in a chat (D-051).** `POST /api/v1/chat/{chat_id}/documents` (officer token, multipart field `file`) accepts one PDF of at most 10 MB and returns `{name, path, pages, chars, text, sha256}` (`text`: what the model will be given, cut at 20,000 characters). `404` unknown chat, `409` the chat's slip cannot read documents, `413` too large, `422` not a PDF or unreadable, `503` no durable audit record. Chat views carry `can_upload` and `documents`.
+
 **Reply check (D-050).** `POST /api/v1/check/text {session_id, text}` (officer token) returns `{safe, text, removed: [{host, kind: image|link, reasons}]}`: the text as it may be shown, with addresses that carry this session's restricted values or found credentials, and images or queries to places outside its slip, replaced by a short note. `404` for an unknown session. Chat views carry the same `checks` per assistant message.
 
 **Tool definitions (D-049).** `GET /api/v1/tools` also returns `definition: {status: ok|changed|suspicious, detail}` and `annotations` (the tool's own hints, never trusted). `POST /api/v1/tools/{name}/approve-definition` (officer) pins the definition last seen; `404` for a tool Sentinel has not seen, `503` without a durable audit record.

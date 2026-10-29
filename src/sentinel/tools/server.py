@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import hmac
 import io
+from pathlib import Path
 import os
 import posixpath
 import sqlite3
@@ -51,7 +52,7 @@ class MailSink:
             self.delivered.clear()
 
 
-def build_tools_server(downstream_token: str) -> tuple[FastMCP, MailSink]:
+def build_tools_server(downstream_token: str, uploads_dir: Path | None = None) -> tuple[FastMCP, MailSink]:
     if not downstream_token:
         raise ValueError("a downstream token is required; the tool server never runs open")
     sink = MailSink()
@@ -123,20 +124,31 @@ def build_tools_server(downstream_token: str) -> tuple[FastMCP, MailSink]:
             raise ToolError("the path must stay inside the sandbox")
         return posixpath.normpath("/" + p.lstrip("/")).lstrip("/")
 
+    def uploaded() -> dict[str, Path]:
+        """Documents the officer uploaded into a chat (plan Q10): `uploads/<name>.pdf`, read fresh on every call."""
+        if uploads_dir is None or not uploads_dir.is_dir():
+            return {}
+        return {f"uploads/{p.name}": p for p in sorted(uploads_dir.glob("*.pdf")) if p.is_file()}
+
     @server.tool
     def list_documents(folder: str = "reports") -> str:
         """List the documents in a folder."""
         f = sandbox_path(folder)
-        names = sorted(p for p in pdfs if p.startswith(f.rstrip("/") + "/") or p == f)
+        names = sorted(p for p in [*pdfs, *uploaded()] if p.startswith(f.rstrip("/") + "/") or p == f)
         return "\n".join(names) if names else f"No documents in {folder}."
 
     @server.tool
     def read_document(path: str) -> str:
         """Read a PDF document and return its text."""
         p = sandbox_path(path)
-        if p not in pdfs:
+        files = uploaded()
+        if p in files:  # read exactly as a person's PDF reader would extract it, hidden text included
+            data = files[p].read_bytes()
+        elif p in pdfs:
+            data = pdfs[p]
+        else:
             return f"No document at {path}."
-        return "\n".join((page.extract_text() or "") for page in PdfReader(io.BytesIO(pdfs[p])).pages).strip()
+        return "\n".join((page.extract_text() or "") for page in PdfReader(io.BytesIO(data)).pages).strip()
 
     @server.tool
     def query_db(sql: str) -> str:
@@ -209,7 +221,8 @@ def main() -> None:  # python -m sentinel.tools.server
     token = os.environ.get("SENTINEL_DOWNSTREAM_TOKEN", "")
     if not token:
         raise SystemExit("SENTINEL_DOWNSTREAM_TOKEN is not set; the tool server refuses to start without it")
-    server, _ = build_tools_server(token)
+    uploads = os.environ.get("SENTINEL_UPLOADS_DIR")
+    server, _ = build_tools_server(token, Path(uploads) if uploads else None)
     uvicorn.run(server.http_app(), host="127.0.0.1", port=int(os.environ.get("SENTINEL_TOOLS_PORT", "8200")),
                 log_level="warning")
 

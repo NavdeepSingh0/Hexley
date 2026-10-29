@@ -71,6 +71,25 @@ export const sendChatMessage = (id, text) => api(`/api/v1/chat/${id}/messages`, 
 export const getChat = (id) => api(`/api/v1/chat/${id}`)
 export const decideApproval = (id, decision) => api(`/approvals/${id}`, { method: 'POST', body: { decision } })
 export const getChatRecording = (id) => api(`/api/v1/chat/${id}/recording`)
+
+// A PDF uploaded into a chat (plan Q10). Sent as a form so the browser sets the boundary; the officer token goes with it.
+export async function uploadChatDocument(id, file) {
+  let r
+  try {
+    r = await fetch(`/api/v1/chat/${id}/documents`, {
+      method: 'POST', headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: (() => { const f = new FormData(); f.append('file', file); return f })(),
+    })
+  } catch {
+    throw new ApiError(0, 'Cannot reach Sentinel. Is `python -m sentinel up --demo` running?')
+  }
+  if (!r.ok) {
+    let detail = r.statusText
+    try { const j = await r.json(); detail = typeof j.detail === 'string' ? j.detail : JSON.stringify(j.detail) } catch { /* keep */ }
+    throw new ApiError(r.status, detail)
+  }
+  return r.json()
+}
 export const verifyAudit = () => api('/audit/verify')
 
 // evidence.json is a static file generated from eval/results/ (never typed by hand).

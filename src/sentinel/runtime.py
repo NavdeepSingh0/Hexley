@@ -71,6 +71,7 @@ class Runtime:
     templates: dict = field(default_factory=load_templates)
     drafts: dict[str, TaskContract] = field(default_factory=dict)
     pins: ToolPins = field(default_factory=ToolPins)  # approved tool definitions by hash (plan Q5)
+    uploads_dir: Path | None = None  # PDFs the officer uploads into a chat; the tool server reads them as uploads/<name> (Q10)
 
 
 def build_runtime(*, tools_url: str, gateway_url: str, downstream_token: str, api_token: str, audit_dir: Path,
@@ -84,4 +85,4 @@ def build_runtime(*, tools_url: str, gateway_url: str, downstream_token: str, ap
     return Runtime(key=key or Ed25519PrivateKey.generate(), tools_url=tools_url, gateway_url=gateway_url,
                    downstream_token=downstream_token, api_token=api_token, audit=audit, allow_tamper=allow_tamper,
                    approval_wait=approval_wait, registry=load_registry(overlay=overlay), registry_overlay=overlay,
-                   pins=ToolPins.load(Path(audit_dir) / "tool_pins.json"))
+                   pins=ToolPins.load(Path(audit_dir) / "tool_pins.json"), uploads_dir=Path(audit_dir) / "uploads")

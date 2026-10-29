@@ -121,3 +121,18 @@ quotation_strict:
   max_messages: 1
   max_records_out: 0
   ttl_seconds: 900
+
+# Your own document (plan Q10): the officer uploads a PDF nobody has seen and asks for something in their own words. The
+# uploaded file is untrusted like every document; the customer database is restricted; the Rule of Two is on.
+own_document:
+  objective: >-
+    Work with the document the officer uploaded, as the officer asks, and report to the manager.
+  strict_flows: true
+  allowed_tools: [list_documents, read_document, query_db, send_email, fetch_url, http_post, write_file]
+  resource_classes: [document_index, document, customer_database, email_external, web, web_post, file]
+  allowed_recipient_domains: [corp.example, intranet.corp.example, hooks.corp.example, "path:/out"]
+  internal_destinations: [manager@corp.example, "path:/out"]
+  max_records: 50
+  max_messages: 5
+  max_records_out: 0
+  ttl_seconds: 1800

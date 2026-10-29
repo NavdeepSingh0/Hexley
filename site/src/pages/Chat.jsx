@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { confirmChat, createChat, decideApproval, getChat, getChatPresets, hasToken, sendChatMessage } from '../api/client.js'
+import { confirmChat, createChat, decideApproval, getChat, getChatPresets, hasToken, sendChatMessage, uploadChatDocument } from '../api/client.js'
 import { Icon } from '../components/Blocks.jsx'
 import Composer from '../components/chat/Composer.jsx'
 import Details from '../components/chat/Details.jsx'
@@ -181,7 +181,9 @@ export default function Chat() {
           </div>
         </div>
 
-        <Composer draft={draft} setDraft={setDraft} onSend={send} block={view ? block : 'Pick a task above to start'} busy={busy} disclosure={view?.disclosure ?? DEFAULT_DISCLOSURE} />
+        <Composer draft={draft} setDraft={setDraft} onSend={send} block={view ? block : 'Pick a task above to start'} busy={busy} disclosure={view?.disclosure ?? DEFAULT_DISCLOSURE}
+          documents={view?.documents ?? []}
+          onUpload={view?.can_upload && view.status !== 'awaiting_confirmation' ? async (file) => { const d = await uploadChatDocument(view.chat_id, file); setView(await getChat(view.chat_id)); return d } : null} />
       </div>
       {detailsOpen && view && <Details view={view} onClose={() => setDetailsOpen(false)} />}
     </div>

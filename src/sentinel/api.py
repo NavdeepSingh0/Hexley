@@ -4,19 +4,23 @@ from __future__ import annotations
 
 import asyncio
 import functools
+import hashlib
 import hmac
+import io
 import json
+import re
 from pathlib import Path
 from typing import Literal
 
 import httpx
-from fastapi import Depends, FastAPI, Header, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import Depends, FastAPI, File, Header, HTTPException, UploadFile, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, PlainTextResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastmcp import Client
 from fastmcp.client.transports import StreamableHttpTransport
 from pydantic import BaseModel, ConfigDict
+from pypdf import PdfReader
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.websockets import WebSocketClose
 
@@ -100,6 +104,9 @@ class SlipRequest(BaseModel):
 class OAuthDecision(BaseModel):
     decision: Literal["approve", "deny"]
     officer_code: str = ""
+
+
+MAX_UPLOAD = 10_000_000  # bytes: a PDF uploaded into a chat (plan Q10)
 
 
 class CheckTextRequest(BaseModel):
@@ -392,6 +399,41 @@ def create_api(rt: Runtime, console_dir: Path | None = None, site_dir: Path | No
             raise HTTPException(status_code=404, detail="No such session.")
         shown, findings = check_reply(req.text, session, session.contract)
         return {"safe": not findings, "text": shown, "removed": [f.as_dict() for f in findings]}
+
+    @app.post("/api/v1/chat/{chat_id}/documents", status_code=201, dependencies=[Depends(require_token)])
+    async def upload_document(chat_id: str, file: UploadFile = File(...)):
+        """The officer uploads a PDF into a chat (plan Q10). It is stored beside the audit log, read by the tool server as
+        uploads/<name>, and treated as untrusted like every document. The view shows the exact text the model will be given,
+        hidden text included. Nothing about it leaves the machine."""
+        chat = chats.chats.get(chat_id)
+        if chat is None:
+            raise HTTPException(status_code=404, detail="No such chat.")
+        if "read_document" not in chat.contract["allowed_tools"]:
+            raise HTTPException(status_code=409, detail="This chat's permission slip cannot read documents.")
+        data = await file.read(MAX_UPLOAD + 1)
+        if len(data) > MAX_UPLOAD:
+            raise HTTPException(status_code=413, detail=f"The PDF is larger than {MAX_UPLOAD // 1_000_000} MB.")
+        if not data.startswith(b"%PDF-"):
+            raise HTTPException(status_code=422, detail="That file is not a PDF.")
+        try:
+            pages = PdfReader(io.BytesIO(data)).pages
+            text = "\n".join((p.extract_text() or "") for p in pages).strip()
+        except Exception as e:  # noqa: BLE001 - any parse failure is reported plainly
+            raise HTTPException(status_code=422, detail="The PDF could not be read.") from e
+        stem = re.sub(r"[^A-Za-z0-9._-]+", "-", Path(file.filename or "document").stem).strip("-._")[:60] or "document"
+        name = f"{stem}.pdf"
+        rt.uploads_dir.mkdir(parents=True, exist_ok=True)
+        digest = hashlib.sha256(data).hexdigest()
+        try:
+            await rt.audit.append("document.uploaded", payload={"chat_id": chat_id, "name": name, "sha256": digest,
+                                                                "pages": len(pages), "chars": len(text)})
+        except AuditError as e:
+            raise HTTPException(status_code=503, detail="The audit log is unavailable, so the upload was not accepted.") from e
+        (rt.uploads_dir / name).write_bytes(data)
+        doc = {"name": name, "path": f"uploads/{name}", "pages": len(pages), "chars": len(text), "text": text[:20_000],
+               "sha256": digest}
+        chat.documents = [d for d in chat.documents if d["name"] != name] + [doc]
+        return doc
 
     @app.get("/api/v1/chat/presets", dependencies=[Depends(require_token)])
     async def chat_presets():

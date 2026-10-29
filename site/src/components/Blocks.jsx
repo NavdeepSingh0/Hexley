@@ -19,6 +19,7 @@ const PATHS = {
   play: 'M8 5v14l11-7Z',
   lock: 'M7 11V8a5 5 0 0 1 10 0v3M5 11h14v9H5v-9Z',
   list: 'M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01',
+  plus: 'M12 5v14M5 12h14',
 }
 
 export function Icon({ name, size = 22, className = '' }) {

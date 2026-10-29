@@ -144,7 +144,8 @@ async def _up(args: argparse.Namespace) -> None:
                                          preset=args.oauth_preset, slip_ttl=args.oauth_ttl, on_request=print_officer_code)
     api_app = create_api(rt)
     rt.runs.pace = args.pace  # type: ignore[union-attr]
-    env = {**os.environ, "SENTINEL_DOWNSTREAM_TOKEN": downstream, "SENTINEL_TOOLS_PORT": str(args.tools_port)}
+    env = {**os.environ, "SENTINEL_DOWNSTREAM_TOKEN": downstream, "SENTINEL_TOOLS_PORT": str(args.tools_port),
+           "SENTINEL_UPLOADS_DIR": str(rt.uploads_dir)}  # documents uploaded into a chat (plan Q10)
     tools = subprocess.Popen([sys.executable, "-m", "sentinel.tools.server"], env=env)
     try:
         await wait_until_listening(args.tools_port, tools, "tool server")

@@ -184,3 +184,14 @@
 @media (prefers-reduced-motion: reduce) { .cx-side, .cx-tools-chev { transition: none; } }
 /* plan Q6: an address Sentinel removed from a reply, said in plain words under the reply */
 .cx-check { margin: 0; padding: 10px 14px; border-radius: 12px; background: var(--panel); border: 1px solid var(--card-border); color: var(--muted); font-size: 14.5px; line-height: 1.5; }
+/* plan Q10: documents uploaded into a chat */
+.cx-docs { list-style: none; margin: 0 0 8px; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.cx-doc { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 999px; background: var(--panel); border: 1px solid var(--card-border); font-size: 13.5px; }
+.cx-upload-note { margin: 0 0 8px; font-size: 13.5px; color: var(--muted); }
+.cx-upload-note.is-error { color: var(--harm); }
+.cx-attach { flex: none; align-self: flex-end; display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: 999px; border: 1px solid var(--card-border); background: transparent; color: var(--ink); cursor: pointer; }
+.cx-attach:hover:not(:disabled) { background: var(--raised); }
+.cx-attach:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.cx-attach:disabled { opacity: 0.5; cursor: progress; }
+.cx-doc-text summary { cursor: pointer; font-size: 14px; padding: 4px 0; }
+.cx-doc-text pre { margin: 6px 0 0; padding: 10px 12px; max-height: 280px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; font-family: var(--mono); font-size: 12.5px; line-height: 1.5; background: var(--bg); border: 1px solid var(--card-border); border-radius: 10px; }
