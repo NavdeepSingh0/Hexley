@@ -30,7 +30,7 @@ export function pendingApproval(view) {
   return allActions(view).find((a) => a.decision === 'NEEDS_APPROVAL' && a.approval_id) ?? null
 }
 
-// "R2: Restricted data stays in" for a rule id, or the id alone if it is not one of the seven.
+// "R2: Restricted data stays in" for a rule id, or the id alone if it is not one of the nine.
 export function ruleLabel(id) {
   const r = RULES.find((x) => x.id === id)
   return r ? `${r.id}: ${r.title}` : String(id)

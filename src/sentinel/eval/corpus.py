@@ -85,14 +85,15 @@ _SUPPORTED_BODIES = [
     ("date-long", "Next dispatch 2 November 2026."),
     ("date-us-ordinal", "Next dispatch November 5th, 2026."),
     ("date-short-month", "Next dispatch 5 Nov 2026."),
+    # closed in plan Q4 (both were declared gaps until then)
+    ("digits-spaced-apart", "We hold 2 4 0 0 units."),
+    ("comma-in-number-words", "We hold two thousand, four hundred units."),
 ]
 
 # Declared gaps, each asserted as a miss in tests/test_matcher.py and tests/test_r2.py.
 _GAP_BODIES = [
     ("paraphrase-western-depot", "Dear Shakti Precision Components, we hold sufficient stock at the western depot for your order."),
     ("paraphrase-generalisation", "Most of our reserves of brass casings are held at one depot and will go out next week."),
-    ("digits-spaced-apart", "We hold 2 4 0 0 units."),
-    ("comma-in-number-words", "We hold two thousand, four hundred units."),
     ("approximation", "We hold roughly two and a half thousand units."),
     ("letters-for-digits", "We hold Z4OO units."),
 ]

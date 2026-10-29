@@ -39,8 +39,8 @@ _UNITS.update({"twenty": 20, "thirty": 30, "forty": 40, "fourty": 40, "fifty": 5
                "seventy": 70, "eighty": 80, "ninety": 90})
 _BIG = {"thousand": 1_000, "lakh": 100_000, "lac": 100_000, "million": 1_000_000, "crore": 10_000_000}
 _WORD_RUN = re.compile(r"\b(?:" + "|".join(sorted([*_UNITS, *_BIG, "hundred", "and"], key=len, reverse=True)) +
-                       r")\b(?:[\s-]+(?:" + "|".join(sorted([*_UNITS, *_BIG, "hundred", "and"], key=len, reverse=True)) +
-                       r")\b)*")
+                       r")\b(?:(?:,?[\s-]+)(?:" + "|".join(sorted([*_UNITS, *_BIG, "hundred", "and"], key=len, reverse=True)) +
+                       r")\b)*")  # a comma may sit inside number words: "two thousand, four hundred" (plan Q4)
 _SUFFIX = {"k": 1_000, "thousand": 1_000, "hundred": 100, "lakh": 100_000, "lakhs": 100_000, "lac": 100_000,
            "lacs": 100_000, "crore": 10_000_000, "crores": 10_000_000, "million": 1_000_000}
 _MONTHS = {m: i + 1 for i, m in enumerate(
@@ -53,7 +53,9 @@ _DMY = re.compile(r"\b(\d{1,2})[/.](\d{1,2})[/.](\d{4})\b")
 _D_MON_Y = re.compile(rf"\b(\d{{1,2}})(?:st|nd|rd|th)?\s+({_MONTH_RE})\.?,?\s+(\d{{4}})\b")
 _MON_D_Y = re.compile(rf"\b({_MONTH_RE})\.?\s+(\d{{1,2}})(?:st|nd|rd|th)?,?\s+(\d{{4}})\b")
 _CODE = re.compile(r"\b([a-z]{2,4})[-\s]?(\d{1,3})\b")
-_NUMBER = re.compile(r"(\d{1,3}(?:[,.\s]\d{3})+|\d+(?:\.\d+)?)(?:\s*(k|thousand|hundred|lakhs?|lacs?|crores?|million)\b)?")
+_NUMBER = re.compile(r"(\d{1,2}(?:,\d{2})+,\d{3}|\d{1,3}(?:[,.\s]\d{3})+|\d+(?:\.\d+)?)"
+                     r"(?:\s*(k|thousand|hundred|lakhs?|lacs?|crores?|million)\b)?")  # Indian grouping first (plan Q4)
+_SPACED_DIGITS = re.compile(r"(?<![\d.,])\d(?: \d){3,}(?![\d.,])")  # 2 4 0 0: four or more single digits, one space apart
 
 
 def normalise(text: str) -> str:
@@ -89,7 +91,7 @@ def _valid_date(y: int, m: int, d: int) -> str | None:
 
 
 def _words_value(run: str) -> int | None:
-    tokens = [w for w in re.split(r"[\s-]+", run) if w and w != "and"]
+    tokens = [w for w in re.split(r"[\s,-]+", run) if w and w != "and"]
     if not tokens:
         return None
     total = current = 0
@@ -133,11 +135,14 @@ def candidates(norm: str, known_codes: frozenset[str] | None = None) -> list[Can
         found.append(Candidate("code", canonical, m.group()))
         text = _mask(text, m.span())
     for m in list(_WORD_RUN.finditer(text)):
-        if not any(w in _UNITS for w in re.split(r"[\s-]+", m.group())):
+        if not any(w in _UNITS for w in re.split(r"[\s,-]+", m.group())):
             continue  # "thousand" or "hundred" alone is a unit suffix for a digit string, not a number phrase
         value = _words_value(m.group())
         if value is not None:
             found.append(Candidate("number", str(value), m.group()))
+        text = _mask(text, m.span())
+    for m in list(_SPACED_DIGITS.finditer(text)):
+        found.append(Candidate("number", str(int(m.group().replace(" ", ""))), m.group()))
         text = _mask(text, m.span())
     for m in _NUMBER.finditer(text):
         raw, suffix = m.group(1), m.group(2)
@@ -148,7 +153,7 @@ def candidates(norm: str, known_codes: frozenset[str] | None = None) -> list[Can
                 if canonical:
                     found.append(Candidate("number", canonical, m.group()))
             else:
-                grouped = re.fullmatch(r"\d{1,3}(?:[,.\s]\d{3})+", raw)
+                grouped = re.fullmatch(r"\d{1,3}(?:[,.\s]\d{3})+|\d{1,2}(?:,\d{2})+,\d{3}", raw)
                 value = Decimal(re.sub(r"[,.\s]", "", raw)) if grouped else Decimal(raw)
                 canonical = _num_str(value)
                 if canonical:

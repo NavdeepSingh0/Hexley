@@ -7,11 +7,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from . import destinations, egress
+from . import destinations, effects, egress
 from .destinations import domain_of
 from .secret_scan import CREDENTIAL_ARG, SecretMatch
 from .matcher import Match
-from .models import EFFECT_PRECEDENCE, AgentAction, Effect, Evidence, ReasonCode, RuleId, TaskContract, ToolEntry
+from .models import EFFECT_PRECEDENCE, AgentAction, Capability, Effect, Evidence, ReasonCode, RuleId, TaskContract, ToolEntry
 
 
 @dataclass(frozen=True)
@@ -21,6 +21,7 @@ class RuleResult:
     reason_code: ReasonCode
     summary: str
     evidence: list[Evidence] = field(default_factory=list)
+    agent_summary: str | None = None  # what the agent is told, if not the officer's summary (plan Q3: never coach it)
 
 
 def rule_r1(action: AgentAction, contract: TaskContract, entry: ToolEntry) -> RuleResult | None:
@@ -167,7 +168,34 @@ def rule_r2(action: AgentAction, entry: ToolEntry, matches: list[Match]) -> Rule
         f"({', '.join(labels)}) read from {', '.join(sources)} outside the building. "
         "This task's permission slip does not allow restricted data to leave. "
         "Send an acknowledgement without that information.",
-        evidence)
+        evidence,
+        agent_summary=f"Blocked: this {action.tool} would send restricted data from this task outside the building, which "
+                      "its permission slip does not allow. Send it without that information.")
+
+
+def rule_r8(action: AgentAction, entry: ToolEntry, contract: TaskContract, tainted_by: dict[str, str],
+            restricted_reads: dict[str, str], recipients: list[str], approved: bool) -> RuleResult | None:
+    """R8, the Rule of Two (plan Q3; Meta's Agents Rule of Two, Willison's lethal trifecta). When the slip asks for it
+    (strict_flows), a session that has read restricted data AND untrusted content may send outside its internal
+    destinations only with the officer's approval of that exact call, a vendor on file included. Value matching (R2)
+    cannot see a paraphrase ("plenty of stock at the western depot"); this rule does not need to see it, because it reasons
+    about what the session has read, not about what the message says."""
+    if approved or not contract.strict_flows or not entry.outbound or entry.egress_template is not None:
+        return None
+    if not tainted_by or not restricted_reads:
+        return None
+    if recipients and all(destinations.allowed(r, contract.internal_destinations) for r in recipients):
+        return None
+    restricted, untrusted = sorted(restricted_reads)[0], sorted(tainted_by)[0]
+    return RuleResult(
+        RuleId.R8, Effect.ASK, ReasonCode.RULE_OF_TWO,
+        f"Approval needed: this session has read restricted data (from {restricted}) and untrusted content (from "
+        f"{untrusted}), so anything '{action.tool}' sends outside could carry that data in other words. It will run only "
+        "if the officer approves this exact request.",
+        [Evidence(kind="flow", detail=f"restricted data was read from {s} earlier in this session", source_ref=s)
+         for s in sorted(restricted_reads)] +
+        [Evidence(kind="taint", detail=f"untrusted content was read from {s} earlier in this session", source_ref=s)
+         for s in sorted(tainted_by)])
 
 
 def rule_secret(action: AgentAction, entry: ToolEntry, matches: list[SecretMatch]) -> RuleResult | None:
@@ -183,11 +211,78 @@ def rule_secret(action: AgentAction, entry: ToolEntry, matches: list[SecretMatch
         return RuleResult(
             RuleId.R9, Effect.BLOCK, ReasonCode.DISCOVERED_CREDENTIAL,
             f"Blocked: this {action.tool} would use a credential that was found in data. Only credentials issued to this "
-            "task may be used; this one was not.", evidence)
+            "task may be used; this one was not.", evidence,
+            agent_summary=f"Blocked: this {action.tool} would use a credential that was not issued to this task.")
     return RuleResult(
         RuleId.R2, Effect.BLOCK, ReasonCode.SECRET_EGRESS,
         f"Blocked: this {action.tool} would send a credential that was found in data. Credentials never leave, "
-        "not even to an internal destination. Send it without that value.", evidence)
+        "not even to an internal destination. Send it without that value.", evidence,
+        agent_summary=f"Blocked: this {action.tool} would send a credential found in data. Send it without that value.")
+
+
+def rule_effects(action: AgentAction, entry: ToolEntry, contract: TaskContract, approved: bool) -> list[RuleResult]:
+    """What the action does, read from its arguments (plan Q4; effects.py). A path is checked whichever tool carries it, a SQL
+    statement is classified whichever tool runs it, a shell command is tokenised before anyone decides about it.
+    - agent and IDE configuration is never written (R1): a new MCP server or hook there runs code (CurXecute, Kiro);
+    - credential files are never read (R1): .env, .ssh, keys (Antigravity, s1ngularity);
+    - a read tool asked to change data, or a statement that cannot be read safely, is refused (R1);
+    - a command that contacts a web address outside the slip is refused (R1);
+    - anything that cannot be undone (DROP, DELETE without WHERE, rm -r, a cloud delete) waits for the officer (R4)."""
+    out: list[RuleResult] = []
+    writes = entry.capability in (Capability.WRITE, Capability.SEND) or entry.outbound
+    for name, value in effects.paths_in_args(action.args):
+        cls = effects.path_class(value)
+        if cls == "config" and writes:
+            out.append(RuleResult(RuleId.R1, Effect.BLOCK, ReasonCode.PROTECTED_PATH,
+                                  f"Blocked: '{value}' is agent or editor configuration. An agent never writes there: a new "
+                                  "server or hook in that file would run code on this machine.",
+                                  [Evidence(kind="effect", detail=f"argument '{name}' is a protected configuration path")]))
+        elif cls == "secret":
+            out.append(RuleResult(RuleId.R1, Effect.BLOCK, ReasonCode.PROTECTED_PATH,
+                                  f"Blocked: '{value}' holds credentials. An agent never reads credential files; only "
+                                  "credentials issued to the task may be used.",
+                                  [Evidence(kind="effect", detail=f"argument '{name}' is a credential file")]))
+    for name in ("sql", "query", "statement"):
+        sql = action.args.get(name) if isinstance(action.args, dict) else None
+        if not isinstance(sql, str):
+            continue
+        fx = effects.sql_effect(sql)
+        if fx.kind == "unknown" or (fx.kind in ("write", "ddl") and entry.capability == Capability.READ):
+            why = fx.note or f"a {fx.kind} statement sent to a tool that may only read"
+            out.append(RuleResult(RuleId.R1, Effect.BLOCK, ReasonCode.WRONG_EFFECT,
+                                  f"Blocked: {why}. '{action.tool}' may only read data for this task.",
+                                  [Evidence(kind="effect", detail=f"SQL classified as {fx.kind}"
+                                            + (f" on {', '.join(fx.tables)}" if fx.tables else ""))]))
+        elif fx.destructive and not approved:
+            out.append(RuleResult(RuleId.R4, Effect.ASK, ReasonCode.DESTRUCTIVE,
+                                  f"Approval needed: {fx.note}. It runs only if the officer approves this exact statement.",
+                                  [Evidence(kind="effect", detail=fx.note)]))
+    command = action.args.get("command") if isinstance(action.args, dict) else None
+    if isinstance(command, str):
+        fx = effects.shell_effect(command)
+        for p in fx.reads_secret:
+            out.append(RuleResult(RuleId.R1, Effect.BLOCK, ReasonCode.PROTECTED_PATH,
+                                  f"Blocked: the command reads {p}, which holds credentials. An agent never reads credential "
+                                  "files or the environment's secrets.",
+                                  [Evidence(kind="effect", detail=f"the command reads {p}")]))
+        for p in fx.writes_config:
+            out.append(RuleResult(RuleId.R1, Effect.BLOCK, ReasonCode.PROTECTED_PATH,
+                                  f"Blocked: the command writes {p}, which is agent or editor configuration.",
+                                  [Evidence(kind="effect", detail=f"the command writes {p}")]))
+        allowed_list = sorted({d.lower() for d in contract.allowed_recipient_domains})
+        keys, bad = destinations.keys_in(list(fx.urls), "url")
+        outside = sorted({domain_of(k) for k in keys if not destinations.allowed(k, allowed_list)})
+        if outside or bad:
+            out.append(RuleResult(RuleId.R1, Effect.BLOCK, ReasonCode.NOT_IN_SLIP,
+                                  f"Blocked: the command contacts {', '.join(outside) or 'an address it could not read'}, "
+                                  f"outside this task's permission slip ({', '.join(allowed_list) or 'nowhere'}).",
+                                  [Evidence(kind="effect", detail=f"the command contacts {u}") for u in fx.urls]))
+        if fx.destructive and not approved:
+            out.append(RuleResult(RuleId.R4, Effect.ASK, ReasonCode.DESTRUCTIVE,
+                                  "Approval needed: this command deletes or overwrites something that cannot be undone. "
+                                  "It runs only if the officer approves this exact command.",
+                                  [Evidence(kind="effect", detail="destructive: " + " | ".join(fx.programs))]))
+    return out
 
 
 FREEZE_AFTER_BLOCKS = 3
@@ -208,7 +303,8 @@ def rule_r5(action: AgentAction, entry: ToolEntry, contract: TaskContract, messa
 
 
 def rule_r6(blocks_including_this: int, threshold: int = FREEZE_AFTER_BLOCKS) -> RuleResult | None:
-    """R6: the third policy block in one session freezes it. Evaluated only when another rule already blocked."""
+    """R6: the Nth policy block in one session freezes it (three unless the slip says otherwise: freeze_after, plan Q3).
+    Evaluated only when another rule already blocked."""
     if blocks_including_this < threshold:
         return None
     return RuleResult(

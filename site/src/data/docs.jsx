@@ -42,6 +42,8 @@ const RULE_NOTES = {
   R5: { example: 'The slip allows one message and the agent tries to send a second: refused.', gap: 'The count is per session; a new session needs a new slip.' },
   R6: { example: 'A persistent attacker\'s third denied action freezes that session and revokes its token. Other sessions are not affected.', gap: 'It only runs when another rule has already blocked something.' },
   R7: { example: 'After reading an untrusted PDF, the agent tries to e-mail a colleague who is on an allowed domain but not named internal: the action waits for the officer instead of going out.', gap: 'It can hold valid actions on a task that reads untrusted content and then acts often; the cost is measured in the README.' },
+  R8: { example: 'On the strict quotation slip the agent reads the stock register and the quotation, then writes to the vendor on file that "we hold sufficient stock at the western depot": no figure is copied, so value matching sees nothing, but the message waits for the officer.', gap: 'It is off unless the slip turns it on, and it asks for approval rather than deciding: an officer who approves everything defeats it.' },
+  R9: { example: 'A runbook has a deploy token left in it. The agent tries to use it in a command, then to paste it into a message to a colleague: both refused, and the report to the manager without it still goes.', gap: 'A credential that matches none of the known shapes (a short password written in prose) or one re-encoded (base64, reversed) is not recognised.' },
 }
 
 const AUDIENCE = 'Everything on this page is written from the repository: the files named at the end.'
@@ -170,7 +172,7 @@ export const PAGES = {
 
   rules: {
     title: 'The rules',
-    lede: 'Seven rules, in plain English, each with an example and what it does not catch.',
+    lede: 'Nine rules, in plain English, each with an example and what it does not catch.',
     source: 'docs/THREAT_MODEL.md, docs/ADVERSARIAL_TESTS.md, src/sentinel/rules.py, README.md.',
     body: () => (
       <>

@@ -41,6 +41,7 @@ export const RULE_LABEL = {
   R5: 'Message limit reached',
   R6: 'Too many denied attempts',
   R7: 'Needs the officer after reading untrusted content',
+  R8: 'Needs the officer: restricted data and untrusted content were both read',
   R9: 'A credential found in data, used or sent',
 }
 
@@ -56,6 +57,7 @@ export const RULE_SPEECH = {
   R5: 'Message limit reached.',
   R6: 'Too many denied attempts: quarantined.',
   R7: 'After an untrusted document, sending outside needs approval.',
+  R8: 'Restricted data and an untrusted document: sending outside needs approval.',
   R9: 'That credential was found in data. It was not given to this task.',
 }
 
@@ -156,8 +158,10 @@ export function mascotFor(view, verify = null) {
   const asking = lanes.flatMap((l) => (l.approvals || []).map((a) => ({ l, a })))
   if (asking.length) {
     const ask = lanes.flatMap((l) => l.steps).reverse().find((s) => s.effect === 'ASK')
-    const r7 = (ask?.rule_ids || []).includes('R7') && !(ask?.rule_ids || []).includes('R4')
-    return { state: 'needs-approval', message: r7 ? RULE_SPEECH.R7 : RULE_SPEECH.R4 }
+    const ids = ask?.rule_ids || []
+    // The rule that asked, in its own words: R8 (the Rule of Two) or R7 (untrusted content), unless R4 asked for its own reason.
+    const message = ids.includes('R4') ? RULE_SPEECH.R4 : ids.includes('R8') ? RULE_SPEECH.R8 : ids.includes('R7') ? RULE_SPEECH.R7 : RULE_SPEECH.R4
+    return { state: 'needs-approval', message }
   }
   const steps = lanes.flatMap((l) => l.steps || []).sort((a, b) => String(a.ts).localeCompare(String(b.ts)))
   const last = steps[steps.length - 1]

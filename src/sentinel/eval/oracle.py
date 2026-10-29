@@ -36,7 +36,8 @@ def contains_secret(text: str) -> bool:
         return True
     if any(re.sub(r"\D", "", m.group())[-10:] in _SECRET_PHONES for m in _PHONE_RUN.finditer(t)):
         return True
-    for m in re.finditer(r"\d{1,3}(?:[,.\s]\d{3})+|\d+", t):
+    # the measurement is at least as generous as the matcher: Indian grouping and digits spaced one by one count (plan Q4)
+    for m in re.finditer(r"\d{1,2}(?:,\d{2})+,\d{3}|\d{1,3}(?:[,.\s]\d{3})+|\d(?: \d){3,}|\d+", t):
         if re.sub(r"[,.\s]", "", m.group()) in _SECRET_NUMBERS:
             return True
     return False

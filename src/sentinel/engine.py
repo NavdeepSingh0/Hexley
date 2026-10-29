@@ -6,7 +6,7 @@ import logging
 import time
 import uuid
 
-from . import destinations, egress, rules
+from . import destinations, effects, egress, rules
 from .contracts import Session
 from .models import AgentAction, Column, Decision, Effect, Evidence, ReasonCode, RuleId
 from .registry import Registry
@@ -35,11 +35,21 @@ def decide(action: AgentAction, session: Session, registry: Registry, approved: 
         recipients, unparseable = destinations.keys_in(
             [action.args[k] for k in entry.destination_args if k in action.args],
             entry.destination_kind) if entry.outbound else ([], [])
+        if entry.outbound:
+            # cc, bcc, reply_to and the like are destinations whether or not the registry listed them (plan Q4)
+            for k in effects.extra_destination_args(action.args, entry.destination_args):
+                v = action.args[k]
+                values = v if isinstance(v, list) else [v]
+                for one in values:
+                    kind = "email" if isinstance(one, str) and "@" in one and "://" not in one else "url"
+                    more, bad = destinations.keys_in([one], kind)
+                    recipients, unparseable = recipients + more, unparseable + bad
         results = [rules.rule_r1(action, session.contract, entry),
                    rules.rule_r1_recipient(action, entry, session.contract, recipients, unparseable),
                    rules.rule_r1_egress(action, entry, session.contract)]
         if session.column == Column.SENTINEL:  # the R1-only baseline runs R1 and nothing else
-            matches = session.index.scan_args(action.args) if entry.outbound else []
+            contacts = isinstance(action.args.get("command"), str) and bool(effects.shell_effect(action.args["command"]).urls)
+            matches = session.index.scan_args(action.args) if (entry.outbound or contacts) else []
             # An address that IS the recipient is not a leak of itself (you may write to a customer who is in the database).
             matches = [m for m in matches if not (m.kind == "email" and m.canonical in recipients)]
             if recipients and not unparseable and all(
@@ -51,16 +61,19 @@ def decide(action: AgentAction, session: Session, registry: Registry, approved: 
             results.append(rules.rule_r3(action, entry, recipients, session.untrusted_destinations,
                                          session.trusted_addresses, session.untrusted_actions))
             results.append(rules.rule_r4(action, entry, approved))
+            results.extend(rules.rule_effects(action, entry, session.contract, approved))
             results.append(rules.rule_r5(action, entry, session.contract, session.messages_out))
             if not any(r is not None and r.effect == Effect.BLOCK for r in results):
                 # R7 asks only when nothing else has already said no: a block outranks a question, and the evidence of
                 # the blocking rule (not a second, redundant question) is what the officer and the log should see.
                 results.append(rules.rule_r7(action, entry, session.tainted_by, recipients, session.contract,
                                              session.trusted_addresses, approved))
+                results.append(rules.rule_r8(action, entry, session.contract, session.tainted_by,
+                                             session.restricted_reads, recipients, approved))
         fired = [r for r in results if r is not None]
         verdict = rules.combine(fired)
         if verdict is not None and verdict.effect == Effect.BLOCK and session.column == Column.SENTINEL:
-            freeze = rules.rule_r6(session.blocks + 1)  # this block would be the Nth
+            freeze = rules.rule_r6(session.blocks + 1, session.contract.freeze_after)  # this block would be the Nth
             if freeze is not None:
                 fired.append(freeze)
                 verdict = rules.combine(fired)
@@ -84,8 +97,9 @@ def decide(action: AgentAction, session: Session, registry: Registry, approved: 
                                                  source_ref=msg.message_sha256)])
             return finish(effect=Effect.ALLOW, reason_code=ReasonCode.ALLOWED,
                           summary_plain=f"Allowed: '{action.tool}' is within this task's permission slip.")
-        return finish(effect=verdict.effect, rule_ids=[r.rule_id for r in fired], reason_code=verdict.reason_code,
-                      summary_plain=verdict.summary, evidence=[e for r in fired for e in r.evidence])
+        return finish(effect=verdict.effect, rule_ids=list(dict.fromkeys(r.rule_id for r in fired)), reason_code=verdict.reason_code,
+                      summary_plain=verdict.summary, evidence=[e for r in fired for e in r.evidence],
+                      agent_summary=verdict.agent_summary)
     except Exception:  # noqa: BLE001 - invariant 2: any error in the decision path is a BLOCK
         log.exception("decision failed; failing closed")
         return finish(effect=Effect.BLOCK, rule_ids=[RuleId.R1], reason_code=ReasonCode.FAIL_CLOSED,

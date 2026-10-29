@@ -158,7 +158,7 @@ class SentinelMiddleware(Middleware):
                                                  {"reason": "block threshold", "blocks": session.blocks,
                                                   "decision_id": decision.decision_id}))
         if decision.effect != Effect.ALLOW:
-            raise ToolError(decision.summary_plain)
+            raise ToolError(decision.agent_summary or decision.summary_plain)
         # For a fixed-template tool, hand the tool the hash of the message the decision recorded, so it can
         # refuse to send anything different (D-020).
         egress_ev = next((e for e in decision.evidence if e.kind == "egress" and e.source_ref), None)
@@ -192,12 +192,14 @@ class SentinelMiddleware(Middleware):
                                                       "decision_id": decision.decision_id}))
         # Any credential in any result is remembered, whatever the tool's label: a key in a runbook or a token in a ticket
         # must never be sent out or used by this session (R2, R9; plan Q2).
-        if protected:
-            session.secrets.add(text, source_ref=tool, action_id=action.action_id)
+        if protected and session.secrets.add(text, source_ref=tool, action_id=action.action_id):
+            session.restricted_reads.setdefault(tool, "read a credential")
         # Label what came back from the registry (never from the content) and remember restricted values,
         # so a later outbound call can be checked against them (R2).
-        if protected and entry.output_confidentiality == Confidentiality.RESTRICTED and entry.fingerprint_fields:
-            session.index.add(text, entry.fingerprint_fields, source_ref=tool, action_id=action.action_id)
+        if protected and entry.output_confidentiality == Confidentiality.RESTRICTED:
+            session.restricted_reads.setdefault(tool, "read restricted data")  # R8 (Rule of Two), with or without fingerprints
+            if entry.fingerprint_fields:
+                session.index.add(text, entry.fingerprint_fields, source_ref=tool, action_id=action.action_id)
         # Addresses found in untrusted content are remembered so R3 can refuse them as destinations later.
         if protected and entry.output_integrity == Integrity.UNTRUSTED:
             session.tainted_by.setdefault(tool, "read untrusted content")  # R7: from now on consequential actions ask

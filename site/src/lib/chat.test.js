@@ -70,7 +70,8 @@ describe('busyLine', () => {
 describe('ruleLabel and allActions', () => {
   it('names a known rule and leaves an unknown one alone', () => {
     expect(ruleLabel('R2')).toBe('R2: Restricted data stays in')
-    expect(ruleLabel('R9')).toBe('R9')
+    expect(ruleLabel('R9')).toBe('R9: Found credentials are never used')
+    expect(ruleLabel('R42')).toBe('R42')
   })
   it('collects actions from every message', () => {
     const v = { messages: [{ actions: [act('ALLOWED')] }, { actions: [act('DENIED'), act('DENIED')] }, {}] }

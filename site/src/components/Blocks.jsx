@@ -96,10 +96,10 @@ export function Outcome({ word }) {
   return <span className={`rules-card-out rules-card-out--${OUTCOME_CLASS[word] ?? 'denied'}`}>{word}</span>
 }
 
-// The seven rules as a short list: id, title and the decision word each one produces.
+// The nine rules as a short list: id, title and the decision word each one produces.
 export function RulesCard() {
   return (
-    <ol className="rules-card" aria-label="The seven rules">
+    <ol className="rules-card" aria-label="The nine rules">
       {RULES.map((r) => (
         <li key={r.id}>
           <span className="rules-card-id">{r.id}</span>

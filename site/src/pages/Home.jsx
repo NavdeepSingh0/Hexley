@@ -143,7 +143,7 @@ export default function Home() {
         <p>Before an agent starts, the officer confirms a permission slip: the task, the tools it may use, where data may go and how many messages it may send. The agent cannot write or widen its own slip.</p>
       </Feature>
       <Feature
-        id="rules" flip label="2 · The rules" title="Seven rules, checked on every action"
+        id="rules" flip label="2 · The rules" title="Nine rules, checked on every action"
         bullets={['The strictest outcome wins: freeze, then deny, then ask, then allow', 'Known gaps are listed, not hidden: a reworded paraphrase can still get through value matching', 'Each rule has tests, and a check that they fail when the rule is removed']}
         link={{ to: '/how-it-works#rules', label: 'Every rule in plain English' }}
         visual={<RulesCard />}

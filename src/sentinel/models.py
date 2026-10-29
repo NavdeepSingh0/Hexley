@@ -42,6 +42,7 @@ class RuleId(StrEnum):
     R5 = "R5"
     R6 = "R6"
     R7 = "R7"
+    R8 = "R8"  # the Rule of Two: restricted + untrusted read, then sending outside, asks the officer (plan Q3)
     R9 = "R9"  # a credential found in data is never used or sent (plan Q2)
 
 
@@ -57,6 +58,10 @@ class ReasonCode(StrEnum):
     VOLUME_EXCEEDED = "VOLUME_EXCEEDED"  # R5
     BLOCK_THRESHOLD_FREEZE = "BLOCK_THRESHOLD_FREEZE"  # R6
     TAINTED_ACTION = "TAINTED_ACTION"  # R7: a consequential action after the session read untrusted content
+    RULE_OF_TWO = "RULE_OF_TWO"  # R8
+    PROTECTED_PATH = "PROTECTED_PATH"  # R1: agent configuration is never written, credential files never read (plan Q4)
+    WRONG_EFFECT = "WRONG_EFFECT"  # R1: a read tool asked to change data, or a statement that cannot be read safely
+    DESTRUCTIVE = "DESTRUCTIVE"  # R4: an action that cannot be undone waits for the officer (plan Q4)
     DISCOVERED_CREDENTIAL = "DISCOVERED_CREDENTIAL"  # R9: a secret found in a tool result, used or sent
     SESSION_INVALID = "SESSION_INVALID"
     AUDIT_UNAVAILABLE = "AUDIT_UNAVAILABLE"  # no durable audit record, so the action was not run
@@ -146,6 +151,11 @@ class TaskContract(_Model):
     # the contract hash, so a token is bound to them.
     work_item_id: str | None = None
     resolved_vendor: dict[str, str] | None = None
+    # Plan Q3. strict_flows: the Rule of Two (R8): once this task has read restricted data AND untrusted content, anything
+    # sent outside the internal destinations waits for the officer, even to a vendor on file, because a paraphrase of the
+    # restricted data would pass value matching. freeze_after: how many refused attempts freeze the session (R6).
+    strict_flows: bool = False
+    freeze_after: int = 3
     issued_at: datetime
     expires_at: datetime
     status: SessionStatus = SessionStatus.PENDING
@@ -191,6 +201,9 @@ class Decision(_Model):
     summary_plain: str
     evidence: list[Evidence] = Field(default_factory=list)
     latency_ms: float = 0.0
+    # What the agent is told, when it differs from what the officer reads. A refusal must not coach a compromised agent:
+    # it never says how many values matched or of which kinds (plan Q3; the ARM finding on denial feedback).
+    agent_summary: str | None = None
 
 
 # ---- events ------------------------------------------------------------------------------------

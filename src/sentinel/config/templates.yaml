@@ -105,3 +105,19 @@ ops_runbook:
   max_messages: 3
   max_records_out: 0
   ttl_seconds: 900
+
+# The quotation task with the Rule of Two on (plan Q3, R8): after the stock register (restricted) and the quotation
+# (untrusted) have both been read, anything sent outside waits for the officer, the vendor on file included. A paraphrase
+# of the stock position passes value matching; this slip does not let it out without a person saying yes.
+quotation_strict:
+  objective: >-
+    Process an incoming vendor quotation: read it, check stock internally to inform the
+    procurement decision, and acknowledge receipt to the vendor.
+  strict_flows: true
+  allowed_tools: [read_quotation, query_stock, send_email]
+  resource_classes: [quotation_doc, stock_register, email_external]
+  allowed_recipient_domains: [shakti.example]
+  max_records: 10
+  max_messages: 1
+  max_records_out: 0
+  ttl_seconds: 900

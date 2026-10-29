@@ -91,8 +91,6 @@ def test_a_document_that_repeats_the_value_cannot_switch_detection_off(index):
 @pytest.mark.parametrize("text", [
     "the western depot is well stocked",           # paraphrase
     "sufficient stock is available",               # generalisation
-    "2 4 0 0 units",                               # digits spaced out
-    "two thousand, four hundred",                  # comma inside number words
     "roughly two and a half thousand units",       # approximation
     "2400".replace("0", "O"),                      # letters standing in for digits
 ])

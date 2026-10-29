@@ -52,12 +52,12 @@ function Flow() {
   )
 }
 
-// The seven rules, each in a sentence or two, in the order the engine names them.
+// The nine rules, each in a sentence or two, in the order the engine names them.
 function RulesList() {
   return (
     <section className="section" id="rules" aria-labelledby="rules-title">
       <p className="s-label">The rules</p>
-      <h2 id="rules-title" className="section-title">Seven rules, in plain English</h2>
+      <h2 id="rules-title" className="section-title">Nine rules, in plain English</h2>
       <ol className="hr-rules">
         {RULES.map((r) => (
           <li key={r.id} className="hr-rule">
@@ -110,7 +110,7 @@ export default function HowItWorks() {
         <p>Before an agent reads anything untrusted, the officer confirms a slip: the task, the tools it may use, where data may go, which places count as internal, and how many messages it may send.</p>
       </Feature>
       <Feature
-        id="rules-summary" flip label="2 · The rules" title="Seven rules, checked on every action"
+        id="rules-summary" flip label="2 · The rules" title="Nine rules, checked on every action"
         bullets={['The strictest outcome wins: freeze, then deny, then ask, then allow', 'The rules look at the slip, where the data came from and where it is going; none reads a document for instructions', 'Each rule has tests, and a check that they fail when the rule is removed']}
         link={{ to: '#rules', label: 'Every rule in plain English' }}
         visual={<RulesCard />}

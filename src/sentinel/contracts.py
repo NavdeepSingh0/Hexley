@@ -97,6 +97,8 @@ def draft_contract(templates: dict[str, dict], template: str, officer: str, now:
         max_messages=spec["max_messages"],
         max_records_out=spec["max_records_out"],
         egress_templates=[EgressTemplate(**et) for et in spec.get("egress_templates", [])],
+        strict_flows=bool(spec.get("strict_flows", False)),
+        freeze_after=int(spec.get("freeze_after", 3)),
         issued_at=now,
         expires_at=now + timedelta(seconds=spec["ttl_seconds"]),
         status=SessionStatus.PENDING,
@@ -128,7 +130,7 @@ def _covered(entry: str, allowed_list: list[str]) -> bool:
 
 def draft_custom(registry, *, objective: str, allowed_tools: list[str], allowed_destinations: list[str],
                  internal_destinations: list[str] | None = None, max_messages: int = 1, ttl_seconds: int = 900,
-                 officer: str, now: datetime | None = None) -> TaskContract:
+                 officer: str, now: datetime | None = None, strict_flows: bool = False, freeze_after: int = 3) -> TaskContract:
     """Build a pending slip for ANY task from what the officer chose (the slip builder). The officer's choices are the
     boundary, so vague or contradictory ones are refused with a plain message instead of being accepted and guessed at."""
     objective = " ".join((objective or "").split())
@@ -162,6 +164,8 @@ def draft_custom(registry, *, objective: str, allowed_tools: list[str], allowed_
         raise SlipError("the message limit must be between 0 and 50")
     if not 60 <= ttl_seconds <= 86_400:
         raise SlipError("a slip must last between 1 minute and 24 hours")
+    if not 2 <= freeze_after <= 10:
+        raise SlipError("a session must freeze after between 2 and 10 refused attempts")
     now = now or datetime.now(timezone.utc)
     contract = TaskContract(
         contract_id=f"tc_{uuid.uuid4().hex[:12]}", template="custom", objective=objective, officer=officer,
@@ -169,6 +173,7 @@ def draft_custom(registry, *, objective: str, allowed_tools: list[str], allowed_
         resource_classes=list(dict.fromkeys(e.resource_class for e in entries)),
         allowed_recipient_domains=allowed, internal_destinations=internal,
         max_records=100, max_messages=max_messages, max_records_out=0,
+        strict_flows=strict_flows, freeze_after=freeze_after,
         issued_at=now, expires_at=now + timedelta(seconds=ttl_seconds), status=SessionStatus.PENDING)
     return contract.model_copy(update={"contract_hash": contract.compute_hash()})
 
@@ -248,6 +253,8 @@ class Session:
     untrusted_actions: dict[str, str] = field(default_factory=dict)  # the same addresses -> the exact call that returned them
     # tools whose untrusted output this session has read (tool -> short note). Non-empty means "tainted" for R7.
     tainted_by: dict[str, str] = field(default_factory=dict)
+    # tools whose restricted output this session has read (tool -> short note). With tainted_by, the Rule of Two (R8).
+    restricted_reads: dict[str, str] = field(default_factory=dict)
     trusted_addresses: frozenset[str] = frozenset()  # vendor-master addresses (trusted records), set at confirmation
     # Held across "decide + reserve budget + count the block", so concurrent calls cannot both take the last slot.
     lock: asyncio.Lock = field(default_factory=asyncio.Lock, repr=False)

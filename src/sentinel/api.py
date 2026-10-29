@@ -91,6 +91,8 @@ class SlipRequest(BaseModel):
     ttl_seconds: int = 900
     officer: str = "Col. R. Menon"
     confirm: bool = False
+    strict_flows: bool = False  # the Rule of Two (R8)
+    freeze_after: int = 3  # refused attempts before the session freezes (R6)
 
 
 class OAuthDecision(BaseModel):
@@ -477,14 +479,15 @@ def create_api(rt: Runtime, console_dir: Path | None = None, site_dir: Path | No
             contract = draft_custom(rt.registry, objective=req.objective, allowed_tools=req.allowed_tools,
                                     allowed_destinations=req.allowed_destinations,
                                     internal_destinations=req.internal_destinations, max_messages=req.max_messages,
-                                    ttl_seconds=req.ttl_seconds, officer=req.officer)
+                                    ttl_seconds=req.ttl_seconds, officer=req.officer,
+                                    strict_flows=req.strict_flows, freeze_after=req.freeze_after)
         except SlipError as e:
             raise HTTPException(status_code=422, detail=str(e)) from e
         rt.drafts[contract.contract_id] = contract
         slip = {"objective": contract.objective, "allowed_tools": contract.allowed_tools,
                 "allowed_destinations": contract.allowed_recipient_domains,
                 "internal_destinations": contract.internal_destinations, "max_messages": contract.max_messages,
-                "ttl_seconds": req.ttl_seconds}
+                "ttl_seconds": req.ttl_seconds, "strict_flows": contract.strict_flows, "freeze_after": contract.freeze_after}
         out = {"contract_id": contract.contract_id, "contract_hash": contract.contract_hash, "slip": slip, "confirmed": False}
         if req.confirm:
             try:
