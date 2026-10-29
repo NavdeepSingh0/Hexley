@@ -1,8 +1,7 @@
 import { Link } from 'react-router-dom'
-import { Accordion, Feature, Frame, Icon, IconBlock } from '../components/Blocks.jsx'
+import { Accordion, Feature, Frame, Icon, IconBlock, RulesCard } from '../components/Blocks.jsx'
 import CtaBand from '../components/CtaBand.jsx'
 import { Shot, StatusBadge } from '../components/Ui.jsx'
-import { RULES } from '../data/rules.js'
 import { FAQ } from '../data/faq.jsx'
 import { STATUS_MEANING, groupByStatus, useConnect } from '../lib/connect.js'
 import { formatInterval } from '../lib/evidence.js'
@@ -67,21 +66,6 @@ function Screens() {
       </Frame>
       <p className="frame-caption">The console, replaying a real model's actions on a poisoned quotation (recorded 26 Oct 2026); Sentinel's decisions are computed live.</p>
     </section>
-  )
-}
-
-function RulesCard() {
-  const kind = { DENIED: 'denied', 'NEEDS APPROVAL': 'approval', QUARANTINED: 'quarantined' }
-  return (
-    <ol className="rules-card" aria-label="The seven rules">
-      {RULES.map((r) => (
-        <li key={r.id}>
-          <span className="rules-card-id">{r.id}</span>
-          <span className="rules-card-title">{r.title}</span>
-          <span className={`rules-card-out rules-card-out--${kind[r.outcome] ?? 'denied'}`}>{r.outcome}</span>
-        </li>
-      ))}
-    </ol>
   )
 }
 

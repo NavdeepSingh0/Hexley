@@ -13,6 +13,7 @@ import './styles/chat.css'
 import './styles/v2.css'
 import './styles/docs.css'
 import './styles/connect.css'
+import './styles/pages.css'
 
 applySavedTheme()
 initAuth()

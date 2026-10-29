@@ -1,6 +1,7 @@
 // Shared building blocks for the website (UI v2, docs/plans/UI_V2_PLAN.md): icons, the lavender frame, alternating feature
 // sections, an accessible accordion, an icon block. Plain markup and the tokens in design/tokens.css; no library.
 import { Link } from 'react-router-dom'
+import { RULES } from '../data/rules.js'
 
 const PATHS = {
   plug: 'M9 3v4M15 3v4M6 7h12v4a6 6 0 0 1-12 0V7ZM12 17v4',
@@ -75,5 +76,37 @@ export function IconBlock({ icon, title, children, link }) {
       <div className="icon-block-text">{children}</div>
       {link && <Link className="icon-block-link" to={link.to}>{link.label} <Icon name="arrow" size={15} /></Link>}
     </article>
+  )
+}
+
+// The top of an inner page: a small label, a heading in the display face and one sentence.
+export function PageHead({ label, title, lede }) {
+  return (
+    <header className="pg-head">
+      {label && <p className="s-label">{label}</p>}
+      <h1 className="pg-h1">{title}</h1>
+      {lede && <p className="pg-lede">{lede}</p>}
+    </header>
+  )
+}
+
+// The four decision words, each in its own colour. Used as a legend beside the rules, not as a claim about any one action.
+export const OUTCOME_CLASS = { ALLOWED: 'allowed', DENIED: 'denied', 'NEEDS APPROVAL': 'approval', QUARANTINED: 'quarantined' }
+export function Outcome({ word }) {
+  return <span className={`rules-card-out rules-card-out--${OUTCOME_CLASS[word] ?? 'denied'}`}>{word}</span>
+}
+
+// The seven rules as a short list: id, title and the decision word each one produces.
+export function RulesCard() {
+  return (
+    <ol className="rules-card" aria-label="The seven rules">
+      {RULES.map((r) => (
+        <li key={r.id}>
+          <span className="rules-card-id">{r.id}</span>
+          <span className="rules-card-title">{r.title}</span>
+          <Outcome word={r.outcome} />
+        </li>
+      ))}
+    </ol>
   )
 }

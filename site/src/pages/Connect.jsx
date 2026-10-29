@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { createConnectToken, hasToken } from '../api/client.js'
-import { Icon } from '../components/Blocks.jsx'
+import { Icon, PageHead } from '../components/Blocks.jsx'
 import { ClientProof, CopyField, StatusBadge, TranscriptProof } from '../components/Ui.jsx'
 import { KIND_LABEL, METHOD_LABEL, STATUS_MEANING, countdown, fillSnippet, methodOf, useConnect } from '../lib/connect.js'
 
@@ -160,12 +160,9 @@ export default function Connect() {
   const method = chosen ? methodOf(data, chosen.method) : null
 
   return (
-    <main className="cs">
-      <header className="cs-head">
-        <p className="s-label">Connect</p>
-        <h1 className="cs-h1">Connect your AI app.</h1>
-        <p className="cs-lede">Pick the app you use. Sentinel then shows exactly what to do, and nothing else.</p>
-      </header>
+    <main>
+      <PageHead label="Connect" title="Connect your AI app." lede="Pick the app you use. Sentinel then shows exactly what to do, and nothing else." />
+      <div className="cs">
       <section className="cs-panel" aria-live="polite">
         {status === 'loading' && <p className="muted" role="status">Loading...</p>}
         {status === 'error' && <p className="muted" role="status">Sentinel could not be reached. {error}</p>}
@@ -189,6 +186,7 @@ export default function Connect() {
         )}
         {status === 'ready' && chosen && <Proof client={chosen} />}
       </section>
+      </div>
     </main>
   )
 }

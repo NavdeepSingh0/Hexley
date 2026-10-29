@@ -63,7 +63,7 @@ Kiro's layout in our content: a left sidebar with grouped small-caps headings (G
 ### U5 Connect. Done 29 Oct 2026
 Client cards in a grid like Kiro's "choose your surface" (name, kind, status, method, an arrow), then a rounded panel with three numbered steps (choose, connect, check), command blocks styled as terminal cards, the proof (screenshot or captured session) as a card. The "check" step explains exactly where the first call shows up (the console and the chat). No new backend. QA: the token flow still works with a real MCP client as before.
 
-### U6 How it works, Integrations, Pricing
+### U6 How it works, Integrations, Pricing. Done 29 Oct 2026
 - **How it works:** the same alternating feature sections with more substance, a flow figure (agent, Sentinel, tool, the four outcomes), the rules card, the approval, quarantine and audit sections, and the "what Sentinel does not cover" link.
 - **Integrations and Pricing:** restyled to the same containers and type; Integrations' screenshots are Navdeep's to supply.
 
