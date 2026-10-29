@@ -60,7 +60,7 @@ QA: every state driven through the real gateway as in F7b (start, slip, denied, 
 ### U4 Docs. Done 29 Oct 2026
 Kiro's layout in our content: a left sidebar with grouped small-caps headings (Get started, Concepts, Guides, Reference, Limits and FAQ), one big rounded panel, an icon-headed **On this page** rail with a scroll marker, an intro card, "Choose your path" cards, an "I want to… / Use" table. Split the single page into real pages under `/docs/<name>`: Overview, Run it, Concepts (slip, decisions, modes, audit), The rules (R1 to R7, each with a one-line example), Connect Claude.ai, Connect Claude Code, Your own tools, Limits and honest scope, Questions judges ask, API in brief. Every page keeps its "Source:" line; no number typed by hand. QA: every link, anchors, deep links and reloads, both themes, phone.
 
-### U5 Connect
+### U5 Connect. Done 29 Oct 2026
 Client cards in a grid like Kiro's "choose your surface" (name, kind, status, method, an arrow), then a rounded panel with three numbered steps (choose, connect, check), command blocks styled as terminal cards, the proof (screenshot or captured session) as a card. The "check" step explains exactly where the first call shows up (the console and the chat). No new backend. QA: the token flow still works with a real MCP client as before.
 
 ### U6 How it works, Integrations, Pricing

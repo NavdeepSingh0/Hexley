@@ -40,15 +40,30 @@ export function CopyField({ label, value, block = false, secret = false }) {
     }
     setTimeout(() => setMsg(''), 3000)
   }
+  const head = (
+    <div className="copy-head">
+      <p className="s-label">{label}</p>
+      <button type="button" className="s-btn s-btn--ghost s-btn--small" onClick={copy}>Copy</button>
+    </div>
+  )
+  const note = <p className="copy-msg" role="status" aria-live="polite">{msg}</p>
+  // A command or a block of settings is shown as a terminal card: the label and Copy sit in its top bar.
+  if (block) {
+    return (
+      <div className="copy copy--term">
+        <div className="term">
+          {head}
+          <pre className="copy-value copy-block" ref={ref} tabIndex={0}><code>{value}</code></pre>
+        </div>
+        {note}
+      </div>
+    )
+  }
   return (
     <div className="copy">
-      <div className="copy-head">
-        <p className="s-label">{label}</p>
-        <button type="button" className="s-btn s-btn--ghost s-btn--small" onClick={copy}>Copy</button>
-      </div>
-      {block ? <pre className="copy-value copy-block" ref={ref} tabIndex={0}><code>{value}</code></pre>
-        : <code className={`copy-value${secret ? ' is-secret' : ''}`} ref={ref} tabIndex={0}>{value}</code>}
-      <p className="copy-msg" role="status" aria-live="polite">{msg}</p>
+      {head}
+      <code className={`copy-value${secret ? ' is-secret' : ''}`} ref={ref} tabIndex={0}>{value}</code>
+      {note}
     </div>
   )
 }

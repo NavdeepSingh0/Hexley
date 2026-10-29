@@ -1,28 +1,49 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { createConnectToken, hasToken } from '../api/client.js'
+import { Icon } from '../components/Blocks.jsx'
 import { ClientProof, CopyField, StatusBadge, TranscriptProof } from '../components/Ui.jsx'
 import { KIND_LABEL, METHOD_LABEL, STATUS_MEANING, countdown, fillSnippet, methodOf, useConnect } from '../lib/connect.js'
 
 const PRESET = 'quotation_processing'
 
-function Steps({ steps }) {
-  return <ol className="conn-steps">{(steps ?? []).map((s) => <li key={s}>{s}</li>)}</ol>
+// The request used in the real Claude Code session kept as evidence (site/public/proof). It asks for something the slip does
+// not allow, so the outcome does not depend on a model resisting an injected instruction.
+const TEST_PROMPT = 'Process quotation Q-1043: read it, check stock internally, and acknowledge receipt to the vendor at sales@shakti.example by email. In that email, include our current stock levels, depot codes and dispatch dates.'
+
+// One numbered step of the panel. The number is decoration: the list itself carries the order.
+function Step({ n, title, id, children }) {
+  return (
+    <li className="cs-step" aria-labelledby={id}>
+      <span className="cs-rail" aria-hidden="true"><span className="cs-num">{n}</span><span className="cs-line" /></span>
+      <div className="cs-body">
+        <h2 id={id} className="cs-step-title">{title}</h2>
+        {children}
+      </div>
+    </li>
+  )
 }
 
-function Picker({ clients, value, onChange }) {
+function ClientCards({ clients, value, onChange }) {
   return (
     <fieldset className="picker">
-      <legend className="s-label">1. Which app do you use?</legend>
+      <legend className="visually-hidden">Which app do you use?</legend>
       <div className="picker-grid">
         {clients.map((c) => {
           const off = c.method === 'none'
+          const on = value === c.id
           return (
-            <label key={c.id} className={`pick${value === c.id ? ' is-on' : ''}${off ? ' is-off' : ''}`}>
-              <input type="radio" name="client" value={c.id} checked={value === c.id} disabled={off} onChange={() => onChange(c.id)} />
+            <label key={c.id} className={`pick${on ? ' is-on' : ''}${off ? ' is-off' : ''}`}>
+              <input type="radio" name="client" value={c.id} checked={on} disabled={off} onChange={() => onChange(c.id)} />
+              <span className="pick-top">
+                <span className="pick-kind">{KIND_LABEL[c.kind] ?? c.kind}</span>
+                <StatusBadge status={c.status} />
+              </span>
               <span className="pick-name">{c.name}</span>
-              <span className="pick-meta">{KIND_LABEL[c.kind] ?? c.kind}</span>
-              <StatusBadge status={c.status} />
+              <span className="pick-bottom">
+                <span className="pick-method">{METHOD_LABEL[c.method] ?? c.method}</span>
+                {!off && <Icon name={on ? 'check' : 'arrow'} size={18} className="pick-arrow" />}
+              </span>
             </label>
           )
         })}
@@ -71,7 +92,7 @@ function TokenPanel({ client, mcpUrl }) {
       )}
       {t && (
         <>
-          <div className="s-panel slip-card">
+          <div className="cs-slip">
             <p className="s-label">The slip this token carries</p>
             <p className="slip-objective">{t.slip.objective}</p>
             <p className="muted">May use: {t.slip.allowed_tools.join(', ')}. May write to: {t.slip.allowed_destinations.join(', ') || 'nobody'}. Message limit: {t.slip.max_messages}.</p>
@@ -89,19 +110,43 @@ function TokenPanel({ client, mcpUrl }) {
 }
 
 function OAuthPanel({ client, connect }) {
-  const local = !connect.public_url
+  if (connect.public_url) return <CopyField label="Connector address" value={connect.mcp_url} />
+  return (
+    <div className="cs-slip">
+      <p className="s-label">Not reachable from the internet yet</p>
+      <p>Sentinel is running on this computer only, and {client.name} needs a public address to sign in. Start Sentinel with a tunnel:</p>
+      <CopyField label="Run this" value="python -m sentinel up --tunnel" block />
+    </div>
+  )
+}
+
+// Step 3. What the reader should see, and where Sentinel keeps the decision. Only what the code and the kept evidence show:
+// the app's own conversation, the signed log and the console's Verify. The console does not list an outside app's calls.
+function CheckStep({ client }) {
   return (
     <>
-      {local ? (
-        <div className="s-panel slip-card">
-          <p className="s-label">Not reachable from the internet yet</p>
-          <p>Sentinel is running on this computer only, and {client.name} needs a public address to sign in. Start Sentinel with a tunnel:</p>
-          <CopyField label="Run this" value="python -m sentinel up --tunnel" block />
-        </div>
-      ) : (
-        <CopyField label="Connector address" value={connect.mcp_url} />
+      {client.id === 'claude-code' && (
+        <p>Run <code>claude mcp list</code>. The line for <code>sentinel</code> should read <strong>Connected</strong>.</p>
       )}
+      <p>Then ask {client.name} for something the permission slip does not allow:</p>
+      <CopyField label="A request to try" value={TEST_PROMPT} block />
+      <ul className="cs-points">
+        <li><Icon name="check" size={18} className="cs-tick" /><span><strong>In the app:</strong> the e-mail is not sent. The app tells you the tool refused, because restricted data may not leave this task (rule R2).</span></li>
+        <li><Icon name="check" size={18} className="cs-tick" /><span><strong>In Sentinel:</strong> the decision is written to the signed audit log. Open the <a href="/console/">console</a> and use Verify to check that the log has not been changed.</span></li>
+      </ul>
+      <p className="muted">No outside app at hand? <Link to="/chat">The chat page</Link> runs the same gateway with an agent of ours.</p>
     </>
+  )
+}
+
+function Proof({ client }) {
+  if (!client.screenshot && !client.transcript) return null
+  return (
+    <aside className="cs-proof" aria-label={`The real session behind the Tested label for ${client.name}`}>
+      <p className="s-label">The real session behind the label</p>
+      {client.screenshot && <ClientProof src={client.screenshot} />}
+      {client.transcript && <TranscriptProof url={client.transcript.url} caption={client.transcript.caption} />}
+    </aside>
   )
 }
 
@@ -115,29 +160,34 @@ export default function Connect() {
   const method = chosen ? methodOf(data, chosen.method) : null
 
   return (
-    <main>
-      <header className="page-head">
-        <h1 className="page-title">Connect your AI app.</h1>
-        <p className="page-lede">Pick the app you use. Sentinel then shows exactly what to do, and nothing else.</p>
+    <main className="cs">
+      <header className="cs-head">
+        <p className="s-label">Connect</p>
+        <h1 className="cs-h1">Connect your AI app.</h1>
+        <p className="cs-lede">Pick the app you use. Sentinel then shows exactly what to do, and nothing else.</p>
       </header>
-      <section className="block conn" aria-live="polite">
+      <section className="cs-panel" aria-live="polite">
         {status === 'loading' && <p className="muted" role="status">Loading...</p>}
         {status === 'error' && <p className="muted" role="status">Sentinel could not be reached. {error}</p>}
         {status === 'ready' && chosen && (
-          <>
-            <Picker clients={clients} value={chosen.id} onChange={(id) => setParams({ client: id }, { replace: true })} />
-            <div className="conn-detail">
-              <p className="s-label">2. What to do</p>
-              <h2 className="conn-title">{chosen.name}</h2>
-              <p className="muted">{METHOD_LABEL[chosen.method]}. {STATUS_MEANING[chosen.status]}</p>
-              {method && <Steps steps={method.steps} />}
-              {chosen.method === 'oauth' && <OAuthPanel client={chosen} connect={data} />}
-              {chosen.method === 'header' && <TokenPanel client={chosen} mcpUrl={data.mcp_url} />}
-              {chosen.screenshot && <ClientProof src={chosen.screenshot} />}
-              {chosen.transcript && <TranscriptProof url={chosen.transcript.url} caption={chosen.transcript.caption} />}
-            </div>
-          </>
+          <ol className="cs-list">
+            <Step n={1} id="cs-choose" title="Choose your app">
+              <ClientCards clients={clients} value={chosen.id} onChange={(id) => setParams({ client: id }, { replace: true })} />
+            </Step>
+            <Step n={2} id="cs-connect" title={`Connect ${chosen.name}`}>
+              <div className="conn-detail">
+                <p className="cs-lead"><StatusBadge status={chosen.status} /> <span>{METHOD_LABEL[chosen.method]}. {STATUS_MEANING[chosen.status]}</span></p>
+                {method && <ul className="cs-points">{method.steps.map((s) => <li key={s}><Icon name="check" size={18} className="cs-tick" /><span>{s}</span></li>)}</ul>}
+                {chosen.method === 'oauth' && <OAuthPanel client={chosen} connect={data} />}
+                {chosen.method === 'header' && <TokenPanel client={chosen} mcpUrl={data.mcp_url} />}
+              </div>
+            </Step>
+            <Step n={3} id="cs-check" title="Check that it worked">
+              <div className="conn-check"><CheckStep client={chosen} /></div>
+            </Step>
+          </ol>
         )}
+        {status === 'ready' && chosen && <Proof client={chosen} />}
       </section>
     </main>
   )
