@@ -7,6 +7,7 @@ const LINKS = [
   ['/integrations', 'Integrations'],
   ['/docs', 'Docs'],
   ['/connect', 'Connect'],
+  ['/chat', 'Chat'],
 ]
 
 function ThemeButton() {

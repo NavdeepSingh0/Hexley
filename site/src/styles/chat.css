@@ -1,0 +1,95 @@
+/* Sentinel Chat (phase F7b): a slim task list, one wide message column, the mascot beside the composer.
+   Colours and sizes come from design/tokens.css. Decision colour appears only on a real decision. */
+
+.chat { max-width: var(--content-max); margin: 0 auto; padding: var(--space-4) var(--gutter) 0; display: grid; grid-template-columns: 260px minmax(0, 1fr); gap: var(--space-5); align-items: start; }
+.chat-side { position: sticky; top: var(--space-3); display: grid; gap: var(--space-3); }
+.preset-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-2); }
+.preset { width: 100%; text-align: left; display: grid; gap: var(--space-1); padding: var(--space-3); border: 2px solid transparent; border-radius: var(--radius-lg); background: var(--panel); color: var(--ink); font: inherit; cursor: pointer; }
+.preset:hover { background: var(--raised); }
+.preset:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.preset.is-on { border-color: var(--brand); background: var(--raised); box-shadow: var(--highlight); }
+.preset[disabled] { opacity: 0.6; cursor: wait; }
+.preset-title { font-weight: var(--weight-bold); font-size: var(--size-base); }
+.preset-desc { color: var(--muted); font-size: var(--size-label); line-height: 1.4; font-weight: var(--weight-regular); }
+.mode { display: grid; gap: var(--space-1); }
+.mode select { font: inherit; font-size: var(--size-base); color: var(--ink); background: var(--panel); border: 1px solid var(--muted); border-radius: var(--radius); padding: 8px 12px; min-height: 44px; }
+.mode select:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+.chat-main { min-width: 0; display: grid; gap: var(--space-3); align-content: start; }
+.chat-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+.chat-title { margin: 0; font-size: var(--size-h2); font-weight: var(--weight-bold); letter-spacing: var(--tracking-tight); line-height: 1.1; }
+.chat-empty { padding: var(--space-5) 0; }
+.chat-empty-title { margin: 0 0 var(--space-2); font-size: var(--size-h3); font-weight: var(--weight-bold); line-height: 1.25; }
+.chat-empty .muted { margin: 0; font-size: var(--size-base); max-width: 34em; }
+
+.thread { display: grid; gap: var(--space-4); }
+.msg { display: grid; gap: var(--space-2); }
+.msg p { margin: 0; font-size: var(--size-base); line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }
+.msg-user { justify-self: end; max-width: min(85%, 640px); padding: var(--space-3); border-radius: var(--radius-lg); background: var(--raised); }
+.msg-system { padding: var(--space-3); border-left: 3px solid var(--muted); color: var(--muted); }
+
+/* One line per action under the assistant's message; open it for the gateway's own sentence and the rule. */
+.chips { display: grid; gap: var(--space-2); }
+.chip { border-radius: var(--radius); background: var(--panel); border-left: 4px solid var(--muted); }
+.chip summary { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-1) var(--space-3); padding: 10px var(--space-3); cursor: pointer; list-style: none; }
+.chip summary::-webkit-details-marker { display: none; }
+.chip summary:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: var(--radius); }
+.chip-word { font-size: var(--size-label); font-weight: var(--weight-bold); letter-spacing: var(--tracking-label); }
+.chip-label { font-weight: var(--weight-bold); font-size: var(--size-base); }
+.chip-preview { color: var(--muted); font-size: var(--size-base); min-width: 0; overflow-wrap: anywhere; }
+.chip-body { padding: 0 var(--space-3) var(--space-3); display: grid; gap: var(--space-1); }
+.chip-body p { margin: 0; font-size: var(--size-base); line-height: 1.5; }
+.chip-rules { color: var(--muted); }
+.chip--allowed { border-left-color: var(--allowed); }
+.chip--allowed .chip-word { color: var(--allowed); }
+.chip--denied { border-left-color: var(--denied); }
+.chip--denied .chip-word { color: var(--denied); }
+.chip--approval { border-left-color: var(--approval); }
+.chip--approval .chip-word { color: var(--approval); }
+.chip--quarantined { border-left-color: var(--quarantined-bg); }
+.chip--quarantined .chip-word { background: var(--quarantined-bg); color: var(--quarantined-ink); padding: 1px 8px; border-radius: 6px; }
+.chip--pending .chip-word { color: var(--muted); }
+
+.chat-slip { display: grid; gap: var(--space-3); }
+.slip-facts { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: var(--space-1) var(--space-4); margin: 0; font-size: var(--size-base); }
+.slip-facts dt { color: var(--muted); }
+.slip-facts dd { margin: 0; overflow-wrap: anywhere; }
+
+.approval-card { display: grid; gap: var(--space-2); outline: 2px solid var(--approval); outline-offset: -2px; box-shadow: var(--glow-approval); }
+.approval-card p { margin: 0; }
+.approval-word { color: var(--approval); }
+.approval-what { font-size: var(--size-h3); font-weight: var(--weight-bold); line-height: 1.2; }
+.approval-args { display: block; padding: var(--space-3); border-radius: var(--radius); background: var(--bg); font-family: var(--mono); font-size: var(--size-base); overflow-wrap: anywhere; }
+.approval-buttons { display: flex; flex-wrap: wrap; gap: var(--space-3); margin-top: var(--space-1); }
+
+.chat-note { margin: 0; padding: var(--space-3); border-radius: var(--radius); background: var(--panel); font-size: var(--size-base); }
+.chat-note--quarantined { background: var(--quarantined-bg); color: var(--quarantined-ink); }
+.linklike { background: none; border: 0; padding: 0; font: inherit; color: inherit; text-decoration: underline; cursor: pointer; }
+.linklike:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+/* The composer stays at the bottom of the screen; the mascot sits beside it, never over the messages. */
+.composer-dock { position: sticky; bottom: 0; background: var(--bg); padding: var(--space-3) 0; border-top: var(--hairline); display: grid; gap: var(--space-2); z-index: 2; }
+.composer { display: flex; gap: var(--space-3); align-items: flex-start; }
+.composer sentinel-mascot { flex: none; }
+.composer-body { flex: 1; min-width: 0; display: grid; gap: var(--space-1); }
+.mascot-line { margin: 0; min-height: 1.5em; color: var(--muted); font-size: var(--size-base); }
+.composer-row { display: flex; gap: var(--space-3); align-items: stretch; }
+.composer-input { flex: 1; min-width: 0; resize: vertical; min-height: 56px; font: inherit; font-size: var(--size-base); color: var(--ink); background: var(--panel); border: 1px solid var(--muted); border-radius: var(--radius); padding: 10px var(--space-3); }
+.composer-input:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.composer-input:disabled { opacity: 0.6; }
+.composer-why { margin: 0; min-height: 1.4em; color: var(--muted); font-size: var(--size-base); }
+.disclosure { margin: 0; color: var(--muted); font-size: var(--size-label); letter-spacing: 0.02em; line-height: 1.4; }
+
+@media (max-width: 860px) {
+  .chat { grid-template-columns: minmax(0, 1fr); gap: var(--space-3); }
+  .chat-side { position: static; }
+  .preset-list { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+  .preset-desc { display: none; }
+}
+@media (max-width: 600px) {
+  .composer-row { flex-direction: column; }
+  .composer-row .s-btn { width: 100%; }
+  .msg-user { max-width: 100%; }
+  .chat-title { font-size: 32px; }
+  .slip-facts { grid-template-columns: minmax(0, 1fr); }
+}

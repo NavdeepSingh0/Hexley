@@ -65,7 +65,7 @@ export const getOAuthRequest = (id) => api(`/api/v1/oauth/requests/${id}`)
 export const decideOAuthRequest = (id, decision, officer_code) =>
   api(`/api/v1/oauth/requests/${id}`, { method: 'POST', body: { decision, officer_code } })
 export const getChatPresets = () => api('/api/v1/chat/presets')
-export const createChat = (preset) => api('/api/v1/chat', { method: 'POST', body: { preset } })
+export const createChat = (preset, mode = 'auto') => api('/api/v1/chat', { method: 'POST', body: { preset, mode } })
 export const confirmChat = (id) => api(`/api/v1/chat/${id}/confirm`, { method: 'POST' })
 export const sendChatMessage = (id, text) => api(`/api/v1/chat/${id}/messages`, { method: 'POST', body: { text } })
 export const getChat = (id) => api(`/api/v1/chat/${id}`)
