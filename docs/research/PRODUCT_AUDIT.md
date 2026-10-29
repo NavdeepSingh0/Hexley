@@ -88,7 +88,9 @@ Legend: **Stopped** = a rule we have today blocks or holds the harmful step. **P
 | 27 | Flowise | Partial | Sentinel's own API needs a token; the platform itself was open | Partial | (deployment) |
 | 28 | SalesBleed | No | Rendered output and DNS | Partial | P5, hostnames as destinations |
 
-**Today: 3 stopped, 11 partial, 14 not stopped** (of 28). After the plan: about **16 stopped** (5 of them only in hosts that use Sentinel's output check), **7 partial**, **5 out of scope** (13, 15, 17, 18, 25). The single largest gap is not a rule: **7 of 28 leaked through the model's rendered reply**, which a tool gateway never sees.
+**Today: 3 stopped, 11 partial, 14 not stopped** (of 28).
+**Built on 29 Oct 2026 (after this audit was written):** Q2 credentials (R9), Q3 the Rule of Two (R8) and refusals that do not coach, Q4 effects not names, Q5 tool pinning, Q6 the reply check, Q10 your own document. Not built yet: Q7 data minimisation, Q8 approval abuse, Q9 audit export. The "After this plan" column is therefore the state of the code for every row except those that depend on Q7 to Q9 (none of the 28 does).
+ After the plan: about **16 stopped** (5 of them only in hosts that use Sentinel's output check), **7 partial**, **5 out of scope** (13, 15, 17, 18, 25). The single largest gap is not a rule: **7 of 28 leaked through the model's rendered reply**, which a tool gateway never sees.
 
 ---
 

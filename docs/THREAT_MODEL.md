@@ -39,7 +39,7 @@ The approval request is built by the gateway from the tool name, the exact argum
 
 | Goal | What exists | Evidence | Not covered |
 |---|---|---|---|
-| **Confidentiality** (restricted data does not leave) | R2 value matching, R3, R7, R8 (the Rule of Two, when the slip turns it on), R9 and secret detection, hardened mode | 0 of 41 supported disclosures reached the sink in our corpus; the real-model runs agree but are small | Paraphrase, spelled-out values, images (no OCR); a blind evaluation has not been done |
+| **Confidentiality** (restricted data does not leave) | R2 value matching, R3, R7, R8 (the Rule of Two, when the slip turns it on), R9 and secret detection, hardened mode | 0 of 43 supported disclosures reached the sink in our corpus; the real-model runs agree but are small | Paraphrase, spelled-out values, images (no OCR); a blind evaluation has not been done |
 | **Integrity** (untrusted content cannot cause an invalid change) | R1 limits which tools run; R7 holds a consequential action after an untrusted read; R4 holds a bank-detail change | Rules are tested; **no integrity measurement exists** | Sentinel does not validate the proposed value. An approved change, or one inside an internal destination, is not checked for correctness |
 | **Availability** (the agent keeps working) | R6 freezes only the offending session; budgets are per session | 0 of 28 valid actions wrongly blocked; R7 holds some valid ones (README) | An attacker who induces three blocks can freeze that session |
 

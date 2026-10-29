@@ -4,13 +4,13 @@
     "group_title": "Scripted attacks",
     "arm": "protected",
     "label": "Attempts to get secrets out that got past Sentinel (scripted corpus)",
-    "value": "0 of 41",
-    "n": 41,
+    "value": "0 of 43",
+    "n": 43,
     "ci95": [
       0.0,
-      0.086
+      0.082
     ],
-    "source_file": "eval/results/scripted-20261028T103528.json",
+    "source_file": "eval/results/scripted-20261029T151633.json",
     "caveat": "Cases were written by us from the matcher's documented list and the routes we built: this shows it does what we say, not that no other route exists. Our own mock tools."
   },
   {
@@ -18,13 +18,13 @@
     "group_title": "Scripted attacks",
     "arm": "unprotected",
     "label": "The same cases with no protection",
-    "value": "41 of 41",
-    "n": 41,
+    "value": "43 of 43",
+    "n": 43,
     "ci95": [
-      0.914,
+      0.918,
       1.0
     ],
-    "source_file": "eval/results/scripted-20261028T103528.json",
+    "source_file": "eval/results/scripted-20261029T151633.json",
     "caveat": "Scripted attacker, mock tools, synthetic data."
   },
   {

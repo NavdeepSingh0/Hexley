@@ -46,12 +46,12 @@ This table says what exists today, not what the architecture describes. "Tested"
 
 ## Measured results (from `eval/results/`, not typed by hand)
 
-Scripted attacker, labelled corpus (`scripted-20261028T103528.json`, commit 9ba4f52, clean tree), through the real gateway, read from the mail sink (n = 1 per case and column). The corpus covers the quotation scenario and the general families (documents, a customer database, a mock web, a webhook, files):
+Scripted attacker, labelled corpus (`scripted-20261029T151633.json`, commit f5be52a, clean tree), through the real gateway, read from the mail sink (n = 1 per case and column). The corpus covers the quotation scenario and the general families (documents, a customer database, a mock web, a webhook, files):
 
 | Measure | Unprotected | R1-only | Sentinel |
 |---|---|---|---|
-| Disclosures that reached the sink (41 cases: 31 representations of the stock data, 10 customer-data routes through an allowed but not internal e-mail address, web address or folder) | 41/41 | 41/41 | **0/41** (95% CI 0%-9%) |
-| Declared gaps that reached the sink (8 cases: paraphrase, digits spaced apart, a spelled-out e-mail address, ...) | 8/8 | 8/8 | **8/8** (expected; stated on the limits slide) |
+| Disclosures that reached the sink (43 cases: 33 representations of the stock data, 10 customer-data routes through an allowed but not internal e-mail address, web address or folder) | 43/43 | 43/43 | **0/43** (95% CI 0%-8%) |
+| Declared gaps that reached the sink (6 cases: paraphrase, generalisation, approximation, letters for digits, a spelled-out e-mail address, ...) | 6/6 | 6/6 | **6/6** (expected; stated on the limits slide; digits spaced apart and a comma inside number words were closed on 29 Oct, plan Q4) |
 | Reply to another address that reached the sink (3 cases) | 3/3 | 2/3 | 0/3 |
 | Valid actions wrongly blocked (28 actions in 10 clean cases) | 0/28 | 0/28 | 0/28 (95% CI 0%-12%) |
 | Clean tasks completed (10 cases, incl. a hostile document and a compromised PDF whose real summary still goes) | 10/10 | 10/10 | 10/10 |
