@@ -85,13 +85,13 @@ export default function Docs() {
             <p><strong>The audit log.</strong> Every decision is written to a signed, hash-chained log before anything is forwarded; a slow or failed write refuses the action. The console can verify it and can change one record to show the check failing.</p>
           </Section>
 
-          <Section id="connect" title="Connecting a client" source="docs/contracts/API.md (Connect), docs/DECISIONS.md D-036 and D-041, docs/PHASE_LOG.md rows B1 and F4.">
+          <Section id="connect" title="Connecting a client" source="docs/contracts/API.md (Connect), docs/DECISIONS.md D-036, D-041 and D-044, docs/PHASE_LOG.md rows B1, F4 and F8.">
             <p>Two ways, both on the <Link to="/connect">Connect</Link> page, which reads its list from your running gateway:</p>
             <ul className="doc-list">
-              <li><strong>Sign in (OAuth).</strong> The AI app adds Sentinel as a custom connector and chooses "Sign in now". The officer approves the permission slip on a page served by the gateway, with a six-digit code shown in the Sentinel terminal. This is the route we have run for real, once, with a free Claude.ai account.</li>
-              <li><strong>Access token (header).</strong> The officer creates a short-lived token on the Connect page and pastes it into an app that lets you set a request header. It is the same session token, so it carries the same slip. No real client has been connected this way yet, so it is labelled "Should work".</li>
+              <li><strong>Sign in (OAuth).</strong> The AI app adds Sentinel as a custom connector and chooses "Sign in now". The officer approves the permission slip on a page served by the gateway, with a six-digit code shown in the Sentinel terminal. This is the route we ran for real with a free Claude.ai account.</li>
+              <li><strong>Access token (header).</strong> The officer creates a short-lived token on the Connect page and pastes it into an app that lets you set a request header. It is the same session token, so it carries the same slip. We connected a real Claude Code with it once, and kept the captured session.</li>
             </ul>
-            <p>The labels on the <Link to="/integrations">Integrations</Link> page mean what they say: Tested is a real session with a screenshot, Should work speaks the same standard but has not been run, Planned is not built.</p>
+            <p>The labels on the <Link to="/integrations">Integrations</Link> page mean what they say: Tested is a real session with a screenshot or a captured session, Should work speaks the same standard but has not been run, Planned is not built.</p>
           </Section>
 
           <Section id="own-tools" title="Your own tools" source="docs/contracts/API.md (Tools and slips for any task), docs/DECISIONS.md D-037 and D-038.">
@@ -131,7 +131,7 @@ export default function Docs() {
               A reworded paraphrase of confidential prose can get through value matching. It is listed as a declared gap and counted separately. The other defences still apply: the destination must be on the slip, an address that appears only in a document is not used, and after untrusted reading a consequential send waits for the officer. (README, ADVERSARIAL_TESTS.)
             </Faq>
             <Faq q="Which AI apps have you actually tested?">
-              One: Claude.ai on a free account, signed in with OAuth, once. Other apps that speak MCP should work and are labelled that way. (PHASE_LOG B1, Integrations page.)
+              Two, each once: Claude.ai on a free account, signed in with OAuth (27 Oct 2026), and Claude Code with the access token (29 Oct 2026). Other apps that speak MCP should work and are labelled that way. (PHASE_LOG B1 and F8, Integrations page.)
             </Faq>
             <Faq q="What does the officer see when asked?">
               What the action is, where it goes, which data, and the rule's own words, built by the gateway from the exact arguments. The agent cannot edit that text. Approvals are one-time, bound to that exact call, and expire. (THREAT_MODEL section 4.)

@@ -22,6 +22,8 @@ Built in phase F1 (`docs/plans/BUILD_PLAN.md`) by Navdeep and Claude. **When** t
 | `placement` | `left` (default), `below`, `above` | where the bubble opens; the console uses `below` (the mascot sits at the top right), a chat composer would use `above` |
 | `speak` | present or absent | when present, reads each new `message` aloud with `speechSynthesis` (off by default) |
 
+Two more attributes exist for design review only and are never set by the product: `speed` (a time scale for the whole animation: `0` freezes it, `0.25` is slow motion, `2` is double speed; held between 0 and 4; missing or unusable means 1) and `still` (present: show the finished pose with no animation, exactly as `prefers-reduced-motion` does). The mascot lab (`/mascot-lab`, development server only) uses them.
+
 Rules: no network requests at all; `prefers-reduced-motion: reduce` shows the finished pose with no animation (a change of state is shown at once); it stops its animation loop while the tab is hidden or the element is removed; the SVG has `role="img"` and an `aria-label` that follows the state, and the bubble is a polite live region.
 
 ## Art (revised 28 Oct 2026: vector, not pixel sprites)

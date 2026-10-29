@@ -361,8 +361,9 @@ async def test_connect_endpoints(ostack):
         assert v["public_url"] == base(ostack) and v["mcp_url"].endswith("/mcp")
         assert [m["id"] for m in v["methods"]] == ["oauth", "header"]
         assert all(c["screenshot"] is None for c in v["clients"] if c["status"] != "tested")
-        assert {m["id"]: m["status"] for m in v["methods"]} == {"oauth": "tested", "header": "should_work"}  # only OAuth has a live session behind it
-        assert [c["id"] for c in v["clients"] if c["status"] == "tested"] == ["claude-web"]
+        assert {m["id"]: m["status"] for m in v["methods"]} == {"oauth": "tested", "header": "tested"}
+        assert [c["id"] for c in v["clients"] if c["status"] == "tested"] == ["claude-web", "claude-code"]
+        assert all(c["transcript"] is None for c in v["clients"] if c["status"] != "tested")
         tok = (await api.post("/api/v1/connect/token", json={"preset": "quotation_processing"})).json()
         assert tok["header_value"].startswith("Bearer ") and tok["slip"]["max_messages"] == 1
         assert (await api.post("/api/v1/connect/token", json={"preset": "nope"})).status_code == 422
@@ -386,3 +387,23 @@ async def test_oauth_endpoints_report_clearly_when_oauth_is_off(stack):
 
 def test_the_officer_code_is_six_digits_and_unpredictable_enough():
     assert re.fullmatch(r"\d{6}", f"{secrets.randbelow(10**6):06d}")  # the format the consent page promises
+
+
+def test_every_tested_status_is_backed_by_evidence_that_exists_and_holds_no_credential():
+    """F8: a client is only `tested` if a screenshot or a captured session is committed for it, and neither may hold a token."""
+    from pathlib import Path
+
+    from sentinel.connect import CLIENTS
+    site = Path(__file__).resolve().parents[1] / "site" / "public"
+    for cid, _name, _kind, status, _method, _snippet, screenshot, transcript in CLIENTS:
+        if status != "tested":
+            assert screenshot is None and transcript is None, cid
+            continue
+        assert screenshot or transcript, f"{cid} is marked tested with no evidence"
+        if screenshot:
+            assert (site / screenshot.lstrip("/")).is_file(), screenshot
+        if transcript:
+            f = site / transcript["url"].lstrip("/")
+            assert f.is_file(), transcript["url"]
+            body = f.read_text(encoding="utf-8")
+            assert "Bearer ey" not in body and "eyJ" not in body and len(body) > 500 and transcript["caption"]

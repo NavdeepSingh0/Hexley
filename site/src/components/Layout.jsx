@@ -46,6 +46,7 @@ function Footer() {
         <Link to="/how-it-works">How it works</Link>
         <Link to="/integrations">Integrations</Link>
         <Link to="/docs">Docs</Link>
+        <Link to="/pricing">Pricing (illustrative)</Link>
         <Link to="/docs#limits">What this does not prove</Link>
       </nav>
     </footer>

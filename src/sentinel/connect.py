@@ -11,24 +11,29 @@ from .contracts import SlipError, draft_contract
 from .models import Column
 from .runtime import Runtime
 
-# (id, name, kind, status, method, snippet, screenshot)
+# (id, name, kind, status, method, snippet, screenshot, transcript)
+# `screenshot` is an image of a real session; `transcript` is {"url", "caption"} for a captured text record. Only a tested
+# client may carry either (docs/PHASE_LOG.md, F8).
 CLIENTS = [
-    ("claude-web", "Claude.ai (web)", "web", "tested", "oauth", None, "/img/real-claude-blocked-by-sentinel.png"),
-    ("claude-code", "Claude Code", "cli", "should_work", "header",
-     'claude mcp add --transport http sentinel {mcp_url} --header "Authorization: {header_value}"', None),
+    ("claude-web", "Claude.ai (web)", "web", "tested", "oauth", None, "/img/real-claude-blocked-by-sentinel.png", None),
+    ("claude-code", "Claude Code", "cli", "tested", "header",
+     'claude mcp add --transport http sentinel {mcp_url} --header "Authorization: {header_value}"', None,
+     {"url": "/proof/claude-code-header-20261029.txt",
+      "caption": "A real Claude Code session, 29 Oct 2026, header token: the read and stock checks were allowed, the e-mail with restricted stock figures was denied (R2), nothing was delivered. One session, not a measurement."}),
     ("vscode", "VS Code (MCP)", "ide", "should_work", "header",
      '{ "servers": { "sentinel": { "type": "http", "url": "{mcp_url}", "headers": { "Authorization": "{header_value}" } } } }',
-     None),
-    ("local", "A local model through an MCP-capable client", "local", "planned", "header", None, None),
-    ("other-agents", "Agents that do not use MCP", "other", "planned", "none", None, None),
+     None, None),
+    ("local", "A local model through an MCP-capable client", "local", "planned", "header", None, None, None),
+    ("other-agents", "Agents that do not use MCP", "other", "planned", "none", None, None, None),
 ]
 
 # What we have verified for each way of connecting (update when a live check passes).
 # oauth: verified 27 Oct 2026 with a real Claude.ai free account (Sign in now + automatic registration): the slip was
 # approved with the officer code, a send containing restricted data was denied (R2), nothing was delivered.
-# header: the token route is covered by tests (a session token opens the gateway) but no real client has been connected
-# with it yet (F8 matrix), so it is "should_work", not "tested" (corrected 28 Oct 2026).
-METHOD_STATUS = {"oauth": "tested", "header": "should_work"}
+# header: the token route was tested with a real client on 29 Oct 2026 (Claude Code: the exact `claude mcp add` command from
+# this list reported Connected, and a real session was decided by the gateway; site/public/proof/). It was "should_work"
+# until then (corrected 28 Oct 2026, D-041; moved to tested in F8, D-044).
+METHOD_STATUS = {"oauth": "tested", "header": "tested"}
 
 OAUTH_STEPS = ["Open Customize → Connectors → Add custom connector", "Paste the connector URL",
                "Choose “Sign in now”", "Approve the permission slip with the officer code shown in the Sentinel terminal"]
@@ -45,7 +50,8 @@ def connect_view(rt: Runtime) -> dict:
         methods.insert(0, {"id": "oauth", "status": METHOD_STATUS["oauth"], "steps": OAUTH_STEPS})
     return {"public_url": public_url, "mcp_url": mcp_url, "methods": methods,
             "clients": [{"id": i, "name": n, "kind": k, "status": s, "method": m, "snippet": sn,
-                         "screenshot": sc if s == "tested" else None} for i, n, k, s, m, sn, sc in CLIENTS]}
+                         "screenshot": sc if s == "tested" else None,
+                         "transcript": tr if s == "tested" else None} for i, n, k, s, m, sn, sc, tr in CLIENTS]}
 
 
 async def issue_header_token(rt: Runtime, preset: str, work_item_id: str | None = "Q-1043", officer: str = "Col. R. Menon") -> dict:

@@ -25,7 +25,7 @@ The site calls these through `site/src/api/client.js`. Until a backend phase lan
   ]
 }
 ```
-(Claude.ai is `tested` by the OAuth route only: a free account, 27 Oct 2026. The header route is `should_work` until a real client has been connected with it, D-041.) `GET /api/v1/connect` needs no token (it holds no secret); `POST /api/v1/connect/token` does. `public_url` is `null` when Sentinel runs locally only (no tunnel). `status` ∈ `tested | should_work | planned`; only `tested` may carry a `screenshot`. `snippet` placeholders: `{mcp_url}`, `{header_value}`.
+(Claude.ai is `tested` by the OAuth route: a free account, 27 Oct 2026. The header route is `tested` by Claude Code: a real session, 29 Oct 2026, D-044. VS Code is `should_work`.) A `tested` client carries evidence: `screenshot` (an image path) or `transcript` (`{"url": "/proof/…txt", "caption": "…"}`, a captured session as text); both are `null` for any other status. `GET /api/v1/connect` needs no token (it holds no secret); `POST /api/v1/connect/token` does. `public_url` is `null` when Sentinel runs locally only (no tunnel). `status` ∈ `tested | should_work | planned`; only `tested` may carry a `screenshot`. `snippet` placeholders: `{mcp_url}`, `{header_value}`.
 
 `POST /api/v1/connect/token` body `{"preset": "quotation_processing"}` → officer action
 ```json

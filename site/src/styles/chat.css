@@ -17,8 +17,8 @@
 
 .chat-main { min-width: 0; display: grid; gap: var(--space-3); align-content: start; }
 .chat-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
-.chat-title { margin: 0; font-size: var(--size-h2); font-weight: var(--weight-bold); letter-spacing: var(--tracking-tight); line-height: 1.1; }
-.chat-empty { padding: var(--space-5) 0; }
+.chat-title { margin: 0; max-width: 20em; font-size: var(--size-h2); font-weight: var(--weight-bold); letter-spacing: var(--tracking-tight); line-height: 1.1; }
+.chat-empty { padding: var(--space-3) 0; }
 .chat-empty-title { margin: 0 0 var(--space-2); font-size: var(--size-h3); font-weight: var(--weight-bold); line-height: 1.25; }
 .chat-empty .muted { margin: 0; font-size: var(--size-base); max-width: 34em; }
 
@@ -77,6 +77,9 @@
 .composer-input { flex: 1; min-width: 0; resize: vertical; min-height: 56px; font: inherit; font-size: var(--size-base); color: var(--ink); background: var(--panel); border: 1px solid var(--muted); border-radius: var(--radius); padding: 10px var(--space-3); }
 .composer-input:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 .composer-input:disabled { opacity: 0.6; }
+/* A closed Send reads as closed on purpose (dashed outline, muted words), not as a broken solid button. */
+.composer .s-btn[disabled] { opacity: 1; background: transparent; border: 1px dashed var(--muted); color: var(--muted); cursor: not-allowed; box-shadow: none; }
+.composer-row .s-btn { min-width: 104px; }
 .composer-why { margin: 0; min-height: 1.4em; color: var(--muted); font-size: var(--size-base); }
 .disclosure { margin: 0; color: var(--muted); font-size: var(--size-label); letter-spacing: 0.02em; line-height: 1.4; }
 

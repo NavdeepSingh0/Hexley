@@ -373,7 +373,7 @@ export function laneCountLine(lane) {
   const c = laneCounts(lane)
   if (!c.calls) return 'No actions yet'
   const n = `${c.calls} ${c.calls === 1 ? 'action' : 'actions'}`
-  if (lane.column === 'r1_only' && c.allowed === c.calls) return `${n} · all allowed by access control`
+  if (lane.column === 'r1_only' && c.allowed === c.calls) return `${n} · every one was allowed`
   const parts = [n]
   if (c.denied) parts.push(`${c.denied} denied`)
   if (c.quarantined) parts.push('agent quarantined')

@@ -63,3 +63,30 @@ export function ClientProof({ src }) {
     </figure>
   )
 }
+
+// The captured text of a real session behind a Tested label (for a client with no screenshot, such as a terminal tool).
+// The text is fetched only when the reader opens it; it is shown as written, never edited by the page.
+export function TranscriptProof({ url, caption }) {
+  const [text, setText] = useState(null)
+  const [error, setError] = useState('')
+  const load = async (e) => {
+    if (!e.target.open || text !== null) return
+    try {
+      const r = await fetch(url)
+      if (!r.ok) throw new Error(String(r.status))
+      setText(await r.text())
+    } catch {
+      setError('The captured session could not be loaded.')
+    }
+  }
+  return (
+    <figure className="client-fig client-transcript">
+      <details onToggle={load}>
+        <summary>Read the captured session</summary>
+        {text !== null && <pre className="transcript" tabIndex={0}>{text}</pre>}
+        {error && <p className="conn-error" role="alert">{error}</p>}
+      </details>
+      <figcaption>{caption} <a href={url}>Open as text</a></figcaption>
+    </figure>
+  )
+}

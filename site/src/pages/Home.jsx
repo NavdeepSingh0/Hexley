@@ -34,17 +34,16 @@ const STEPS = [
 
 function Hero() {
   return (
-    <section className="hero" aria-labelledby="hero-title">
+    <div className="hero-wrap"><section className="hero" aria-labelledby="hero-title">
       <div className="hero-text">
         <h1 id="hero-title" className="hero-title">The AI can only do the job you gave it.</h1>
         <p className="hero-lede">Sentinel checks every action an AI agent takes against a permission slip, and stops the ones the job never needed.</p>
         <div className="hero-actions">
           <a className="s-btn s-btn--primary s-btn--big" href="/console/">See it work</a>
-          <Link className="s-btn s-btn--ghost s-btn--big" to="/connect">Connect Claude</Link>
         </div>
       </div>
       <div className="hero-mascot"><sentinel-mascot state="idle" size="200" /></div>
-    </section>
+    </section></div>
   )
 }
 
@@ -53,7 +52,7 @@ function HowItWorksStrip() {
     <section className="block" aria-labelledby="story-title">
       <p className="s-label">How it works</p>
       <h2 id="story-title" className="block-title">One job, checked at every step</h2>
-      <Story steps={STEPS} />
+      <Story steps={STEPS} layout="columns" />
     </section>
   )
 }
@@ -72,11 +71,11 @@ function useEvidence() {
   return state
 }
 
-function EvidenceCard({ g }) {
+function EvidenceCard({ g, primary }) {
   const p = g.protectedItem
   const u = g.unprotectedItem
   return (
-    <article className="s-panel evidence-card">
+    <article className={`s-panel evidence-card ${primary ? 'evidence-card--primary' : 'evidence-card--secondary'}`}>
       <p className="s-label">{g.title}</p>
       <p className="evidence-big">{p.value}</p>
       <p className="evidence-what">got past Sentinel</p>
@@ -96,7 +95,7 @@ function Evidence() {
       {ev.status === 'loading' && <p className="muted" role="status">Loading the evidence file...</p>}
       {ev.status === 'error' && <p className="muted" role="status">The evidence file could not be loaded, so no numbers are shown.</p>}
       {ev.status === 'ready' && ev.groups.length === 0 && <p className="muted" role="status">The evidence file has no complete entries, so no numbers are shown.</p>}
-      {ev.groups.length > 0 && <div className="evidence-grid">{ev.groups.map((g) => <EvidenceCard key={g.id} g={g} />)}</div>}
+      {ev.groups.length > 0 && <div className="evidence-grid">{ev.groups.map((g, i) => <EvidenceCard key={g.id} g={g} primary={i === 0} />)}</div>}
       <p className="evidence-more"><Link to="/docs#limits">Read what this does not prove</Link></p>
     </section>
   )
@@ -104,24 +103,25 @@ function Evidence() {
 
 function Integrations() {
   const { status, data } = useConnect()
-  const groups = groupByStatus(data?.clients)
+  const rows = groupByStatus(data?.clients).flatMap((g) => g.clients.map((c) => ({ ...c, group: g.status })))
   return (
     <section className="block" aria-labelledby="int-title">
       <p className="s-label">Works with</p>
       <h2 id="int-title" className="block-title">Built on the MCP standard</h2>
       {status === 'loading' && <p className="muted" role="status">Loading...</p>}
       {status === 'error' && <p className="muted" role="status">The list of clients could not be loaded from Sentinel.</p>}
-      {groups.length > 0 && (
+      {rows.length > 0 && (
         <ul className="int-list">
-          {groups.map((g) => (
-            <li key={g.status} className="int-item">
-              <StatusBadge status={g.status} />
-              <span className="int-name">{g.clients.map((c) => c.name).join(', ')}</span>
-              <span className="int-note">{STATUS_MEANING[g.status]}</span>
+          {rows.map((c) => (
+            <li key={c.id} className="int-item">
+              <StatusBadge status={c.group} />
+              <span className="int-name">{c.name}</span>
+              <span className="int-note">{STATUS_MEANING[c.group]}</span>
             </li>
           ))}
         </ul>
       )}
+      <p className="int-gloss muted">MCP is how AI apps connect to tools.</p>
       <p className="evidence-more"><Link to="/integrations">All integrations</Link></p>
     </section>
   )

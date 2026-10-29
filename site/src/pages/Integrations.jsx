@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { ClientProof, StatusBadge } from '../components/Ui.jsx'
+import { ClientProof, StatusBadge, TranscriptProof } from '../components/Ui.jsx'
 import { KIND_LABEL, METHOD_LABEL, STATUS_MEANING, groupByStatus, useConnect } from '../lib/connect.js'
 
 function ClientCard({ c }) {
@@ -11,6 +11,7 @@ function ClientCard({ c }) {
       </div>
       <p className="muted client-method">{METHOD_LABEL[c.method] ?? c.method}</p>
       {c.screenshot && <ClientProof src={c.screenshot} />}
+      {c.transcript && <TranscriptProof url={c.transcript.url} caption={c.transcript.caption} />}
       {c.method !== 'none' && c.status !== 'planned' && <Link className="client-link" to={`/connect?client=${encodeURIComponent(c.id)}`}>How to connect</Link>}
     </li>
   )

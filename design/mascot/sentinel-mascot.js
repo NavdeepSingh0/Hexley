@@ -19,6 +19,9 @@ export const truncateMessage = (m, n = MAX_MESSAGE) => {
   const t = String(m ?? '').replace(/\s+/g, ' ').trim()
   return t.length > n ? `${t.slice(0, n - 1).trimEnd()}…` : t
 }
+// The `speed` review attribute: a time scale for the whole animation (0 freezes it, 0.25 is slow motion, 4 at most).
+// Missing or unusable means 1. Only the mascot lab sets it.
+export const parseSpeed = (v) => { const n = parseFloat(v); return Number.isFinite(n) ? Math.min(4, Math.max(0, n)) : 1 }
 // Is the speech bubble showing, `ageMs` after it was set?
 export const bubbleVisible = (state, message, ageMs) => Boolean(message) && (PERSISTENT.has(state) || ageMs < BUBBLE_MS)
 
@@ -163,7 +166,7 @@ const TEMPLATE = (id) => `
 const Base = typeof HTMLElement === 'undefined' ? class {} : HTMLElement
 
 export class SentinelMascot extends Base {
-  static get observedAttributes() { return ['state', 'message', 'size', 'theme', 'speak', 'placement'] }
+  static get observedAttributes() { return ['state', 'message', 'size', 'theme', 'speak', 'placement', 'speed', 'still'] }
 
   constructor() {
     super()
@@ -177,6 +180,8 @@ export class SentinelMascot extends Base {
     this._bubbleSet = 0
     this._bubbleTimer = 0
     this._reduced = false
+    this._vnow = 0 // the animation's own clock (ms): real time scaled by `speed`
+    this._speed = 1
   }
 
   get state() { return normalizeState(this.getAttribute('state')) }
@@ -194,8 +199,8 @@ export class SentinelMascot extends Base {
       }
     }
     this._mq = typeof matchMedia === 'function' ? matchMedia('(prefers-reduced-motion: reduce)') : null
-    this._reduced = Boolean(this._mq?.matches)
-    this._onMq = () => { this._reduced = Boolean(this._mq.matches); this._settle(); this._start() }
+    this._reduced = Boolean(this._mq?.matches) || this.hasAttribute('still')
+    this._onMq = () => { this._reduced = Boolean(this._mq.matches) || this.hasAttribute('still'); this._settle(); this._start() }
     this._mq?.addEventListener?.('change', this._onMq)
     this._onVis = () => (document.hidden ? this._stop() : this._start())
     document.addEventListener('visibilitychange', this._onVis)
@@ -204,7 +209,9 @@ export class SentinelMascot extends Base {
       this._mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] })
     }
     this._applyStatic()
+    this._speed = parseSpeed(this.getAttribute('speed'))
     this._born = performance.now()
+    this._vnow = this._born
     this._enter = this._born
     this._target = poseVector(this.state)
     this._v = this._target.slice() // the first pose is shown at once; only later changes morph
@@ -226,11 +233,16 @@ export class SentinelMascot extends Base {
     if (!this._el || oldValue === value) return
     if (name === 'state') {
       this._target = poseVector(this.state)
-      this._enter = performance.now()
+      this._enter = this._vnow
       this._el.svg.setAttribute('aria-label', `Sentinel mascot: ${this.state}`)
       if (this._reduced) this._settle()
       this._say(this.getAttribute('message')) // a persistent state keeps its words up; leaving one starts the clock
     } else if (name === 'message') this._say(value)
+    else if (name === 'speed') this._speed = parseSpeed(value)
+    else if (name === 'still') {
+      this._reduced = Boolean(this._mq?.matches) || this.hasAttribute('still')
+      if (this._reduced) { this._stop(); this._settle() } else this._start()
+    }
     else if (name === 'size' || name === 'theme') this._applyStatic()
   }
 
@@ -268,10 +280,11 @@ export class SentinelMascot extends Base {
     this._last = performance.now()
     const tick = (now) => {
       this._raf = requestAnimationFrame(tick)
-      const dt = Math.min(0.05, (now - this._last) / 1000)
+      const dt = Math.min(0.05, (now - this._last) / 1000) * this._speed
       this._last = now
+      this._vnow += dt * 1000
       this._v = easeToward(this._v, this._target, dt, 0.12)
-      this._render(now)
+      this._render(this._vnow)
     }
     this._raf = requestAnimationFrame(tick)
   }
@@ -281,7 +294,7 @@ export class SentinelMascot extends Base {
   // Reduced motion (or a snap): show the finished pose, still.
   _settle() {
     this._v = this._target.slice()
-    this._render(performance.now(), true)
+    this._render(this._vnow, true)
   }
 
   _render(now, still = this._reduced) {

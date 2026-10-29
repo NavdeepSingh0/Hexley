@@ -81,7 +81,7 @@ describe('stage lanes: one verdict word and one plain sentence', () => {
 describe('count line and caption', () => {
   it('counts actions plainly and adds only what happened', () => {
     expect(laneCountLine(lane(poisoned, 'sentinel'))).toMatch(/^\d+ actions · 1 denied$/)
-    expect(laneCountLine(lane(poisoned, 'r1_only'))).toMatch(/all allowed by access control$/)
+    expect(laneCountLine(lane(poisoned, 'r1_only'))).toMatch(/every one was allowed$/)
     expect(laneCountLine({ steps: [], column: 'sentinel' })).toBe('No actions yet')
     expect(laneCountLine(lane(freeze, 'sentinel'))).toMatch(/agent quarantined/)
   })

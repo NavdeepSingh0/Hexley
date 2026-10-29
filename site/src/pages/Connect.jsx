@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { createConnectToken, hasToken } from '../api/client.js'
-import { ClientProof, CopyField, StatusBadge } from '../components/Ui.jsx'
+import { ClientProof, CopyField, StatusBadge, TranscriptProof } from '../components/Ui.jsx'
 import { KIND_LABEL, METHOD_LABEL, STATUS_MEANING, countdown, fillSnippet, methodOf, useConnect } from '../lib/connect.js'
 
 const PRESET = 'quotation_processing'
@@ -134,6 +134,7 @@ export default function Connect() {
               {chosen.method === 'oauth' && <OAuthPanel client={chosen} connect={data} />}
               {chosen.method === 'header' && <TokenPanel client={chosen} mcpUrl={data.mcp_url} />}
               {chosen.screenshot && <ClientProof src={chosen.screenshot} />}
+              {chosen.transcript && <TranscriptProof url={chosen.transcript.url} caption={chosen.transcript.caption} />}
             </div>
           </>
         )}

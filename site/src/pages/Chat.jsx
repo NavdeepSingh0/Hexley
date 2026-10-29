@@ -191,13 +191,12 @@ export default function Chat() {
 
       <section className="chat-main" aria-label="Chat">
         <header className="chat-head">
-          <h1 className="chat-title">Sentinel Chat</h1>
+          <h1 className="chat-title">{view ? (preset?.title ?? 'Sentinel Chat') : 'Pick a task, then watch every step get checked.'}</h1>
           {view && <button type="button" className="s-btn s-btn--ghost s-btn--small" onClick={newChat}>New chat</button>}
         </header>
 
         {!view && (
           <div className="chat-empty">
-            <p className="chat-empty-title">Pick a task, then watch every step get checked.</p>
             <p className="muted">A model works for you. Every tool it calls goes through Sentinel first, and you see each decision as it is made.</p>
           </div>
         )}

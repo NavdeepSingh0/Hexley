@@ -6,7 +6,7 @@ import { getConnect } from '../api/client.js'
 export const STATUS_ORDER = ['tested', 'should_work', 'planned']
 export const STATUS_LABEL = { tested: 'Tested', should_work: 'Should work', planned: 'Planned' }
 export const STATUS_MEANING = {
-  tested: 'We connected a real session and have the screenshot.',
+  tested: 'We connected a real session and kept the evidence.',
   should_work: 'It speaks the same standard (MCP) but we have not run it yet.',
   planned: 'Designed for, not built.',
 }

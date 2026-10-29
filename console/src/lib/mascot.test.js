@@ -2,7 +2,7 @@
 // checked in a real browser (the F1 QA script), because it needs a DOM, shadow roots and animation frames.
 import { describe, expect, it } from 'vitest'
 import {
-  BUBBLE_MS, MAX_MESSAGE, POSES, STATES, VECTOR_LENGTH, blinkScale, bubbleVisible, easeToward, motionAt, normalizeState, poseVector,
+  BUBBLE_MS, MAX_MESSAGE, POSES, STATES, VECTOR_LENGTH, blinkScale, bubbleVisible, easeToward, motionAt, normalizeState, parseSpeed, poseVector,
   truncateMessage,
 } from '../../../design/mascot/sentinel-mascot.js'
 
@@ -131,5 +131,18 @@ describe('motion', () => {
     expect(blinkScale(-1)).toBe(1); expect(blinkScale(0.5)).toBe(1)
     expect(blinkScale(0.07)).toBeCloseTo(0.1, 5)
     expect(blinkScale(0.03)).toBeLessThan(1)
+  })
+})
+
+describe('the speed review attribute', () => {
+  it('is a time scale: 0 freezes, 0.25 is slow motion, anything unusable is 1', () => {
+    expect(parseSpeed('0')).toBe(0)
+    expect(parseSpeed('0.25')).toBe(0.25)
+    expect(parseSpeed('2')).toBe(2)
+    for (const bad of [null, undefined, '', 'fast', NaN]) expect(parseSpeed(bad)).toBe(1)
+  })
+  it('is held between 0 and 4, so a typo cannot make it run backwards or race', () => {
+    expect(parseSpeed('-3')).toBe(0)
+    expect(parseSpeed('100')).toBe(4)
   })
 })

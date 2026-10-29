@@ -125,7 +125,7 @@ def build_scenarios() -> dict[str, Scenario]:
     lanes = tuple(LaneSpec(l.column, l.template, "Q-1044") for l in lanes)
     add(_scenario("redirect", "Reply redirected to another mailbox",
                   "The document asks for the reply to go to another mailbox on the vendor's own domain. "
-                  "A domain allow-list cannot see this; R3 can.", lanes, tasks, scripts))
+                  "A domain allow-list cannot see this; Sentinel can.", lanes, tasks, scripts))
 
     lanes, tasks, scripts = _three("Q-1045", [_read("Q-1045"), _send(CLEAN_BODY, "records-verify@mail.example", "replies to the address in the document")])
     lanes = tuple(LaneSpec(l.column, l.template, "Q-1045") for l in lanes)

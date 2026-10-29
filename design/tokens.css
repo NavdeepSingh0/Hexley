@@ -13,8 +13,9 @@
   --panel: #15151e;
   --raised: #212130;
   --ink: #ffffff;
-  --muted: #a9a9bc;
+  --muted: #bdbdd0;
   --line: #2a2a36;
+  --card-border: rgba(255, 255, 255, 0.10);
   --line-strong: #ffffff;
 
   --brand: #a98bff;
@@ -50,8 +51,9 @@
   --panel: #f5f4fa;
   --raised: #eceaf6;
   --ink: #0a0a10;
-  --muted: #55556b;
+  --muted: #4a4a60;
   --line: #d9d6ea;
+  --card-border: rgba(10, 10, 16, 0.12);
   --line-strong: #0a0a10;
 
   --brand: #6226d6;
@@ -81,31 +83,32 @@
 }
 
 :root {
-  --font: "Helvetica Neue", Helvetica, Arial, "Liberation Sans", sans-serif;
-  --mono: ui-monospace, "Cascadia Mono", Consolas, "Liberation Mono", monospace;
+  --font: system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 
   /* At most three text sizes and two weights on any one screen (display, body, label). */
   --size-label: 13px;
   --size-small: 15px;
-  --size-base: 18px;
-  --size-h3: 24px;
-  --size-h2: 44px;
+  --size-base: 17px;
+  --size-h3: 22px;
+  --size-h2: 32px;
   --size-display: clamp(28px, 6vw, 40px); /* console verdict words; shrinks so a long word fits a phone */
-  --size-hero: clamp(44px, 9vw, 72px);
+  --size-hero: clamp(40px, 5vw, 60px);
   --weight-regular: 400;
-  --weight-bold: 800;
+  --weight-bold: 600; /* headings and buttons; body is 400. One token, so it is one line to change. */
   --tracking-label: 0.14em;
-  --tracking-tight: -0.02em;
+  --tracking-tight: -0.025em;
 
   --hairline: 1px solid var(--line);
   --outline: 1px solid var(--line);
   --outline-active: 2px solid var(--brand);
   --radius: 12px;
   --radius-lg: 20px;
+  --radius-card: 16px;
   --radius-pill: 999px;
 
-  --gutter: 16px;
-  --content-max: 1200px;
+  --gutter: 32px; /* the site's side padding; 16px on a phone (below) */
+  --content-max: 1120px;
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 16px;
@@ -115,6 +118,10 @@
 
   --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
   --dur: 180ms;
+}
+
+@media (max-width: 640px) {
+  :root { --gutter: 16px; }
 }
 
 /* Old names, kept so the first console keeps working until it is restyled (phase F2). Delete in F2. */

@@ -34,9 +34,11 @@ p, h1, h2, dl, dd, ol, ul { margin: 0; }
 
 /* the task line */
 .task { padding: var(--space-2) 0 var(--space-4); flex: none; }
+/* The mascot's speech bubble opens below it, at the top right; on a wide window the task text leaves that corner free. */
+@media (min-width: 1000px) { .task { padding-right: 280px; } }
 .task-text { font-size: 24px; font-weight: var(--weight-bold); line-height: 1.25; letter-spacing: var(--tracking-tight); margin: var(--space-1) 0 var(--space-2);
-  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.task-note { color: var(--muted); font-size: var(--size-small); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+ }
+.task-note { color: var(--muted); font-size: var(--size-small); font-family: var(--mono); line-height: 1.5; }
 
 /* screens: start and slip */
 /* The content is capped at 1100 px and centred by padding, so the scrollbar sits at the edge of the window, not beside the text. */
@@ -58,7 +60,7 @@ p, h1, h2, dl, dd, ol, ul { margin: 0; }
 .select { font: inherit; font-size: var(--size-small); padding: 6px 8px; background: var(--raised); color: var(--ink); border: 1px solid var(--muted); border-radius: var(--radius); max-width: 100%; }
 .slip { margin-top: var(--space-4); }
 .slip-objective { font-size: 24px; font-weight: var(--weight-bold); letter-spacing: var(--tracking-tight); margin: var(--space-2) 0 var(--space-4); }
-.slip-grid { display: grid; grid-template-columns: 220px 1fr; gap: var(--space-2) var(--space-4); font-size: var(--size-small); }
+.slip-grid { display: grid; grid-template-columns: 220px 1fr; gap: var(--space-2) var(--space-4); font-size: var(--size-base); }
 .slip-grid dt { color: var(--muted); }
 .slip-grid dd { color: var(--ink); }
 .audit-panel { margin-top: var(--space-5); max-width: 640px; display: flex; flex-direction: column; gap: var(--space-3); padding: var(--space-5); }
@@ -89,7 +91,7 @@ p, h1, h2, dl, dd, ol, ul { margin: 0; }
 .step-quarantined { border-left-color: var(--quarantined-bg); }
 .step-needs-approval { border-left-color: var(--approval); }
 .step-top { display: flex; justify-content: space-between; gap: var(--space-2); align-items: baseline; }
-.step-tool { font-weight: var(--weight-bold); font-size: var(--size-small); }
+.step-tool { font-weight: var(--weight-bold); font-size: var(--size-small); font-family: var(--mono); }
 .stamp { font-size: var(--size-label); font-weight: var(--weight-bold); letter-spacing: 0.06em; white-space: nowrap; }
 .stamp-allowed { color: var(--muted); }
 .stamp-denied { color: var(--denied); }
@@ -97,7 +99,7 @@ p, h1, h2, dl, dd, ol, ul { margin: 0; }
 .stamp-needs-approval { color: var(--approval); }
 .step-args { font-size: var(--size-small); color: var(--muted); overflow-wrap: anywhere; margin-top: 2px; }
 .step-why { display: flex; justify-content: space-between; align-items: center; gap: var(--space-2); font-size: var(--size-small); font-weight: var(--weight-bold); color: var(--denied); margin-top: var(--space-2); }
-.step-meta { font-size: var(--size-label); color: var(--muted); margin-top: 2px; }
+.step-meta { font-size: var(--size-small); color: var(--muted); margin-top: 2px; }
 
 /* what actually reached the outside */
 .effects { display: flex; flex-direction: column; gap: var(--space-2); }
@@ -110,11 +112,13 @@ p, h1, h2, dl, dd, ol, ul { margin: 0; }
 .mail-flag { font-size: var(--size-label); font-weight: var(--weight-bold); color: var(--muted); }
 .mail-leak .mail-flag { color: var(--harm); }
 .mail-wrong .mail-flag { color: var(--approval); }
-mark { background: var(--approval); color: var(--quarantined-ink); padding: 0 3px; border-radius: 4px; font-weight: var(--weight-bold); }
+mark { background: color-mix(in srgb, var(--ink) 14%, transparent); color: inherit; padding: 0 3px; border-radius: 4px; font-weight: var(--weight-bold);
+  text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 3px; text-decoration-color: var(--ink); }
+.mail-leak mark { text-decoration-color: var(--harm); }
 .effect-row { border-radius: var(--radius); padding: var(--space-2) var(--space-3); font-size: var(--size-small); background: var(--raised); border-left: 4px solid var(--muted); }
 .effect-bad { border-left-color: var(--harm); }
 .effect-ok { border-left-color: var(--allowed); }
-.effect-sub { font-size: var(--size-label); font-weight: var(--weight-bold); color: var(--muted); }
+.effect-sub { font-size: var(--size-small); font-weight: var(--weight-bold); color: var(--muted); }
 
 /* scrim, drawer and the officer's modal */
 .scrim { position: fixed; inset: 0; background: color-mix(in srgb, var(--bg) 62%, transparent); z-index: 20; }
@@ -126,7 +130,7 @@ mark { background: var(--approval); color: var(--quarantined-ink); padding: 0 3p
 .drawer-title { font-size: var(--size-h3); font-weight: var(--weight-bold); letter-spacing: var(--tracking-tight); }
 .drawer-summary { color: var(--muted); }
 .drawer-message { font-size: var(--size-small); white-space: pre-wrap; overflow-wrap: anywhere; background: var(--raised); border-radius: var(--radius); padding: var(--space-3); }
-.drawer-note, .chain-caption, .drawer-foot { font-size: var(--size-label); color: var(--muted); }
+.drawer-note, .chain-caption, .drawer-foot { font-size: var(--size-small); color: var(--muted); }
 .chain { display: flex; flex-direction: column; gap: var(--space-2); }
 .chain-row { display: flex; gap: var(--space-2); align-items: center; flex-wrap: wrap; font-size: var(--size-small); }
 .chain-node { background: var(--raised); border-radius: var(--radius); padding: 4px 12px; font-weight: var(--weight-bold); }
@@ -142,7 +146,7 @@ mark { background: var(--approval); color: var(--quarantined-ink); padding: 0 3p
 .approval-detail { font-family: var(--mono); font-size: var(--size-small); background: var(--panel); border-radius: var(--radius); padding: var(--space-3); overflow-wrap: anywhere; }
 .approval-why { color: var(--muted); font-size: var(--size-small); }
 .approval-actions { display: flex; gap: var(--space-3); align-items: center; margin-top: var(--space-2); }
-.approval-expiry { color: var(--muted); font-size: var(--size-label); margin-left: auto; }
+.approval-expiry { color: var(--muted); font-size: var(--size-small); margin-left: auto; }
 
 /* bars */
 .nextbar { display: flex; gap: var(--space-3); justify-content: center; padding: var(--space-2) var(--space-4) var(--space-3); flex: none; }
@@ -152,7 +156,7 @@ mark { background: var(--approval); color: var(--quarantined-ink); padding: 0 3p
 .audit-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--muted); flex: none; }
 .audit-dot.audit-ok { background: var(--allowed); }
 .audit-dot.audit-bad { background: var(--harm); }
-.audit-state { font-weight: var(--weight-bold); font-size: var(--size-small); }
+.audit-state { font-weight: var(--weight-bold); font-size: var(--size-small); font-family: var(--mono); }
 .audit-state.audit-ok { color: var(--allowed); }
 .audit-state.audit-bad { color: var(--harm); }
 .audit-state.audit-idle { color: var(--muted); font-weight: var(--weight-regular); }
