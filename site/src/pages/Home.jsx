@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { Accordion, Feature, Frame, Icon, IconBlock, RulesCard } from '../components/Blocks.jsx'
 import CtaBand from '../components/CtaBand.jsx'
@@ -5,36 +6,18 @@ import { Shot, StatusBadge } from '../components/Ui.jsx'
 import { FAQ } from '../data/faq.jsx'
 import { STATUS_MEANING, groupByStatus, useConnect } from '../lib/connect.js'
 import { formatInterval } from '../lib/evidence.js'
+import { claimLaunch } from '../lib/firstVisit.js'
 import { useEvidence } from '../lib/useEvidence.js'
 
-// The "what's real" rail: three short facts, each read from the same data the rest of the site uses (the evidence file, the
-// gateway's own client list). An item whose data has not loaded is left out, never replaced by a typed number.
-function Rail() {
-  const ev = useEvidence()
-  const { data } = useConnect()
-  const first = ev.groups[0]
-  const tested = (data?.clients ?? []).filter((c) => c.status === 'tested').map((c) => c.name)
-  return (
-    <aside className="rail" aria-label="What is real">
-      <p className="s-label rail-label">What's real</p>
-      {first && (
-        <Link to="/#evidence" className="rail-item">
-          <span className="rail-title">{first.protectedItem.value} {first.title.toLowerCase()} got past Sentinel</span>
-          <span className="rail-text">Sample size {first.protectedItem.n}. Read what this is not.</span>
-        </Link>
-      )}
-      {tested.length > 0 && (
-        <Link to="/integrations" className="rail-item">
-          <span className="rail-title">Connected for real: {tested.join(' and ')}</span>
-          <span className="rail-text">One session each, with the evidence kept.</span>
-        </Link>
-      )}
-      <Link to="/docs" className="rail-item">
-        <span className="rail-title">Run it yourself with one command</span>
-        <span className="rail-text">python -m sentinel up --demo</span>
-      </Link>
-    </aside>
-  )
+// The mascot on the right of the hero. The first time the home page loads in a browser it fires its boosters once (half a
+// second after the page shows, so it is seen); after that it only idles. It is decoration: it claims no decision.
+function HeroMascot() {
+  const ref = useRef(null)
+  useEffect(() => {
+    const t = setTimeout(() => { if (claimLaunch()) ref.current?.liftoff?.() }, 500)
+    return () => clearTimeout(t)
+  }, [])
+  return <div className="hero2-mascot" aria-hidden="true"><sentinel-mascot ref={ref} state="idle" size="200" /></div>
 }
 
 function Hero() {
@@ -49,7 +32,7 @@ function Hero() {
             <Link className="s-btn s-btn--ghost s-btn--big" to="/docs">Read the docs</Link>
           </div>
         </div>
-        <Rail />
+        <HeroMascot />
       </section>
     </div>
   )

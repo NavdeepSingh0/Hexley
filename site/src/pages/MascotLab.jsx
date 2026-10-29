@@ -1,7 +1,7 @@
 // The mascot lab: a page for judging the mascot's animation. It exists only in the development server (App.jsx adds the
 // route behind import.meta.env.DEV and the production build is checked for it), so it is never part of the final run.
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { STATES } from '../../../design/mascot/sentinel-mascot.js'
+import { LIFTOFF_S, LIFT_MAX, STATES } from '../../../design/mascot/sentinel-mascot.js'
 import { MASCOT_LAB_DEV_ONLY, SAY, SCENARIOS, STATE_INFO, allTransitions, dwell, trace } from '../lib/mascotLab.js'
 import '../styles/lab.css'
 
@@ -98,6 +98,39 @@ function StateCard({ state, size, speed, still, speech, onStage }) {
   )
 }
 
+const LAUNCH_PHASES = [
+  ['0 to 0.5 s', 'The nozzles slide out under the body and it crouches a little.'],
+  ['0.5 to 1.3 s', 'The flames light and the body rises.'],
+  ['1.3 to 2.6 s', 'It hovers, bobbing and tilting slightly.'],
+  ['2.6 to 3.4 s', 'It comes down as the flames taper off.'],
+  ['3.5 to 4.2 s', 'It lands with a small squash and the nozzles slide back in.'],
+]
+
+// The home page's one-off launch, replayable. The home page itself fires it once, the first time it loads in a browser.
+function Boosters({ speed, still }) {
+  const ref = useRef(null)
+  const size = 160
+  return (
+    <section className="lab-section" aria-labelledby="boost-h">
+      <h2 id="boost-h" className="lab-h2">Boosters</h2>
+      <p className="muted lab-sub">The launch the home page plays once, the first time it loads in a browser. It lasts {LIFTOFF_S} s and rises {Math.round((LIFT_MAX * size) / 200)} px at this size. With Reduced motion on it does nothing: the finished pose is the mascot at rest. Use the speed buttons above to slow it down.</p>
+      <div className="lab-stage s-panel">
+        <div className="lab-stage-mascot" style={{ minHeight: size + 130 }}>
+          <sentinel-mascot ref={ref} state="idle" size={String(size)} speed={String(speed)} still={still ? '' : undefined} />
+        </div>
+        <div className="lab-stage-side">
+          <div className="lab-actions">
+            <button type="button" className="s-btn s-btn--primary s-btn--small" onClick={() => ref.current?.liftoff?.()}>Launch</button>
+          </div>
+          <ol className="lab-steps">
+            {LAUNCH_PHASES.map(([when, what]) => <li key={when}><span className="lab-step-state">{when}</span> <span className="muted">{what}</span></li>)}
+          </ol>
+        </div>
+      </div>
+    </section>
+  )
+}
+
 export default function MascotLab() {
   const [speed, setSpeed] = useState(1)
   const [size, setSize] = useState(96)
@@ -157,6 +190,8 @@ export default function MascotLab() {
           </div>
         </div>
       </section>
+
+      <Boosters speed={speed} still={still} />
 
       <section className="lab-section" aria-labelledby="gallery-h">
         <h2 id="gallery-h" className="lab-h2">All nine, alive</h2>

@@ -6,8 +6,12 @@
 // morph, not a cut); the body bobs, blinks, and pops or shakes when a decision lands. `prefers-reduced-motion` shows the
 // finished pose with no animation at all.
 //
-// The pure parts (states, poses, easing, motion, speech timing) are exported and tested in Node; the element is checked in a
-// real browser.
+// Boosters: `liftoff()` (or a `liftoff` attribute present when it connects) plays a one-off launch: two small thrusters slide
+// out under the body, flames light, the body rises, hovers and settles back. It is decoration for the home page and the mascot lab;
+// it is not a state and says nothing about any decision. With reduced motion (or `still`) it does nothing.
+//
+// The pure parts (states, poses, easing, motion, speech timing, the liftoff curve) are exported and tested in Node; the element is
+// checked in a real browser.
 
 export const STATES = ['sleeping', 'idle', 'checking', 'allowed', 'denied', 'needs-approval', 'quarantined', 'verified', 'tamper']
 export const MAX_MESSAGE = 90
@@ -119,6 +123,40 @@ export function motionAt(state, t, age) {
 export const blinkScale = (sinceBlinkStart) => (sinceBlinkStart < 0 || sinceBlinkStart > 0.14 ? 1 : 1 - 0.9 * Math.sin((sinceBlinkStart / 0.14) * Math.PI))
 const BLINKS = new Set(['idle', 'checking', 'needs-approval'])
 
+// ---- liftoff (the boosters) ----------------------------------------------------------------------------------------------
+// One launch, `age` seconds after it starts: nozzles slide out (0 to 0.5 s) with a small crouch, flames light and the body rises
+// (0.5 to 1.3), hovers (to 2.6), descends as the flames taper off (out by 3.4), lands with a squash (3.5) and the nozzles slide
+// back in (to 4.2).
+// Pure and deterministic. `flame` and `nozzle` run from 0 to 1; offsets are in drawing units (the drawing is 200 wide).
+export const LIFTOFF_S = 4.2
+export const LIFT_MAX = 26
+const smooth = (x) => { const u = Math.min(1, Math.max(0, x)); return u * u * (3 - 2 * u) }
+export function liftoffAt(age) {
+  const rest = { dy: 0, sx: 1, sy: 1, rot: 0, flame: 0, nozzle: 0, lift: 0 }
+  if (!(age >= 0) || age >= LIFTOFF_S) return rest
+  const nozzle = age < 0.5 ? smooth(age / 0.5) : age < 3.6 ? 1 : 1 - smooth((age - 3.6) / 0.6)
+  let lift = 0
+  if (age >= 0.5 && age < 1.3) lift = smooth((age - 0.5) / 0.8)
+  else if (age >= 1.3 && age < 2.6) lift = 1
+  else if (age >= 2.6 && age < 3.5) lift = 1 - smooth((age - 2.6) / 0.9)
+  let flame = 0 // lit only once the nozzles are fully out (0.5 s), out before touch-down
+  if (age >= 0.5 && age < 0.75) flame = 0.35 * smooth((age - 0.5) / 0.25)
+  else if (age >= 0.75 && age < 1.2) flame = 0.35 + 0.65 * smooth((age - 0.75) / 0.45)
+  else if (age >= 1.2 && age < 1.6) flame = 1 - 0.2 * smooth((age - 1.2) / 0.4)
+  else if (age >= 1.6 && age < 2.6) flame = 0.8
+  else if (age >= 2.6 && age < 3.4) flame = 0.8 * (1 - smooth((age - 2.6) / 0.8))
+  const crouch = Math.sin(Math.PI * Math.min(1, Math.max(0, (age - 0.15) / 0.35))) // 0 outside 0.15 to 0.5 s
+  const rise = age >= 0.5 && age < 1.3 ? Math.sin((Math.PI * (age - 0.5)) / 0.8) : 0
+  const land = age >= 3.5 ? Math.exp(-(age - 3.5) * 9) * Math.cos((age - 3.5) * 16) : 0
+  return {
+    dy: -LIFT_MAX * lift + 3 * crouch + lift * lift * 1.8 * Math.sin(age * 4.6),
+    sx: 1 + 0.03 * crouch + 0.035 * land - 0.02 * rise,
+    sy: 1 - 0.06 * crouch + 0.04 * rise - 0.07 * land,
+    rot: 1.6 * Math.sin(age * 2.1) * lift,
+    flame, nozzle, lift,
+  }
+}
+
 // ---- the element ---------------------------------------------------------------------------------------------------------
 const BUBBLE_THEME = {
   dark: { bg: '#212130', fg: '#FFFFFF', line: '#2A2A36' },
@@ -143,9 +181,15 @@ const TEMPLATE = (id) => `
   :host([placement="above"]) .bubble::after { bottom: -6px; left: 22px; border-left: none; border-top: none; }
 </style>
 <svg viewBox="0 0 200 200" role="img" aria-label="Sentinel mascot">
-  <defs><linearGradient id="g${id}" x1="0" y1="0" x2="0" y2="1"><stop class="sa" offset="0"/><stop class="sb" offset="1"/></linearGradient></defs>
+  <defs>
+    <linearGradient id="g${id}" x1="0" y1="0" x2="0" y2="1"><stop class="sa" offset="0"/><stop class="sb" offset="1"/></linearGradient>
+    <linearGradient id="f${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#efe8ff" stop-opacity=".98"/><stop offset=".3" stop-color="#b79cff" stop-opacity=".95"/><stop offset=".7" stop-color="#8f5bff" stop-opacity=".6"/><stop offset="1" stop-color="#8f5bff" stop-opacity="0"/></linearGradient>
+  </defs>
   <ellipse class="shadow" cx="100" cy="176" rx="58" ry="8" fill="#000" opacity=".28"/>
   <g class="body">
+    <g class="boost" visibility="hidden" aria-hidden="true">
+      ${['L', 'R'].map((side) => `<g class="nz nz${side}"><path d="M-10 0L10 0L7 11L-7 11Z" fill="#2a2a38" stroke="#a98bff" stroke-width="1.5" stroke-linejoin="round"/><path class="fo fo${side}" fill="url(#f${id})"/><path class="fi fi${side}" fill="#fff" opacity=".9"/></g>`).join('')}
+    </g>
     <rect class="shell" x="30" y="36" width="140" height="128" rx="40" fill="url(#g${id})"/>
     <ellipse class="dome" cx="86" cy="50" rx="34" ry="8" fill="#fff" opacity=".8"/>
     <rect class="screen" x="48" y="62" width="104" height="72" rx="20"/>
@@ -166,7 +210,7 @@ const TEMPLATE = (id) => `
 const Base = typeof HTMLElement === 'undefined' ? class {} : HTMLElement
 
 export class SentinelMascot extends Base {
-  static get observedAttributes() { return ['state', 'message', 'size', 'theme', 'speak', 'placement', 'speed', 'still'] }
+  static get observedAttributes() { return ['state', 'message', 'size', 'theme', 'speak', 'placement', 'speed', 'still', 'liftoff'] }
 
   constructor() {
     super()
@@ -182,6 +226,16 @@ export class SentinelMascot extends Base {
     this._reduced = false
     this._vnow = 0 // the animation's own clock (ms): real time scaled by `speed`
     this._speed = 1
+    this._lift0 = -1 // when the current liftoff began on that clock (ms); -1 when none is playing
+    this._wantLift = false // liftoff() was asked for before the element was ready
+  }
+
+  // Play the launch once. Does nothing under reduced motion or `still`: the finished pose is the mascot at rest.
+  liftoff() {
+    if (!this._el) { this._wantLift = true; return }
+    if (this._reduced) return
+    this._lift0 = this._vnow
+    this._start()
   }
 
   get state() { return normalizeState(this.getAttribute('state')) }
@@ -196,6 +250,7 @@ export class SentinelMascot extends Base {
         svg: q('svg'), sa: q('.sa'), sb: q('.sb'), shadow: q('.shadow'), body: q('.body'), shell: q('.shell'), dome: q('.dome'), screen: q('.screen'),
         grid: q('.grid'), eyeL: q('.eyeL'), eyeR: q('.eyeR'), la: q('.la'), lb: q('.lb'), ra: q('.ra'), rb: q('.rb'), tile: q('.tile'), dot: q('.dot'),
         vent: q('.vent'), zs: [q('.z0'), q('.z1'), q('.z2')], q: q('.q'), bubble: q('.bubble'),
+        boost: q('.boost'), nz: [q('.nzL'), q('.nzR')], fo: [q('.foL'), q('.foR')], fi: [q('.fiL'), q('.fiR')],
       }
     }
     this._mq = typeof matchMedia === 'function' ? matchMedia('(prefers-reduced-motion: reduce)') : null
@@ -219,6 +274,7 @@ export class SentinelMascot extends Base {
     this._settle()
     this._say(this.getAttribute('message'))
     this._start()
+    if (this._wantLift || this.hasAttribute('liftoff')) { this._wantLift = false; this.liftoff() }
   }
 
   disconnectedCallback() {
@@ -239,6 +295,7 @@ export class SentinelMascot extends Base {
       this._say(this.getAttribute('message')) // a persistent state keeps its words up; leaving one starts the clock
     } else if (name === 'message') this._say(value)
     else if (name === 'speed') this._speed = parseSpeed(value)
+    else if (name === 'liftoff') { if (value !== null) this.liftoff() }
     else if (name === 'still') {
       this._reduced = Boolean(this._mq?.matches) || this.hasAttribute('still')
       if (this._reduced) { this._stop(); this._settle() } else this._start()
@@ -297,12 +354,30 @@ export class SentinelMascot extends Base {
     this._render(this._vnow, true)
   }
 
+  // The thrusters: nozzles slide out of the underside, flames flicker below them. Hidden whenever no launch is playing.
+  _drawBoost(L, now) {
+    const e = this._el
+    if (!L || (L.nozzle <= 0 && L.flame <= 0)) { e.boost.setAttribute('visibility', 'hidden'); return }
+    e.boost.setAttribute('visibility', 'visible')
+    const t = now / 1000
+    ;[84, 116].forEach((x, i) => {
+      e.nz[i].setAttribute('transform', `translate(${x} ${(164 - 11 * (1 - L.nozzle)).toFixed(2)})`)
+      const f = 1 + 0.1 * Math.sin(t * 53 + i * 2.1) + 0.07 * Math.sin(t * 89 + i)
+      const len = L.flame * 58 * f
+      const fl = (w, k) => (len < 1 ? '' : `M${-w} 11C${-w - 1} ${(11 + len * k * 0.45).toFixed(1)} ${-w * 0.4} ${(11 + len * k * 0.8).toFixed(1)} 0 ${(11 + len * k).toFixed(1)}C${w * 0.4} ${(11 + len * k * 0.8).toFixed(1)} ${w + 1} ${(11 + len * k * 0.45).toFixed(1)} ${w} 11Z`)
+      e.fo[i].setAttribute('d', fl(8.5, 1)); e.fi[i].setAttribute('d', fl(4, 0.55))
+    })
+  }
+
   _render(now, still = this._reduced) {
     const v = this._v
     const e = this._el
     const t = (now - this._born) / 1000
     const age = (now - this._enter) / 1000
     const m = still ? { dx: 0, dy: 0, sx: 1, sy: 1, rot: 0, gx: 0, gy: 0 } : motionAt(this.state, t, age)
+    const L = !still && this._lift0 >= 0 ? liftoffAt((now - this._lift0) / 1000) : null
+    if (L) { m.dy += L.dy; m.sx *= L.sx; m.sy *= L.sy; m.rot += L.rot }
+    if (this._lift0 >= 0 && (still || (now - this._lift0) / 1000 >= LIFTOFF_S)) this._lift0 = -1
     let blink = 1
     if (!still && BLINKS.has(this.state)) {
       if (now >= this._blinkAt) {
@@ -331,8 +406,11 @@ export class SentinelMascot extends Base {
     e.vent.setAttribute('fill', css(mix([154, 154, 176], [255, 255, 255], inv)))
 
     e.body.setAttribute('transform', `translate(${m.dx.toFixed(2)} ${m.dy.toFixed(2)}) translate(100 164) rotate(${m.rot.toFixed(2)}) scale(${m.sx.toFixed(4)} ${m.sy.toFixed(4)}) translate(-100 -164)`)
-    e.shadow.setAttribute('rx', (58 - m.dy * 0.5).toFixed(2))
-    e.shadow.setAttribute('opacity', (0.28 + m.dy * 0.01).toFixed(3))
+    // the shadow stays on the ground: it shrinks and thins as the body rises
+    const up = L ? L.lift : 0
+    e.shadow.setAttribute('rx', (58 - (m.dy - (L ? L.dy : 0)) * 0.5 - 14 * up).toFixed(2))
+    e.shadow.setAttribute('opacity', (0.28 + (m.dy - (L ? L.dy : 0)) * 0.01 - 0.12 * up).toFixed(3))
+    this._drawBoost(L, now)
     // the dot pulses while the mascot is waiting on something
     e.dot.setAttribute('opacity', (this.state === 'checking' || this.state === 'needs-approval') && !still ? (0.65 + 0.35 * Math.sin(t * 6)).toFixed(3) : '1')
 

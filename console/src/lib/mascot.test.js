@@ -2,8 +2,8 @@
 // checked in a real browser (the F1 QA script), because it needs a DOM, shadow roots and animation frames.
 import { describe, expect, it } from 'vitest'
 import {
-  BUBBLE_MS, MAX_MESSAGE, POSES, STATES, VECTOR_LENGTH, blinkScale, bubbleVisible, easeToward, motionAt, normalizeState, parseSpeed, poseVector,
-  truncateMessage,
+  BUBBLE_MS, LIFT_MAX, LIFTOFF_S, MAX_MESSAGE, POSES, STATES, VECTOR_LENGTH, blinkScale, bubbleVisible, easeToward, liftoffAt, motionAt, normalizeState,
+  parseSpeed, poseVector, truncateMessage,
 } from '../../../design/mascot/sentinel-mascot.js'
 
 describe('states', () => {
@@ -144,5 +144,42 @@ describe('the speed review attribute', () => {
   it('is held between 0 and 4, so a typo cannot make it run backwards or race', () => {
     expect(parseSpeed('-3')).toBe(0)
     expect(parseSpeed('100')).toBe(4)
+  })
+})
+
+describe('the liftoff (boosters)', () => {
+  const frames = Array.from({ length: Math.round(LIFTOFF_S * 100) + 1 }, (_, i) => liftoffAt(i / 100))
+  it('is at rest before it starts, after it ends and for nonsense input', () => {
+    const rest = { dy: 0, sx: 1, sy: 1, rot: 0, flame: 0, nozzle: 0, lift: 0 }
+    for (const age of [-5, -0.001, LIFTOFF_S, LIFTOFF_S + 0.01, 60, NaN, undefined]) expect(liftoffAt(age)).toEqual(rest)
+    expect(liftoffAt(0)).toEqual(rest)
+  })
+  it('lifts the body up and brings it all the way back down', () => {
+    const lowest = Math.min(...frames.map((f) => f.dy))
+    expect(lowest).toBeLessThan(-LIFT_MAX + 1) // it really rises
+    expect(lowest).toBeGreaterThan(-LIFT_MAX - 3) // and only a little more than the hover height
+    expect(Math.max(...frames.map((f) => f.dy))).toBeLessThan(4) // the crouch before take-off is small
+    expect(liftoffAt(3.5).dy).toBeCloseTo(0, 9) // touch-down
+  })
+  it('only has flames once the nozzles are out and before touch-down', () => {
+    for (let i = 0; i < frames.length; i++) {
+      const age = i / 100
+      if (age < 0.5 || age >= 3.4) expect(frames[i].flame).toBe(0)
+    }
+    expect(Math.max(...frames.map((f) => f.flame))).toBeGreaterThan(0.7)
+    expect(frames.every((f) => f.flame >= 0 && f.flame <= 1 && f.nozzle >= 0 && f.nozzle <= 1 && f.lift >= 0 && f.lift <= 1)).toBe(true)
+  })
+  it('has the nozzles out whenever there is a flame, so a flame never comes out of the body', () => {
+    for (const f of frames) if (f.flame > 0) expect(f.nozzle).toBe(1)
+  })
+  it('keeps the tilt and the squash small', () => {
+    for (const f of frames) {
+      expect(Math.abs(f.rot)).toBeLessThanOrEqual(2)
+      expect(f.sx).toBeGreaterThan(0.95); expect(f.sx).toBeLessThan(1.06)
+      expect(f.sy).toBeGreaterThan(0.9); expect(f.sy).toBeLessThan(1.07)
+    }
+  })
+  it('is smooth: no frame jumps more than a few units from the one before it', () => {
+    for (let i = 1; i < frames.length; i++) expect(Math.abs(frames[i].dy - frames[i - 1].dy)).toBeLessThan(2.2) // 10 ms steps
   })
 })

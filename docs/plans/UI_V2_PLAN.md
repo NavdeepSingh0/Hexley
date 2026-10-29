@@ -70,7 +70,7 @@ Client cards in a grid like Kiro's "choose your surface" (name, kind, status, me
 ### U7 Sweep and close. Done 29 Oct 2026
 Run every page at 1280x720, 1440x900 and 390x844 in both themes; keyboard walk; link check; the production build, tests and the development-only check; a fresh clone; update the docs, the log and the README; push on Navdeep's word.
 
-### U8 The mascot with boosters (asked for by Navdeep on 29 Oct 2026; done last, on purpose)
+### U8 The mascot with boosters (asked for by Navdeep on 29 Oct 2026; done last, on purpose). Done 29 Oct 2026
 - **Remove the "What's real" rail** from the home hero, and put the mascot there instead, at its current size.
 - **Give it boosters, like the thrusters of Astro Bot**: small flames under the body that fire once, when the home page is loaded **for the first time** in a browser (a per-viewer flag in `localStorage`, guarded; if storage is blocked it simply plays once per page load). It lifts off a little, hovers, and settles back to idle. After that it only idles as usual.
 - Reduced motion shows the finished pose with no animation. The flames are part of the component's drawing (no image files), driven by a new review-visible state or attribute so the mascot lab can replay it at any speed, and covered by a test that the first-visit logic fires once.

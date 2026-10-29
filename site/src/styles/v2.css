@@ -138,14 +138,7 @@
 .hero2-title { margin: 0; font-size: clamp(32px, 4.6vw, 54px); line-height: 1.08; font-weight: 700; max-width: 15em; }
 .hero2-lede { margin: var(--space-4) 0 0; max-width: 32em; color: var(--muted); font-size: 20px; line-height: 1.5; }
 .hero2 .hero-actions { margin-top: var(--space-5); }
-.rail { display: grid; gap: 0; align-content: start; padding-top: var(--space-2); }
-.rail-label { margin-bottom: var(--space-2); display: flex; align-items: center; gap: 8px; }
-.rail-label::before { content: ""; width: 8px; height: 8px; background: var(--brand); border-radius: 2px; }
-.rail-item { display: grid; gap: 4px; padding: var(--space-3) 0; border-top: 1px solid var(--line); color: var(--ink); text-decoration: none; }
-.rail-item:hover .rail-title { text-decoration: underline; }
-.rail-item:focus-visible { outline: 2px solid var(--focus); outline-offset: 4px; border-radius: 6px; }
-.rail-title { font-weight: var(--weight-bold); font-size: 16px; line-height: 1.35; }
-.rail-text { color: var(--muted); font-size: 14px; line-height: 1.4; font-family: var(--mono); }
+.hero2-mascot { display: flex; justify-content: center; align-items: center; min-height: 330px; padding-top: 44px; }
 
 .frame-shots { position: relative; padding-bottom: 6%; }
 .frame-main { width: 82%; }
