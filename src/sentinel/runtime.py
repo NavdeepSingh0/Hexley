@@ -16,6 +16,7 @@ from .contracts import SessionStore, load_templates
 from .events import EventBus
 from .models import TaskContract
 from .registry import Registry, load_registry
+from .tool_pins import ToolPins
 
 
 def rotate_audit_log(directory: Path) -> Path | None:
@@ -69,6 +70,7 @@ class Runtime:
     registry_overlay: Path | None = None  # where officer-classified tools are saved (next to the audit log)
     templates: dict = field(default_factory=load_templates)
     drafts: dict[str, TaskContract] = field(default_factory=dict)
+    pins: ToolPins = field(default_factory=ToolPins)  # approved tool definitions by hash (plan Q5)
 
 
 def build_runtime(*, tools_url: str, gateway_url: str, downstream_token: str, api_token: str, audit_dir: Path,
@@ -81,4 +83,5 @@ def build_runtime(*, tools_url: str, gateway_url: str, downstream_token: str, ap
     overlay = Path(audit_dir) / "registry.local.yaml"
     return Runtime(key=key or Ed25519PrivateKey.generate(), tools_url=tools_url, gateway_url=gateway_url,
                    downstream_token=downstream_token, api_token=api_token, audit=audit, allow_tamper=allow_tamper,
-                   approval_wait=approval_wait, registry=load_registry(overlay=overlay), registry_overlay=overlay)
+                   approval_wait=approval_wait, registry=load_registry(overlay=overlay), registry_overlay=overlay,
+                   pins=ToolPins.load(Path(audit_dir) / "tool_pins.json"))

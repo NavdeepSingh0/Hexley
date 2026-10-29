@@ -33,6 +33,7 @@ from .events import make_event
 from .models import (AgentAction, Column, Confidentiality, Decision, Effect, Evidence, Integrity, Mode, ReasonCode,
                      RuleId, SessionStatus)
 from .runtime import Runtime
+from .tool_pins import definition_hash
 from .tools.server import COLUMN_HEADER, SESSION_HEADER, TOKEN_HEADER
 
 log = logging.getLogger("sentinel.gateway")
@@ -70,12 +71,31 @@ class SentinelMiddleware(Middleware):
         finally:
             _current.reset(reset)
         allowed = set(session.contract.allowed_tools)
+        if session.column == Column.SENTINEL:
+            await self._observe_definitions(tools)
         if session.column == Column.UNPROTECTED:
             # The baseline sees every backend tool, but never a gateway-local tool its slip does not allow:
             # otherwise the like-for-like comparison would differ between columns (D-028).
             return [t for t in tools if not self.rt.registry.get(t.name).local or t.name in allowed]
-        # Listing is a convenience for the agent, not a control: R1 is enforced again on every call.
-        return [t for t in tools if t.name in allowed and self.rt.registry.is_known(t.name)]
+        # Listing is a convenience for the agent, not a control: R1 is enforced again on every call. A tool whose definition
+        # changed since it was approved, or whose description reads like instructions, is not shown (plan Q5).
+        return [t for t in tools if t.name in allowed and self.rt.registry.is_known(t.name)
+                and (session.column != Column.SENTINEL or self.rt.pins.blocked(t.name) is None)]
+
+    async def _observe_definitions(self, tools) -> None:
+        """Hash every tool's full definition and compare it with its pin (plan Q5). A new problem is announced once:
+        an event for the console and a record in the audit log."""
+        for t in tools:
+            schema = getattr(t, "parameters", None) or getattr(t, "input_schema", None) or {}
+            h = definition_hash(t.name, t.description, schema, getattr(t, "annotations", None))
+            state, changed = self.rt.pins.observe(t.name, h, t.description)
+            if changed and state.status != "ok":
+                payload = {"tool": t.name, "status": state.status, "detail": state.detail, "definition_sha256": h}
+                await self.rt.bus.publish(make_event("tool." + state.status, None, None, payload))
+                try:
+                    await self.rt.audit.append("tool." + state.status, payload=payload)
+                except AuditError as e:
+                    log.warning("audit append of a tool definition alert failed: %s", e)
 
     async def _record_decision(self, action: AgentAction, decision: Decision, session: Session, protected: bool) -> Decision:
         """D-020: the decision is recorded durably BEFORE anything is forwarded; no durable record, no action.
@@ -129,6 +149,15 @@ class SentinelMiddleware(Middleware):
         await self.rt.bus.publish(make_event("action.requested", session.session_id, session.column,
                                              action.model_dump(mode="json")))
         protected = session.column == Column.SENTINEL
+        pin = self.rt.pins.blocked(tool) if protected else None
+        if pin is not None:
+            # The tool's definition changed since it was approved, or its description reads like instructions to the model:
+            # refused until the officer has looked at it (plan Q5). Recorded like any other decision.
+            decision = tool_changed(action, pin)
+            async with session.lock:
+                await self._record_decision(action, decision, session, protected)
+            await self.rt.bus.publish(make_event("decision", session.session_id, session.column, decision.model_dump(mode="json")))
+            raise ToolError(decision.summary_plain)
         decision, approval = await self._evaluate(session, action, entry, protected)
         await self.rt.bus.publish(make_event("decision", session.session_id, session.column,
                                              decision.model_dump(mode="json")))
@@ -225,6 +254,16 @@ def approval_not_granted(action: AgentAction, status: ApprovalStatus) -> Decisio
         rule_ids=[RuleId.R4], reason_code=ReasonCode.HUMAN_VERIFICATION,
         summary_plain=f"Blocked: '{action.tool}' did not run because {reason}.",
         evidence=[Evidence(kind="approval", detail=f"approval {status.value}", source_ref=action.tool)])
+
+
+def tool_changed(action: AgentAction, pin) -> Decision:
+    why = ("its definition changed since the officer approved it" if pin.status == "changed"
+           else f"its description reads like instructions to the model ({pin.detail})")
+    return Decision(
+        decision_id=f"dec_{uuid.uuid4().hex[:12]}", action_id=action.action_id, effect=Effect.BLOCK,
+        rule_ids=[RuleId.R1], reason_code=ReasonCode.TOOL_CHANGED,
+        summary_plain=f"Blocked: '{action.tool}' is held for review because {why}. The officer must approve its definition first.",
+        evidence=[Evidence(kind="definition", detail=pin.detail or pin.status, source_ref=pin.seen_hash[:16])])
 
 
 def audit_unavailable(action: AgentAction) -> Decision:

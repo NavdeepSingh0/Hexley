@@ -29,6 +29,7 @@ from .contracts import SlipError, draft_contract, draft_custom
 from .matcher import FIELD_KINDS
 from .oauth import OAuthError
 from .registry import save_overlay, suggest_classification
+from .tool_pins import definition_hash
 from .runs import SCENARIOS, RunError, RunManager, list_recordings
 from .events import make_event
 from .models import Capability, Column, Confidentiality, Integrity, Mode, ToolEntry
@@ -434,11 +435,33 @@ def create_api(rt: Runtime, console_dir: Path | None = None, site_dir: Path | No
         out = []
         for t in await upstream_tools():
             known = rt.registry.is_known(t.name)
+            st = rt.pins.state(t.name)
+            if st is None:  # not seen by the gateway yet: judge it now, the same way
+                h = definition_hash(t.name, t.description, schema_of(t), getattr(t, "annotations", None))
+                st, _ = rt.pins.observe(t.name, h, t.description)
+            annotations = getattr(t, "annotations", None)
             out.append({"name": t.name, "description": t.description or "", "arguments": list(schema_of(t).get("properties", {})),
+                        "definition": {"status": st.status, "detail": st.detail},
+                        # what the tool says about itself: shown to the officer as a hint, never trusted (plan Q5)
+                        "annotations": annotations.model_dump(mode="json", exclude_none=True) if hasattr(annotations, "model_dump") else annotations,
                         "classified": known, "builtin": rt.registry.is_builtin(t.name),
                         "labels": rt.registry.get(t.name).model_dump(mode="json", exclude={"name"}) if known else None,
                         "suggested": None if known else suggest_classification(t.name, t.description or "", schema_of(t))})
         return {"tools": out, "unclassified": sum(1 for x in out if not x["classified"])}
+
+    @app.post("/api/v1/tools/{name}/approve-definition", dependencies=[Depends(require_token)])
+    async def approve_definition(name: str):
+        """The officer has read a tool's changed or suspicious definition and approves it as it is now (plan Q5)."""
+        st = rt.pins.state(name)
+        if st is None:
+            raise HTTPException(status_code=404, detail=f"Sentinel has not seen a tool called '{name}'.")
+        try:
+            await rt.audit.append("tool.approved", payload={"tool": name, "definition_sha256": st.seen_hash, "was": st.status})
+        except AuditError as e:
+            raise HTTPException(status_code=503, detail="The audit log is unavailable, so the approval was not saved.") from e
+        h = rt.pins.approve(name)
+        await rt.bus.publish(make_event("tool.approved", None, None, {"tool": name}))
+        return {"tool": name, "definition_sha256": h, "status": "ok"}
 
     @app.post("/api/v1/tools/{name}/classify", dependencies=[Depends(require_token)])
     async def classify_tool(name: str, body: ToolClassification):

@@ -99,6 +99,8 @@ Static file `site/public/evidence.json`, generated from `eval/results/` by `scri
 ```
 
 ## Mascot state (core phase B7)
+**Tool definitions (D-049).** `GET /api/v1/tools` also returns `definition: {status: ok|changed|suspicious, detail}` and `annotations` (the tool's own hints, never trusted). `POST /api/v1/tools/{name}/approve-definition` (officer) pins the definition last seen; `404` for a tool Sentinel has not seen, `503` without a durable audit record.
+
 **Audit demo (D-045).** `GET /audit/verify` also returns `tamper_enabled` and `restorable` (a demo-altered record exists). `POST /audit/tamper` (optional `seq`; default the most recent blocked decision) and `POST /audit/restore` (no body; returns `{"restored_seqs": [...]}`) work only when `up` was started with `--demo`: `403` otherwise; `404` when there is no record to alter or nothing to put back. Both take the audit log's write lock, so a decision being recorded is never lost.
 
 `GET /api/v1/mascot/state` → `{"state": "denied", "message": "…", "session_id": "ses_…", "ts": "…"}` (latest event of the most recent active session; `sleeping` when none). Used by the browser extension.

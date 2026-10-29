@@ -61,6 +61,7 @@ class ReasonCode(StrEnum):
     RULE_OF_TWO = "RULE_OF_TWO"  # R8
     PROTECTED_PATH = "PROTECTED_PATH"  # R1: agent configuration is never written, credential files never read (plan Q4)
     WRONG_EFFECT = "WRONG_EFFECT"  # R1: a read tool asked to change data, or a statement that cannot be read safely
+    TOOL_CHANGED = "TOOL_CHANGED"  # R1: the tool's definition changed or reads like instructions (plan Q5)
     DESTRUCTIVE = "DESTRUCTIVE"  # R4: an action that cannot be undone waits for the officer (plan Q4)
     DISCOVERED_CREDENTIAL = "DISCOVERED_CREDENTIAL"  # R9: a secret found in a tool result, used or sent
     SESSION_INVALID = "SESSION_INVALID"
