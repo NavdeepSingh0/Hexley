@@ -23,7 +23,17 @@ CLIENTS = [
     ("vscode", "VS Code (MCP)", "ide", "should_work", "header",
      '{ "servers": { "sentinel": { "type": "http", "url": "{mcp_url}", "headers": { "Authorization": "{header_value}" } } } }',
      None, None),
-    ("local", "A local model through an MCP-capable client", "local", "planned", "header", None, None, None),
+    # Gemini CLI: connected to the gateway with this exact settings block and listed Sentinel's tools (29 Oct 2026); no session was
+    # run because its own Google sign-in had expired. Codex CLI: connected state not shown, its model needed a newer CLI. Both
+    # therefore stay "should work" until a session is run.
+    ("gemini-cli", "Gemini CLI", "cli", "should_work", "header",
+     '{ "mcpServers": { "sentinel": { "httpUrl": "{mcp_url}", "headers": { "Authorization": "{header_value}" } } } }', None, None),
+    ("codex-cli", "Codex CLI", "cli", "should_work", "header",
+     '[mcp_servers.sentinel]\nurl = "{mcp_url}"\nhttp_headers = { Authorization = "{header_value}" }', None, None),
+    ("local-chat", "A local model (Ollama) in Sentinel Chat", "local", "tested", "header", None, None,
+     {"url": "/proof/local-ollama-20261029.txt",
+      "caption": "A real model on this computer (qwen3 through Ollama) used through the real gateway in Sentinel Chat, 29 Oct 2026: nothing the agent read left the machine. Our own host, not a third-party client."}),
+    ("local", "A local model through a third-party MCP client", "local", "planned", "header", None, None, None),
     ("other-agents", "Agents that do not use MCP", "other", "planned", "none", None, None, None),
 ]
 

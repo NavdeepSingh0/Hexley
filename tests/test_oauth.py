@@ -362,7 +362,7 @@ async def test_connect_endpoints(ostack):
         assert [m["id"] for m in v["methods"]] == ["oauth", "header"]
         assert all(c["screenshot"] is None for c in v["clients"] if c["status"] != "tested")
         assert {m["id"]: m["status"] for m in v["methods"]} == {"oauth": "tested", "header": "tested"}
-        assert [c["id"] for c in v["clients"] if c["status"] == "tested"] == ["claude-web", "claude-code"]
+        assert [c["id"] for c in v["clients"] if c["status"] == "tested"] == ["claude-web", "claude-code", "local-chat"]
         assert all(c["transcript"] is None for c in v["clients"] if c["status"] != "tested")
         tok = (await api.post("/api/v1/connect/token", json={"preset": "quotation_processing"})).json()
         assert tok["header_value"].startswith("Bearer ") and tok["slip"]["max_messages"] == 1
@@ -407,3 +407,16 @@ def test_every_tested_status_is_backed_by_evidence_that_exists_and_holds_no_cred
             assert f.is_file(), transcript["url"]
             body = f.read_text(encoding="utf-8")
             assert "Bearer ey" not in body and "eyJ" not in body and len(body) > 500 and transcript["caption"]
+
+
+async def test_sign_in_can_use_a_slip_that_is_not_about_a_quotation(ostack):
+    """Found when preparing a Claude.ai test with the own-document slip: the sign-in always attached quotation Q-1043, so any
+    other slip failed because the quotation's vendor is not in its domains (plan R1)."""
+    from sentinel.oauth import SentinelOAuthProvider
+
+    p = SentinelOAuthProvider(ostack.rt, base_url=ostack.gateway_url.removesuffix("/mcp"), preset="own_document")
+    draft = p._slip_draft()
+    assert draft.template == "own_document" and draft.work_item_id is None and draft.resolved_vendor is None
+    assert "read_document" in draft.allowed_tools and draft.strict_flows
+    q = SentinelOAuthProvider(ostack.rt, base_url=ostack.gateway_url.removesuffix("/mcp"))  # the default is unchanged
+    assert q._slip_draft().work_item_id == "Q-1043"

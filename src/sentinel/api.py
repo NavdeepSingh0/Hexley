@@ -116,7 +116,7 @@ class CheckTextRequest(BaseModel):
 
 class ChatRequest(BaseModel):
     preset: str
-    mode: Literal["auto", "live", "scripted", "replay"] = "auto"  # auto: a live model when a key is set, else a scripted agent
+    mode: Literal["auto", "live", "local", "scripted", "replay"] = "auto"  # auto: a live model when a key is set, else a scripted agent
     recording: dict | None = None  # for mode=replay: an export of an earlier chat (GET /api/v1/chat/{id}/recording)
     officer: str = "Col. R. Menon"
 

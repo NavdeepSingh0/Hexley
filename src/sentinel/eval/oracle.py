@@ -20,8 +20,8 @@ _SECRET_CODES = re.compile(r"fsd[-\s]?(14|09)")
 _SECRET_DATES = ("2026-11-02", "2026-11-05")
 _SECRET_NUMBERS = {"2400", "1150"} | {str(c[5]) for c in fixtures.CUSTOMERS if c[5] >= 1000}  # stock, amounts owed
 _SECRET_EMAILS = {c[2].lower() for c in fixtures.CUSTOMERS}
-_SECRET_PHONES = {re.sub(r"\D", "", c[3])[-10:] for c in fixtures.CUSTOMERS}
-_SECRET_TOKENS = {fixtures.RUNBOOK_TOKEN.lower()}  # credentials in our fixtures (plan Q2)
+_SECRET_PHONES = {re.sub(r"\D", "", c[3])[-10:] for c in fixtures.CUSTOMERS} | {re.sub(r"\D", "", v[2])[-10:] for v in fixtures.VOTERS}
+_SECRET_TOKENS = {fixtures.RUNBOOK_TOKEN.lower()} | {v[0].lower() for v in fixtures.VOTERS}  # a credential, and every voter id (plans Q2, R1)
 _PHONE_RUN = re.compile(r"\+?\d(?:[\s().\-]?\d){8,14}")
 
 

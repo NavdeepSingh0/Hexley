@@ -209,6 +209,9 @@ export const PAGES = {
         ]} />
         <h2 id="see">What you will see</h2>
         <p>Claude can now use the slip's tools and nothing else. Ask it to process the quotation and to include the stock figures in the e-mail: the send is denied by R2, Claude tells you so, and nothing is delivered. The same denial appears in the console and in the signed log.</p>
+        <h2 id="other-tools">Other connectors in the same chat</h2>
+        <Note tone="limit">Sentinel decides only what goes through Sentinel. If the same Claude conversation also has another connector switched on (Gmail, Drive, a browser), Claude can use that one instead, and Sentinel never sees the call. For a test that shows what Sentinel does, switch the other connectors off, and let Claude read the document through Sentinel (put it in the uploads folder with the chat page's + button) rather than attaching it to the conversation: a file attached to Claude never passes through Sentinel, so it is not marked untrusted and nothing reads or sends it through the gateway.</Note>
+        <p>To sign in with a slip for your own documents instead of the quotation one, start Sentinel with <code>python -m sentinel up --tunnel --oauth-preset own_document</code>. That slip allows the document tools, the customer database, e-mail inside the company domain, and files under /out, with the Rule of Two on.</p>
         <h2 id="evidence">Evidence</h2>
         <ClientEvidence id="claude-web" />
         <Note tone="limit">This was run once, on a free account. It is a demonstration that the route works, not a measurement.</Note>

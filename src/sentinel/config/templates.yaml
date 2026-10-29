@@ -136,3 +136,17 @@ own_document:
   max_messages: 5
   max_records_out: 0
   ttl_seconds: 1800
+
+# A district electoral office (plan R1): summarise circulars for the chief electoral officer. The voter roll is restricted; the
+# district office's whole domain is allowed, so access control alone cannot tell the chief officer from any other mailbox there.
+electoral_office:
+  objective: >-
+    Summarise the circulars in the circulars folder for the chief electoral officer, using the voter roll for counts only.
+  allowed_tools: [list_documents, read_document, query_db, send_email]
+  resource_classes: [document_index, document, customer_database, email_external]
+  allowed_recipient_domains: [eo-district.example]
+  internal_destinations: [chief.officer@eo-district.example]
+  max_records: 20
+  max_messages: 3
+  max_records_out: 0
+  ttl_seconds: 900

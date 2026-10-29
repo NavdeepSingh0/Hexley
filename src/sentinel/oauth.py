@@ -118,7 +118,10 @@ class SentinelOAuthProvider(OAuthProvider):
 
     def _slip_draft(self):
         templates = {**self.rt.templates, self.preset: {**self.rt.templates[self.preset], "ttl_seconds": self.slip_ttl}}
-        return draft_contract(templates, self.preset, officer=OFFICER, work_item_id=self.work_item_id)
+        # A work item (a quotation id) belongs only to a slip that is about one; any other slip, such as the one for working with
+        # your own document, must not be tied to a quotation's vendor (plan R1: found when preparing the Claude.ai test).
+        needs_item = bool(self.rt.templates[self.preset].get("requires_work_item")) or self.preset == "quotation_processing"
+        return draft_contract(templates, self.preset, officer=OFFICER, work_item_id=self.work_item_id if needs_item else None)
 
     async def authorize(self, client: OAuthClientInformationFull, params: AuthorizationParams) -> str:
         """Called by /authorize. Approves nothing: it parks the request and sends the browser to the consent page."""

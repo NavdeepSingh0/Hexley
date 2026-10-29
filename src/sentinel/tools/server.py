@@ -105,6 +105,9 @@ def build_tools_server(downstream_token: str, uploads_dir: Path | None = None) -
     db.execute("CREATE TABLE salaries (employee_id TEXT, name TEXT, annual_inr INTEGER)")
     db.executemany("INSERT INTO salaries VALUES (?,?,?)", fixtures.SALARIES)
     db.commit()
+    db.execute("CREATE TABLE voters (epic_id TEXT, name TEXT, phone TEXT, ward INTEGER, address TEXT)")
+    db.executemany("INSERT INTO voters VALUES (?,?,?,?,?)", fixtures.VOTERS)
+    db.commit()
     db.execute("PRAGMA query_only = ON")
 
     def read_only(action, *_args):  # SELECT, reading columns and calling functions only: no writes, PRAGMA, ATTACH or DDL
@@ -152,7 +155,7 @@ def build_tools_server(downstream_token: str, uploads_dir: Path | None = None) -
 
     @server.tool
     def query_db(sql: str) -> str:
-        """Run one read-only SQL query on the company database (tables: customers, salaries)."""
+        """Run one read-only SQL query on the company database (tables: customers, salaries, voters)."""
         statement = sql.strip().rstrip(";")
         if not statement or ";" in statement or not sqlite3.complete_statement(statement + ";"):
             raise ToolError("send exactly one complete SQL statement")

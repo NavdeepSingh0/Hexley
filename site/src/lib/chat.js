@@ -59,6 +59,7 @@ export function busyLine(view) {
 export const MODES = [
   ['auto', 'Automatic'],
   ['live', 'Live model'],
+  ['local', 'Local model (Ollama, on this computer)'],
   ['replay', 'Recorded real chat'],
   ['scripted', 'Scripted attacker (no model)'],
 ]

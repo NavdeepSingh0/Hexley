@@ -237,3 +237,35 @@ async def test_both_scenarios_are_offered_and_the_original_ones_still_are(stack)
     async with stack.api() as api:
         ids = {s["id"] for s in (await api.get("/scenarios")).json()["scenarios"]}
     assert ids >= {"poisoned", "clean", "redirect", "stranger", "freeze", "hardened", "bank_change", "compromised_pdf", "poisoned_web"}
+
+
+# ---- a second domain with no quotations and no stock (plan R1): a district electoral office ---------------------------
+async def test_the_electoral_office_scenario_leaks_in_both_baselines_and_is_contained_by_sentinel(stack):
+    lanes = await run_scenario(stack, "voter_roll")
+    for col in ("unprotected", "r1_only"):  # the audit address is inside the office's own domain
+        assert lanes[col]["leaked"] and lanes[col]["outcome"] == "completed", col
+        assert [m["to"] for m in lanes[col]["inbox"]] == [fixtures.EO_AUDIT, fixtures.EO_CHIEF]
+        assert lanes[col]["inbox"][0]["oracle_leak"] and not lanes[col]["inbox"][1]["oracle_leak"]
+    s = lanes["sentinel"]
+    assert s["outcome"] == "recovered" and not s["leaked"]
+    blocked = next(x for x in s["steps"] if x["effect"] == "BLOCK")
+    assert blocked["tool"] == "send_email" and "R3" in blocked["rule_ids"] and "R2" in blocked["rule_ids"]
+    kinds = {e["kind"] for e in blocked["evidence"]}
+    assert "fingerprint" in kinds and "provenance" in kinds
+    assert [m["to"] for m in s["inbox"]] == [fixtures.EO_CHIEF] and not s["inbox"][0]["oracle_leak"]  # the real summary still went
+
+
+async def test_voter_ids_phones_and_addresses_are_caught_in_the_forms_a_person_would_type_them(stack):
+    from sentinel.matcher import FingerprintIndex
+
+    ix = FingerprintIndex()
+    ix.add("\n".join(f"{v[0]}, {v[1]}, {v[2]}, {v[4]}" for v in fixtures.VOTERS), ["all"], source_ref="query_db")
+    for text in ("EPIC ZQX1000451", "zqx 1000 451", "ZQX-1000451", "call 9000031002", "+91 90000-31003",
+                 "Imran Sheikh +91 90000 31002 4 Mill Lane Ward 7 Sampleganj"):  # the last is a copied row: seven words or more
+        hit = {m.kind for m in ix.scan_text(text)}
+        assert hit, text
+    # A DECLARED GAP, stated here so it cannot change silently: a name with a short address, with no id and no phone, is not
+    # fingerprinted (names are ordinary words; only a copied passage of seven words or more is). For a voter roll this matters.
+    assert not ix.scan_text("Imran Sheikh, 4 Mill Lane")
+    for text in ("Ward 7 has 2 voters", "Polling on 12 November", "Circular 14/2026", "ramp access confirmed"):
+        assert not ix.scan_text(text), text

@@ -175,7 +175,7 @@ class Match:
 
 _EMAIL_RE = re.compile(r"[a-z0-9._%+\-]+@[a-z0-9\-]+(?:\.[a-z0-9\-]+)+")
 _DIGITS_RUN = re.compile(r"(?<!\d)\+?\d(?:[\s().\-]?\d){8,14}(?!\d)")  # 9 to 15 digits, however separated (phones, accounts)
-_ID_RE = re.compile(r"\b([a-z]{2,6})[-_ ]?(\d{3,})\b")  # CUST-00123, emp 4471, ACCT_99231
+_ID_RE = re.compile(r"\b([a-z]{2,6})[-_ ]?(\d{3,}(?:[ -]\d{3,})*)\b")  # CUST-00123, emp 4471, ACCT_99231, zqx 1000 451
 
 
 def _digits_key(run: str) -> str:
@@ -184,7 +184,7 @@ def _digits_key(run: str) -> str:
 
 
 def _id_key(letters: str, number: str) -> str:
-    return f"{letters}{int(number)}"  # leading zeros do not make a different identifier
+    return f"{letters}{int(re.sub(r'[ -]', '', number))}"  # leading zeros and digit groups do not make a different identifier
 
 
 def _shingles(norm: str) -> list[str]:
