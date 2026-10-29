@@ -217,6 +217,7 @@ RULE_SPEECH = {
     "R5": "Message limit reached.",
     "R6": "Too many denied attempts: quarantined.",
     "R7": "After an untrusted document, sending outside needs approval.",
+    "R9": "That credential was found in data. It was not given to this task.",
 }
 
 

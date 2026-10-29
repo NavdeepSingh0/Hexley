@@ -42,6 +42,7 @@ class RuleId(StrEnum):
     R5 = "R5"
     R6 = "R6"
     R7 = "R7"
+    R9 = "R9"  # a credential found in data is never used or sent (plan Q2)
 
 
 class ReasonCode(StrEnum):
@@ -56,6 +57,7 @@ class ReasonCode(StrEnum):
     VOLUME_EXCEEDED = "VOLUME_EXCEEDED"  # R5
     BLOCK_THRESHOLD_FREEZE = "BLOCK_THRESHOLD_FREEZE"  # R6
     TAINTED_ACTION = "TAINTED_ACTION"  # R7: a consequential action after the session read untrusted content
+    DISCOVERED_CREDENTIAL = "DISCOVERED_CREDENTIAL"  # R9: a secret found in a tool result, used or sent
     SESSION_INVALID = "SESSION_INVALID"
     AUDIT_UNAVAILABLE = "AUDIT_UNAVAILABLE"  # no durable audit record, so the action was not run
     FAIL_CLOSED = "FAIL_CLOSED"

@@ -41,6 +41,7 @@ export const RULE_LABEL = {
   R5: 'Message limit reached',
   R6: 'Too many denied attempts',
   R7: 'Needs the officer after reading untrusted content',
+  R9: 'A credential found in data, used or sent',
 }
 
 // The one vocabulary used everywhere (site, chat, console, mascot, deck): what Sentinel decided, in the deck's words.
@@ -55,6 +56,7 @@ export const RULE_SPEECH = {
   R5: 'Message limit reached.',
   R6: 'Too many denied attempts: quarantined.',
   R7: 'After an untrusted document, sending outside needs approval.',
+  R9: 'That credential was found in data. It was not given to this task.',
 }
 
 const truncate = (s, n) => (s.length > n ? s.slice(0, n - 1) + '…' : s)

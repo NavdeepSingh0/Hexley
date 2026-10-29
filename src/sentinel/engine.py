@@ -46,6 +46,8 @@ def decide(action: AgentAction, session: Session, registry: Registry, approved: 
                     destinations.allowed(r, session.contract.internal_destinations) for r in recipients):
                 matches = []  # restricted data may go to a destination the officer named as internal (the slip says so)
             results.append(rules.rule_r2(action, entry, matches))
+            # Credentials found in data: checked on every tool, not only outbound ones, and never exempt (R2, R9).
+            results.append(rules.rule_secret(action, entry, session.secrets.scan_args(action.args)))
             results.append(rules.rule_r3(action, entry, recipients, session.untrusted_destinations,
                                          session.trusted_addresses, session.untrusted_actions))
             results.append(rules.rule_r4(action, entry, approved))

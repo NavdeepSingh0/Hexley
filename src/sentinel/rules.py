@@ -9,6 +9,7 @@ from dataclasses import dataclass, field
 
 from . import destinations, egress
 from .destinations import domain_of
+from .secret_scan import CREDENTIAL_ARG, SecretMatch
 from .matcher import Match
 from .models import EFFECT_PRECEDENCE, AgentAction, Effect, Evidence, ReasonCode, RuleId, TaskContract, ToolEntry
 
@@ -167,6 +168,26 @@ def rule_r2(action: AgentAction, entry: ToolEntry, matches: list[Match]) -> Rule
         "This task's permission slip does not allow restricted data to leave. "
         "Send an acknowledgement without that information.",
         evidence)
+
+
+def rule_secret(action: AgentAction, entry: ToolEntry, matches: list[SecretMatch]) -> RuleResult | None:
+    """R2 for credentials, and R9. A secret found in any tool result (a key in a runbook, a token in a ticket) is never sent
+    anywhere, internal destinations included (R2), and is never used: a discovered credential in a credential-like argument,
+    or in any action that does not send, was not issued to this task (R9). Plan Q2; PocketOS, Supabase MCP, Antigravity."""
+    if not matches:
+        return None
+    used = [m for m in matches if CREDENTIAL_ARG.search(m.path or "")] or ([] if entry.outbound else matches)
+    evidence = [Evidence(kind="secret", detail=f"{m.label} found in {m.source_ref}, present in argument '{m.path or action.tool}'",
+                         matched_tokens=[m.masked], source_ref=m.source_ref, source_action_id=m.source_action) for m in matches]
+    if used:
+        return RuleResult(
+            RuleId.R9, Effect.BLOCK, ReasonCode.DISCOVERED_CREDENTIAL,
+            f"Blocked: this {action.tool} would use a credential that was found in data. Only credentials issued to this "
+            "task may be used; this one was not.", evidence)
+    return RuleResult(
+        RuleId.R2, Effect.BLOCK, ReasonCode.SECRET_EGRESS,
+        f"Blocked: this {action.tool} would send a credential that was found in data. Credentials never leave, "
+        "not even to an internal destination. Send it without that value.", evidence)
 
 
 FREEZE_AFTER_BLOCKS = 3

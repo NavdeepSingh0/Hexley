@@ -16,7 +16,7 @@ Highest value per hour first; the live test is last, as asked, but it is guarant
 
 | Phase | Audit item | What | Closes incidents |
 |---|---|---|---|
-| Q1 | §1-7 | The audit and this plan | — |
+| A0 | §1-7 | The audit and this plan (logged as A0; Q1 is the core check that came before it) | — |
 | Q2 | P2 | Secret and credential detector on every tool result; R2 for secrets everywhere; **R9** discovered credential never usable | 7, 19, 23, 24 (with Q4) |
 | Q3 | P1 | **R8** Rule of Two (`strict_flows`), generic denials to the agent, R6 counts intent | the paraphrase-to-vendor path; freeze DoS |
 | Q4 | P3 | Protected paths, destructive operations, SQL and shell effects, `cc`/`bcc`/`reply_to`, hostnames as destinations, matcher normalisation (Unicode, Indian digit grouping, spaced digits) | 8, 9, 10, 19, 21, 26, 28 (part) |

@@ -19,6 +19,7 @@ import yaml
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey, Ed25519PublicKey
 
 from . import destinations, fixtures
+from .secret_scan import SecretIndex
 from .matcher import FingerprintIndex
 from .models import Column, EgressTemplate, Mode, SessionStatus, TaskContract
 
@@ -240,6 +241,8 @@ class Session:
     messages_out: int = 0
     records_out: int = 0
     index: FingerprintIndex = field(default_factory=FingerprintIndex)  # restricted values read so far
+    # credentials found in ANY tool result (plan Q2): never written to the log, never usable or sendable (R2, R9)
+    secrets: SecretIndex = field(default_factory=SecretIndex)
     # addresses seen in untrusted tool results, each mapped to the tool whose result contained it first
     untrusted_destinations: dict[str, str] = field(default_factory=dict)
     untrusted_actions: dict[str, str] = field(default_factory=dict)  # the same addresses -> the exact call that returned them

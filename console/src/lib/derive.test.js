@@ -248,7 +248,7 @@ describe('the mascot shows only what really happened (docs/contracts/MASCOT.md)'
     expect(mascotFor(null)).toEqual(sleep)
     expect(mascotFor(poisonedAwaiting)).toEqual({ state: 'idle', message: '' })
     expect(RULE_SPEECH.R2).toBe('That would send restricted data out.')
-    expect(Object.keys(RULE_SPEECH)).toEqual(['R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7'])
+    expect(Object.keys(RULE_SPEECH)).toEqual(['R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7', 'R9'])
   })
   it('a finished run with a denial shows DENIED with the words of the rule that decided', () => {
     expect(mascotFor(poisoned)).toEqual({ state: 'denied', message: 'That would send restricted data out.' })
