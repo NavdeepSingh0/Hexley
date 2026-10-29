@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 export const FAQ = [
   {
     q: 'Does an AI model decide what is allowed?',
-    a: <>No. The rules are ordinary code that runs outside the model. A document the model reads can talk it into anything; the checks do not read the document for instructions. <Link to="/docs#limits">What is and is not covered</Link>.</>,
+    a: <>No. The rules are ordinary code that runs outside the model. A document the model reads can talk it into anything; the checks do not read the document for instructions. <Link to="/docs/limits">What is and is not covered</Link>.</>,
   },
   {
     q: 'Why not just tell the model not to leak?',
@@ -12,7 +12,7 @@ export const FAQ = [
   },
   {
     q: 'Is it a guarantee?',
-    a: <>No. It is a measurement on a set of cases we wrote, plus a stated list of routes it does not cover. Nobody who has not read the rules has attacked it yet; that result will be reported on its own line. <Link to="/docs#limits">Limits and honest scope</Link>.</>,
+    a: <>No. It is a measurement on a set of cases we wrote, plus a stated list of routes it does not cover. Nobody who has not read the rules has attacked it yet; that result will be reported on its own line. <Link to="/docs/limits">Limits and honest scope</Link>.</>,
   },
   {
     q: 'What if the attacker rewords the secret?',
@@ -25,5 +25,13 @@ export const FAQ = [
   {
     q: 'Is any of the data real?',
     a: <>No. Every record, mailbox, document and bank detail is synthetic; domains end in <code>.example</code>, and the tools are mocks.</>,
+  },
+  {
+    q: 'What does the officer see when asked?',
+    a: <>What the action is, where it goes, which data, and the rule's own words, built by the gateway from the exact arguments. The agent cannot edit that text. Approvals are one-time, bound to that exact call, and expire. <Link to="/docs/concepts">Concepts</Link>.</>,
+  },
+  {
+    q: 'Can I check that the log was not edited?',
+    a: <>Yes. In the console, finish the guided run and use Verify, then Change one record, then Verify again; in the chat, open Details and use Verify the log.</>,
   },
 ]

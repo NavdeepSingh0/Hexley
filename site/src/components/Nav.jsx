@@ -19,8 +19,8 @@ const MENUS = {
     label: 'Resources',
     items: [
       ['/docs', 'Docs', 'Run it, the concepts, the rules, the API'],
-      ['/docs#limits', 'Limits and honest scope', 'What Sentinel does and does not cover'],
-      ['/docs#faq', 'Questions judges ask', 'Short answers, each with its source'],
+      ['/docs/limits', 'Limits and honest scope', 'What Sentinel does and does not cover'],
+      ['/docs/faq', 'Questions judges ask', 'Short answers, each with its source'],
       ['/#evidence', 'Evidence', 'Measured, with the sample size and the limits'],
     ],
   },

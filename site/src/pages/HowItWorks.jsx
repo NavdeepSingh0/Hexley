@@ -48,7 +48,7 @@ function Rules() {
         ))}
       </ol>
       <p className="evidence-more muted">{PRECEDENCE}</p>
-      <p className="evidence-more"><Link to="/docs#limits">What the rules do not cover</Link></p>
+      <p className="evidence-more"><Link to="/docs/limits">What the rules do not cover</Link></p>
     </section>
   )
 }

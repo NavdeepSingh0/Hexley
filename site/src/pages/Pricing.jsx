@@ -44,7 +44,7 @@ export default function Pricing() {
             </li>
           ))}
         </ul>
-        <p className="evidence-more">What exists, and what does not, is listed under <Link to="/docs#limits">limits and honest scope</Link>.</p>
+        <p className="evidence-more">What exists, and what does not, is listed under <Link to="/docs/limits">limits and honest scope</Link>.</p>
       </section>
     </main>
   )

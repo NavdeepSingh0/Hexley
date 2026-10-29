@@ -110,7 +110,7 @@ function Evidence() {
       {ev.status === 'error' && <p className="muted" role="status">The evidence file could not be loaded, so no numbers are shown.</p>}
       {ev.status === 'ready' && ev.groups.length === 0 && <p className="muted" role="status">The evidence file has no complete entries, so no numbers are shown.</p>}
       {ev.groups.length > 0 && <div className="evidence-grid">{ev.groups.map((g, i) => <EvidenceCard key={g.id} g={g} primary={i === 0} />)}</div>}
-      <p className="evidence-more"><Link to="/docs#limits">Read what this does not prove</Link></p>
+      <p className="evidence-more"><Link to="/docs/limits">Read what this does not prove</Link></p>
     </section>
   )
 }
@@ -125,7 +125,7 @@ function Pillars() {
         <IconBlock icon="plug" title="Built on a standard" link={{ to: '/integrations', label: 'See what is tested' }}>
           <p>Sentinel is an MCP gateway, so anything that speaks MCP can be routed through it.{tested.length > 0 ? ` ${tested.join(' and ')} have been connected for real; the rest are labelled as we have run them.` : ''}</p>
         </IconBlock>
-        <IconBlock icon="shield" title="Every number has its limits" link={{ to: '/docs#limits', label: 'What this does not prove' }}>
+        <IconBlock icon="shield" title="Every number has its limits" link={{ to: '/docs/limits', label: 'What this does not prove' }}>
           <p>Each result shows its sample size and a line saying what it is not. The cases were written by us, so a zero means "does what we say", not "no other route exists".</p>
         </IconBlock>
         <IconBlock icon="laptop" title="Runs on your machine" link={{ to: '/docs', label: 'Run it' }}>
@@ -196,8 +196,8 @@ export default function Home() {
       <Integrations />
       <section className="section" aria-labelledby="faq-title">
         <h2 id="faq-title" className="section-title section-title--center">Questions judges ask</h2>
-        <Accordion items={FAQ} />
-        <p className="evidence-more faq-more"><Link to="/docs#faq">All questions <Icon name="arrow" size={14} /></Link></p>
+        <Accordion items={FAQ.slice(0, 6)} />
+        <p className="evidence-more faq-more"><Link to="/docs/faq">All questions <Icon name="arrow" size={14} /></Link></p>
       </section>
       <CtaBand />
     </main>

@@ -15,6 +15,7 @@ const PATHS = {
   check: 'M5 12l5 5 9-10',
   book: 'M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3V4ZM5 17a3 3 0 0 1 3-3h11',
   chat: 'M4 5h16v11H9l-5 4V5Z',
+  play: 'M8 5v14l11-7Z',
   lock: 'M7 11V8a5 5 0 0 1 10 0v3M5 11h14v9H5v-9Z',
   list: 'M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01',
 }

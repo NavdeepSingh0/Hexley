@@ -57,7 +57,7 @@ A page that works like Claude or ChatGPT, in our look. **No marketing navbar or 
 - Phone: the sidebar is a slide-over, the Details drawer is full screen, the composer stays above the keyboard.
 QA: every state driven through the real gateway as in F7b (start, slip, denied, clean, approval approve and deny, quarantine, busy, a reload that restores the chat), keyboard only, hit-tests that nothing covers Approve, Deny or the composer, no overflow at 1280 and 390, both themes, screenshots looked at.
 
-### U4 Docs
+### U4 Docs. Done 29 Oct 2026
 Kiro's layout in our content: a left sidebar with grouped small-caps headings (Get started, Concepts, Guides, Reference, Limits and FAQ), one big rounded panel, an icon-headed **On this page** rail with a scroll marker, an intro card, "Choose your path" cards, an "I want to… / Use" table. Split the single page into real pages under `/docs/<name>`: Overview, Run it, Concepts (slip, decisions, modes, audit), The rules (R1 to R7, each with a one-line example), Connect Claude.ai, Connect Claude Code, Your own tools, Limits and honest scope, Questions judges ask, API in brief. Every page keeps its "Source:" line; no number typed by hand. QA: every link, anchors, deep links and reloads, both themes, phone.
 
 ### U5 Connect
@@ -69,6 +69,12 @@ Client cards in a grid like Kiro's "choose your surface" (name, kind, status, me
 
 ### U7 Sweep and close
 Run every page at 1280x720, 1440x900 and 390x844 in both themes; keyboard walk; link check; the production build, tests and the development-only check; a fresh clone; update the docs, the log and the README; push on Navdeep's word.
+
+### U8 The mascot with boosters (asked for by Navdeep on 29 Oct 2026; done last, on purpose)
+- **Remove the "What's real" rail** from the home hero, and put the mascot there instead, at its current size.
+- **Give it boosters, like the thrusters of Astro Bot**: small flames under the body that fire once, when the home page is loaded **for the first time** in a browser (a per-viewer flag in `localStorage`, guarded; if storage is blocked it simply plays once per page load). It lifts off a little, hovers, and settles back to idle. After that it only idles as usual.
+- Reduced motion shows the finished pose with no animation. The flames are part of the component's drawing (no image files), driven by a new review-visible state or attribute so the mascot lab can replay it at any speed, and covered by a test that the first-visit logic fires once.
+- The rail's three facts (the evidence number, what is connected, the one command) are already shown further down the page (the evidence section, the integrations list and the docs), so nothing is lost by removing it.
 
 ## Not in this plan
 The console redesign (it keeps its own look for now), new backend endpoints, accounts or sign-in, a working search box, real pricing, anything that adds a number we cannot trace to a file.
