@@ -93,3 +93,16 @@ describe('token coverage', () => {
     }
   })
 })
+
+describe('the lavender frame on the website (UI v2)', () => {
+  const shared = Object.fromEntries([...block(css, ':root {\n  --font').matchAll(/--([\w-]+):\s*([^;]+);/g)].map((m) => [m[1], m[2].trim()]))
+  it('ink on the frame is readable at both of its colours', () => {
+    for (const name of ['frame', 'frame-2']) {
+      const r = ratio(parse(shared['on-frame']), parse(shared[name]))
+      expect(r, `${name}`).toBeGreaterThanOrEqual(7)
+    }
+  })
+  it('the frame is clearly lighter than a black page, so its edge is visible', () => {
+    expect(ratio(parse(shared.frame), parse('#07070a'))).toBeGreaterThanOrEqual(3)
+  })
+})

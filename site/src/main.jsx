@@ -10,6 +10,7 @@ import '../../design/mascot/sentinel-mascot.js'
 import './styles/base.css'
 import './styles/site.css'
 import './styles/chat.css'
+import './styles/v2.css'
 
 applySavedTheme()
 initAuth()

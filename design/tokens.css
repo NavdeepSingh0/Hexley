@@ -84,6 +84,8 @@
 
 :root {
   --font: system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  /* Headings only (UI v2): a mono face, one token so it is one line to change. Chosen by looking at six renderings, 29 Oct 2026. */
+  --font-display: "Cascadia Code", "SF Mono", Menlo, Consolas, ui-monospace, monospace;
   --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 
   /* At most three text sizes and two weights on any one screen (display, body, label). */
@@ -105,6 +107,12 @@
   --radius: 12px;
   --radius-lg: 20px;
   --radius-card: 16px;
+  --radius-panel: 24px;
+  --radius-frame: 48px;
+  /* The lavender frame that holds product screenshots on the website (marketing pages only). */
+  --frame: #cdb6ff;
+  --frame-2: #a98bff;
+  --on-frame: #0a0a10;
   --radius-pill: 999px;
 
   --gutter: 32px; /* the site's side padding; 16px on a phone (below) */

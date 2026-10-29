@@ -70,3 +70,11 @@ Revised 28 Oct 2026 after Navdeep's reference images (three white rounded robots
 
 ## 7. What is cut
 Browser extension, pricing polish, mobile layout beyond "no horizontal scroll", a visual regression suite. The red-team cards need a person who has not read the rules, so they are asked of a mentor or another participant at the venue and reported as "blind, n people, date".
+
+## 8. Amendments of 29 Oct 2026 (UI v2, see `docs/plans/UI_V2_PLAN.md`)
+Decided after comparing the site with kiro.dev. These supersede sections 2, 3 and 4 where they disagree, for the **website**; the console and the chat page keep rule 4 as written (colour means a decision).
+- **Violet may be a surface** on marketing pages (frames, the closing band, a feature card). It is never used as a decision colour.
+- **Display type is a mono face** (`--font-display`: Cascadia Code, SF Mono, Menlo, Consolas) at weight 700 for headings only; body and UI stay in the system sans.
+- **Structure from large rounded containers on a black page** (cards 16 px, panels 24 px, frames 48 px), a floating blurred navbar with dropdowns, a full-width violet closing band with the mascot peeking from the bottom edge (mascot size unchanged).
+- **The chat page is an app screen** (sidebar of chats, one centred conversation column, a bottom composer), with no marketing navbar or footer, laid out like the frontier-model chat pages.
+- Projector readability is no longer a design goal; the demo is shown on a laptop.
