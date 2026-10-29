@@ -70,6 +70,12 @@ export function Message({ m, working }) {
       <Avatar />
       <div className="cx-turn-body">
         {m.text ? <p className="cx-text"><Inline text={m.text} /></p> : working && <Dots />}
+        {m.checks?.length > 0 && (
+          <p className="cx-check" role="note">
+            Sentinel removed {m.checks.length === 1 ? 'an address' : `${m.checks.length} addresses`} from this reply before
+            showing it: {m.checks.map((c) => `${c.kind} to ${c.host} (${c.reasons[0]})`).join('; ')}.
+          </p>
+        )}
         {m.actions?.length > 0 && <ToolGroup actions={m.actions} live={working} />}
       </div>
     </div>

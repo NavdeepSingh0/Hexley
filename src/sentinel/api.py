@@ -29,6 +29,7 @@ from .contracts import SlipError, draft_contract, draft_custom
 from .matcher import FIELD_KINDS
 from .oauth import OAuthError
 from .registry import save_overlay, suggest_classification
+from .output_check import check_reply
 from .tool_pins import definition_hash
 from .runs import SCENARIOS, RunError, RunManager, list_recordings
 from .events import make_event
@@ -99,6 +100,11 @@ class SlipRequest(BaseModel):
 class OAuthDecision(BaseModel):
     decision: Literal["approve", "deny"]
     officer_code: str = ""
+
+
+class CheckTextRequest(BaseModel):
+    session_id: str
+    text: str
 
 
 class ChatRequest(BaseModel):
@@ -375,6 +381,17 @@ def create_api(rt: Runtime, console_dir: Path | None = None, site_dir: Path | No
     # ---- Sentinel Chat (core plan B5; docs/contracts/API.md) -----------------------------------------------------------
     def chat_error(e: ChatError) -> HTTPException:
         return HTTPException(status_code=e.status, detail=e.detail)
+
+    @app.post("/api/v1/check/text", dependencies=[Depends(require_token)])
+    async def check_text(req: CheckTextRequest):
+        """For any host that renders a model's reply (plan Q6): before rendering, ask whether the reply carries this session's
+        restricted values or found credentials in an address, or an image or query to a place outside its slip. Returns the
+        text as it may be shown and what was removed."""
+        session = rt.store.get(req.session_id)
+        if session is None:
+            raise HTTPException(status_code=404, detail="No such session.")
+        shown, findings = check_reply(req.text, session, session.contract)
+        return {"safe": not findings, "text": shown, "removed": [f.as_dict() for f in findings]}
 
     @app.get("/api/v1/chat/presets", dependencies=[Depends(require_token)])
     async def chat_presets():

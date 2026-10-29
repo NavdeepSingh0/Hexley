@@ -33,6 +33,7 @@ from .confirm import ConfirmError, confirm_draft
 from .contracts import SlipError, draft_contract
 from .events import make_event
 from .models import Column, EventEnvelope, SessionStatus
+from .output_check import check_reply
 from .runs import SCENARIOS, build_steps
 from .runtime import Runtime
 
@@ -435,6 +436,14 @@ class ChatManager:
                 result = await agent_turn(mcp, http, _Watched(chat, chat.endpoint), chat.model_messages, tools,
                                           max_steps=MAX_STEPS_PER_TURN)
             reply["text"] = result.final_text or ("I stopped after the maximum number of steps." if result.hit_step_limit else "")
+            # The reply is an exit too (plan Q6): an address in it that carries this task's data, or an image or query to a
+            # place outside the slip, is removed before the page shows it. The model's own log keeps what it wrote.
+            shown, findings = check_reply(reply["text"], self.rt.store.get(chat.session_id) if chat.session_id else None,
+                                          chat.contract)
+            if findings:
+                reply["text"], reply["checks"] = shown, [f.as_dict() for f in findings]
+                await self.rt.bus.publish(make_event("reply.checked", chat.session_id, "sentinel",
+                                                     {"chat_id": chat.chat_id, "removed": [f.as_dict() for f in findings]}))
         except asyncio.CancelledError:
             raise
         except Exception as e:  # noqa: BLE001 - a failed model or gateway call is shown plainly, never raised into the loop
@@ -458,7 +467,8 @@ class ChatManager:
             actions = []
             if m["role"] == "assistant" and m.get("step_from") is not None:
                 actions = [action_view(s) for s in steps[m["step_from"]: m["step_to"]]]
-            messages.append({"id": m["id"], "role": m["role"], "text": m["text"], "ts": m["ts"], "actions": actions})
+            messages.append({"id": m["id"], "role": m["role"], "text": m["text"], "ts": m["ts"], "actions": actions,
+                             "checks": m.get("checks", [])})
         state = self.session_state(chat)
         retry = None
         if chat.retry:

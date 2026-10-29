@@ -99,6 +99,8 @@ Static file `site/public/evidence.json`, generated from `eval/results/` by `scri
 ```
 
 ## Mascot state (core phase B7)
+**Reply check (D-050).** `POST /api/v1/check/text {session_id, text}` (officer token) returns `{safe, text, removed: [{host, kind: image|link, reasons}]}`: the text as it may be shown, with addresses that carry this session's restricted values or found credentials, and images or queries to places outside its slip, replaced by a short note. `404` for an unknown session. Chat views carry the same `checks` per assistant message.
+
 **Tool definitions (D-049).** `GET /api/v1/tools` also returns `definition: {status: ok|changed|suspicious, detail}` and `annotations` (the tool's own hints, never trusted). `POST /api/v1/tools/{name}/approve-definition` (officer) pins the definition last seen; `404` for a tool Sentinel has not seen, `503` without a durable audit record.
 
 **Audit demo (D-045).** `GET /audit/verify` also returns `tamper_enabled` and `restorable` (a demo-altered record exists). `POST /audit/tamper` (optional `seq`; default the most recent blocked decision) and `POST /audit/restore` (no body; returns `{"restored_seqs": [...]}`) work only when `up` was started with `--demo`: `403` otherwise; `404` when there is no record to alter or nothing to put back. Both take the audit log's write lock, so a decision being recorded is never lost.

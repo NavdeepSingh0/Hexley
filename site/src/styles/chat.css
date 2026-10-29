@@ -182,3 +182,5 @@
   .cx-facts dd { margin-bottom: 6px; }
 }
 @media (prefers-reduced-motion: reduce) { .cx-side, .cx-tools-chev { transition: none; } }
+/* plan Q6: an address Sentinel removed from a reply, said in plain words under the reply */
+.cx-check { margin: 0; padding: 10px 14px; border-radius: 12px; background: var(--panel); border: 1px solid var(--card-border); color: var(--muted); font-size: 14.5px; line-height: 1.5; }
