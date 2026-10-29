@@ -28,7 +28,14 @@
 
 .cs-slip { display: grid; gap: 6px; padding: 16px 18px; border-radius: 16px; background: var(--bg); border: 1px solid var(--card-border); }
 
-/* Client cards. The old .pick rules in site.css are overridden here and are removed in the clean-up phase. */
+/* Client cards: one radio per client, the whole card is the label. */
+.picker { border: 0; margin: 0; padding: 0; min-width: 0; }
+.pick { position: relative; display: flex; flex-direction: column; cursor: pointer; }
+.pick input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.pick:has(input:focus-visible) { outline: 2px solid var(--focus); outline-offset: 3px; }
+.pick.is-off { opacity: 0.6; cursor: not-allowed; }
+.pick.is-off input { cursor: not-allowed; }
+.picker-grid { display: grid; }
 .cs-panel .picker-grid { grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr)); gap: 14px; }
 .cs-panel .pick { justify-content: space-between; align-items: stretch; gap: 10px; min-height: 132px; padding: 16px 18px; border-radius: 18px; background: var(--bg); border: 1px solid var(--card-border); transition: transform var(--dur) var(--ease), border-color var(--dur) var(--ease); }
 .cs-panel .pick:hover:not(.is-off) { transform: translateY(-2px); border-color: var(--muted); }
@@ -67,7 +74,8 @@
   .cs-num { width: 32px; height: 32px; font-size: 15px; }
   .cs-step-title { margin-top: 2px; font-size: 20px; }
   .cs-body { font-size: 16px; }
-  .cs-panel .picker-grid { grid-template-columns: minmax(0, 1fr); }
+  .picker-grid { display: grid; }
+.cs-panel .picker-grid { grid-template-columns: minmax(0, 1fr); }
   .cs-panel .pick { min-height: 0; }
   .term .s-label::before { margin-right: 20px; }
 }

@@ -25,7 +25,7 @@ export default function Mascot() {
   }
 
   return (
-    <main className="sg">
+    <main className="sg" data-dev-page="MASCOT_PAGE_DEV_ONLY">
       <p className="s-label">Dev page · phase F1</p>
       <h1 className="sg-title">Mascot</h1>
       <p className="sg-lede">An original rounded screen-cube robot, drawn as an animated SVG. It shows the state it is given and says what it is told.</p>

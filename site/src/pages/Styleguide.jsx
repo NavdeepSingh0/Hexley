@@ -17,7 +17,7 @@ function Section({ title, children }) {
 
 export default function Styleguide() {
   return (
-    <main className="sg">
+    <main className="sg" data-dev-page="STYLEGUIDE_DEV_ONLY">
       <p className="s-label">Dev page · phase F0</p>
       <h1 className="sg-title">Styleguide</h1>
       <p className="sg-lede">Every shared primitive on the shared tokens. Switch the theme in the top bar and check both.</p>
