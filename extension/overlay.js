@@ -198,12 +198,32 @@ async function resolveApproval(decision) {
 
 // ── Theme from parent page ─────────────────────────────────────────────────────
 window.addEventListener('message', (e) => {
+  if (e.source !== window.parent) return // only the page frame that holds this overlay, not any other window
   if (!e.data || e.data.source !== 'sentinel-content') return
   if (e.data.type === 'theme') {
     mascot.setAttribute('theme', e.data.value || 'dark')
     document.documentElement.dataset.theme = e.data.value || 'dark'
   }
 })
+
+// ── Size of the frame ──────────────────────────────────────────────────────────
+// The page gives this overlay a fixed-size frame. The approval panel is taller than it, so the overlay tells the page how tall it
+// needs to be (content.js applies it, within bounds) and the frame grows upward from the bottom-left corner.
+const FRAME_WIDTH = 260
+const FRAME_MIN_HEIGHT = 260
+const FRAME_MAX_HEIGHT = 640
+const BUBBLE_ROOM = 150 // above the mascot: its speech bubble opens upward
+let lastFrame = ''
+
+function reportSize() {
+  if (!wrap) return
+  const height = Math.min(FRAME_MAX_HEIGHT, Math.max(FRAME_MIN_HEIGHT, Math.ceil(wrap.offsetHeight) + BUBBLE_ROOM))
+  const key = `${FRAME_WIDTH}x${height}`
+  if (key === lastFrame) return
+  lastFrame = key
+  // The size is not a secret, and the page's address is not known here, so the target is any parent; the page side checks the sender.
+  window.parent.postMessage({ source: 'sentinel-overlay', type: 'resize', width: FRAME_WIDTH, height }, '*')
+}
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
@@ -220,6 +240,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   approveBtn    = document.getElementById('approve-btn')
   denyBtn       = document.getElementById('deny-btn')
   wrap          = document.getElementById('wrap')
+  new ResizeObserver(reportSize).observe(wrap)
+  reportSize()
 
   // Load settings
   const stored = await chrome.storage.session.get(['sentinelBase', 'token'])

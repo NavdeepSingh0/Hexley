@@ -30,6 +30,17 @@ function hideStatus() {
   statusEl.style.display = 'none'
 }
 
+/** Sentinel's officer API runs on this computer. The token can approve actions, so it is only ever sent to this computer: not to a
+ *  tunnel (which reaches the AI gateway, not the officer API) and not to an address pasted by mistake. */
+function isLocalAddress(base) {
+  try {
+    const u = new URL(base)
+    return u.protocol === 'http:' && (u.hostname === '127.0.0.1' || u.hostname === 'localhost')
+  } catch (_) {
+    return false
+  }
+}
+
 /** Parse address + token out of a full Sentinel link.
  *  Accepts: http://127.0.0.1:8000/#token=abc123
  *  Returns: { base, token } or null if unparseable.
@@ -94,6 +105,11 @@ saveBtn.addEventListener('click', async () => {
 
   const base  = (baseUrlInput.value || '').trim().replace(/\/$/, '')
   const token = (tokenInput.value   || '').trim()
+
+  if (!isLocalAddress(base)) {
+    showStatus('Use the address of Sentinel on this computer, like http://127.0.0.1:8000. A tunnel address reaches the AI gateway, not the officer API, and the token is never sent to another machine.', 'error')
+    return
+  }
 
   // Reject masked placeholder (user hasn't re-entered real token)
   const isPlaceholder = /^•+$/.test(token)

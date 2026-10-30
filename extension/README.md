@@ -8,23 +8,17 @@ Shows Sentinel's mascot on **claude.ai** and **chatgpt.com**, reacting to real g
 
 ## Install (load unpacked)
 
-1. Clone the Sentinel repo and check out `feat/extension`:
+1. Clone the Sentinel repo (the extension is in `main`, in the `extension/` folder):
    ```bash
    git clone https://github.com/NavdeepSingh0/Sentinel.git
    cd Sentinel
-   git checkout feat/extension
    ```
 
-2. Copy the mascot file into the extension:
-   ```bash
-   bash extension/scripts/copy-mascot.sh
-   ```
+2. Open Chrome → `chrome://extensions` → enable **Developer mode** (top-right toggle).
 
-3. Open Chrome → `chrome://extensions` → enable **Developer mode** (top-right toggle).
+3. Click **Load unpacked** → select the `extension/` folder inside the repo.
 
-4. Click **Load unpacked** → select the `extension/` folder inside the repo.
-
-5. The Sentinel icon appears in your toolbar.
+4. The Sentinel icon appears in your toolbar. (`extension/sentinel-mascot.js` is a copy of `design/mascot/sentinel-mascot.js`; after the mascot changes, run `bash extension/scripts/copy-mascot.sh` and reload the extension.)
 
 ---
 
@@ -86,7 +80,10 @@ When the mascot shows **needs-approval**:
 | `http://localhost/*` | Same |
 | `https://claude.ai/*` | Inject the mascot overlay |
 | `https://chatgpt.com/*` | Inject the mascot overlay |
-| `https://*.trycloudflare.com/*` | Optional — for tunnel access (requested at runtime) |
+
+**How it is tested:** `scripts/extension_qa.mjs` loads the extension into Chromium against a running Sentinel and checks the overlay, approving from the browser, the per-site switch and the local-address rule (the header of the script says what it needs).
+
+**Sentinel must run on this computer.** The officer token can approve actions, so the extension only sends it to `http://127.0.0.1` or `http://localhost` (the options page refuses any other address). A tunnel address does not help: Sentinel's tunnel reaches the AI gateway, not the officer API.
 
 **What this extension does NOT do:**
 - Does not read your chat, prompts, or files
@@ -116,4 +113,5 @@ Then reload the extension on `chrome://extensions`.
 | "Sentinel not connected" | Make sure `sentinel up --demo` is running |
 | Mascot not visible on claude.ai | Check that the site toggle is on in the popup |
 | 409 on approve/deny | The approval expired or was already resolved — check the console |
+| "Use the address of Sentinel on this computer" | Paste the link that `sentinel up` prints (it starts with `http://127.0.0.1`) |
 
