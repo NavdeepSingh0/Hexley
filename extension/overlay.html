@@ -32,12 +32,11 @@
     }
 
     html, body {
-      /* Large enough so the mascot + bubble + approval panel all fit.
-         The iframe itself starts at 220×220; we'll resize via postMessage. */
       width: 260px;
       height: 260px;
-      background: transparent;
-      overflow: visible;     /* never clip the mascot — it overflows its box */
+      background: transparent !important;
+      -webkit-background-clip: content-box;
+      overflow: visible;
       font-family: var(--font);
     }
 
