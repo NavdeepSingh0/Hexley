@@ -187,8 +187,12 @@ class SentinelOAuthProvider(OAuthProvider):
     def token_ok(self, secret: str) -> bool:
         return self.google is None and bool(secret) and hmac.compare_digest(secret.strip().encode(), self.rt.api_token.encode())
 
-    def same_origin(self, origin: str | None) -> bool:
-        """A form on another site must not approve a connection with the officer's login. A browser sends Origin on a POST."""
+    def same_origin(self, origin: str | None, fetch_site: str | None = None) -> bool:
+        """A form on another site must not approve a connection with the officer's login. A browser says so itself in Sec-Fetch-Site,
+        which a page cannot set. Origin is the fallback for one that does not: found in real Chrome, a page with a no-referrer policy
+        sends its own form's POST with Origin: null, so null alone cannot be told from a forged form and is refused only as a fallback."""
+        if fetch_site is not None:
+            return fetch_site == "same-origin"
         if origin is None:
             return True
         parts = urlsplit(self.consent_base)
@@ -379,7 +383,7 @@ def register_consent_routes(server, provider: SentinelOAuthProvider) -> None:
 
     @server.custom_route("/oauth/consent", methods=["POST"])
     async def consent_post(request: Request) -> Response:
-        if not provider.same_origin(request.headers.get("origin")):
+        if not provider.same_origin(request.headers.get("origin"), request.headers.get("sec-fetch-site")):
             return _page('<h1>Sign-in not available</h1><p class="err">This request came from another site.</p>', 403)
         form = {k: v[0] for k, v in parse_qs((await request.body()).decode("utf-8", "replace")).items()}
         request_id = form.get("request", "")
@@ -434,7 +438,7 @@ def register_consent_routes(server, provider: SentinelOAuthProvider) -> None:
 
     @server.custom_route("/oauth/sign-out", methods=["POST"])
     async def sign_out(request: Request) -> Response:
-        if not provider.same_origin(request.headers.get("origin")):
+        if not provider.same_origin(request.headers.get("origin"), request.headers.get("sec-fetch-site")):
             return _page('<h1>Not available</h1><p class="err">This request came from another site.</p>', 403)
         response = _page("<h1>Logged out</h1><p>This browser will be asked for the officer token next time.</p>")
         response.delete_cookie(LOGIN_COOKIE, path="/oauth/")

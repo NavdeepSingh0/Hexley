@@ -182,6 +182,20 @@ async def test_a_form_on_another_site_cannot_use_the_login(stack, google):
         assert r.status_code == 403 and rid in stack.rt.oauth.pending
 
 
+async def test_the_forms_own_post_passes_in_a_real_browser_and_another_sites_does_not(stack, google):
+    """Real Chrome sends Origin: null for a form on a page with a no-referrer policy, which refused the Allow button on the live site."""
+    login = stack.rt.oauth.google.login_value(BOSS)
+    async with httpx.AsyncClient(timeout=30, cookies={LOGIN_COOKIE: login}) as c:
+        rid = await _request(c, stack)
+        for bad in ("cross-site", "same-site", "none"):
+            r = await c.post(f"{base(stack)}/oauth/consent", data={"request": rid, "decision": "approve"},
+                             headers={"Origin": "null", "Sec-Fetch-Site": bad})
+            assert r.status_code == 403 and rid in stack.rt.oauth.pending, bad
+        assert (await c.post(f"{base(stack)}/oauth/consent", data={"request": rid, "decision": "approve"}, headers={"Origin": "null"})).status_code == 403
+        ok = await c.post(f"{base(stack)}/oauth/consent", data={"request": rid, "decision": "approve"}, headers={"Origin": "null", "Sec-Fetch-Site": "same-origin"})
+        assert code_from(ok)
+
+
 def _login(**over) -> GoogleLogin:
     return GoogleLogin(CLIENT, "s", "https://hexley.site/oauth/google/callback", SECRET, over.get("allowed", frozenset({BOSS})))
 
