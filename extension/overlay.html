@@ -8,7 +8,6 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg:        transparent;
       --violet:    #A98BFF;
       --green:     #34E8A3;
       --blue:      #5B9BFF;
@@ -33,19 +32,20 @@
     }
 
     html, body {
-      width: 220px;
-      height: 220px;
+      /* Large enough so the mascot + bubble + approval panel all fit.
+         The iframe itself starts at 220×220; we'll resize via postMessage. */
+      width: 260px;
+      height: 260px;
       background: transparent;
-      overflow: hidden;
+      overflow: visible;     /* never clip the mascot — it overflows its box */
       font-family: var(--font);
     }
 
-    /* ── Wrap ─────────────────────────────────────────── */
+    /* ── Root wrap — anchored bottom-left ─────────────────────────────────── */
     #wrap {
       position: absolute;
       bottom: 0;
       left: 0;
-      width: 220px;
       display: flex;
       flex-direction: column;
       align-items: flex-start;
@@ -71,12 +71,16 @@
     /* ── Mascot wrapper ───────────────────────────────── */
     #mascot-wrap {
       position: relative;
-      width: 80px;
-      height: 80px;
+      /* 120px box — enough room for the 200×200 viewBox at ~0.6 scale,
+         but the SVG uses overflow: visible so speech bubbles still show. */
+      width: 120px;
+      height: 120px;
     }
 
     sentinel-mascot {
       display: block;
+      /* Let any overflow (speech bubble, boosters) be visible */
+      overflow: visible;
     }
 
     /* ── Minimise button ──────────────────────────────── */
@@ -111,7 +115,7 @@
       color: var(--text-muted);
       white-space: nowrap;
       box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-      max-width: 200px;
+      max-width: 220px;
     }
     #pill[data-ok="1"] {
       color: var(--green);
@@ -136,7 +140,7 @@
     /* ── Approval panel ───────────────────────────────── */
     #approval-panel {
       margin-top: 8px;
-      width: 200px;
+      width: 220px;
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius);
@@ -224,23 +228,28 @@
 <body>
   <!-- Minimised dot (shown when overlay is collapsed) -->
   <button id="dot-btn" hidden title="Show Sentinel" aria-label="Show Sentinel mascot">
-    <!-- Simple sentinel-face icon -->
+    <!-- Sentinel face icon — matches the mascot's screen rectangle -->
     <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
       <rect x="4" y="5" width="24" height="22" rx="7" fill="#A98BFF" opacity=".15"/>
       <rect x="4" y="5" width="24" height="22" rx="7" stroke="#A98BFF" stroke-width="1.5"/>
       <rect x="9" y="10" width="14" height="10" rx="3" fill="#07070A"/>
-      <line x1="12" y1="15" x2="12" y2="19" stroke="#A98BFF" stroke-width="2" stroke-linecap="round"/>
-      <line x1="20" y1="15" x2="20" y2="19" stroke="#A98BFF" stroke-width="2" stroke-linecap="round"/>
+      <line x1="12" y1="13" x2="12" y2="18" stroke="#A98BFF" stroke-width="2" stroke-linecap="round"/>
+      <line x1="20" y1="13" x2="20" y2="18" stroke="#A98BFF" stroke-width="2" stroke-linecap="round"/>
+      <circle cx="22" cy="23" r="2.5" fill="#A98BFF"/>
     </svg>
   </button>
 
   <!-- Main overlay wrap -->
   <div id="wrap">
     <div id="mascot-wrap">
+      <!-- size="120" gives the mascot a 120×120px box.
+           The SVG's viewBox is 0 0 200 200, so scale = 120/200 = 0.6.
+           overflow:visible on the SVG means the speech bubble (placed via CSS
+           .bubble { position: absolute }) will show outside that 120px box. -->
       <sentinel-mascot
         id="mascot"
         state="sleeping"
-        size="80"
+        size="120"
         placement="above"
         theme="dark"
       ></sentinel-mascot>
@@ -254,7 +263,7 @@
     </div>
 
     <!-- Review button (shown when needs-approval) -->
-    <button id="review-btn" hidden aria-label="Review held action">Review</button>
+    <button id="review-btn" hidden aria-label="Review held action">⚠ Review</button>
 
     <!-- Approval panel -->
     <section id="approval-panel" hidden aria-label="Pending approval">
@@ -277,4 +286,3 @@
   <script src="overlay.js"></script>
 </body>
 </html>
-

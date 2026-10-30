@@ -47,12 +47,12 @@
     'position: absolute',
     'bottom: 0',
     'left: 0',
-    'width: 220px',
-    'height: 220px',
+    'width: 260px',
+    'height: 260px',
     'border: none',
     'background: transparent',
     'pointer-events: auto',
-    'overflow: hidden',
+    'overflow: visible',
   ].join(';')
   iframe.setAttribute('scrolling', 'no')
   iframe.setAttribute('frameborder', '0')
@@ -87,8 +87,8 @@
     }
 
     if (e.data.type === 'expand') {
-      iframe.style.width = '220px'
-      iframe.style.height = '220px'
+      iframe.style.width = '260px'
+      iframe.style.height = '260px'
     }
   })
 
