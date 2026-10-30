@@ -1,0 +1,19 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "vite",
+  "installCommand": "npm ci",
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "redirects": [
+    { "source": "/console", "destination": "https://hexley.onrender.com/console/", "permanent": false },
+    { "source": "/console/:path*", "destination": "https://hexley.onrender.com/console/:path*", "permanent": false }
+  ],
+  "rewrites": [
+    { "source": "/api/:path*", "destination": "https://hexley.onrender.com/api/:path*" },
+    { "source": "/audit/:path*", "destination": "https://hexley.onrender.com/audit/:path*" },
+    { "source": "/approvals", "destination": "https://hexley.onrender.com/approvals" },
+    { "source": "/approvals/:path*", "destination": "https://hexley.onrender.com/approvals/:path*" },
+    { "source": "/health", "destination": "https://hexley.onrender.com/health" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}

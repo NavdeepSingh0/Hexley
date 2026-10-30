@@ -42,3 +42,14 @@ Vercel cannot run this: Sentinel is a long-running Python server with WebSockets
 Checked on this computer: the program refuses to listen beyond this computer unless the token is yours and strong; it takes its port from `$PORT`; with those settings the API answers on every address, the gateway and the tool server answer on none but 127.0.0.1, and the token is not in the log; the model cap stops requests before they are sent (all tested, each with a deliberate-break check).
 
 **Not checked:** the Docker image was never built to the end here (the first attempt stopped at a network error inside Docker, and the rebuild was skipped to deploy sooner), and Render itself has not run it. The first build on Render is therefore the first real test. If it fails, the build log names the step; the usual suspects are a file the image does not copy (see `.dockerignore`) and the free plan running out of memory during the website build.
+
+## The website on Vercel (optional, in front of the Render service)
+Why: the free Render service sleeps, so the first visit to its address can take up to a minute. Vercel serves the public pages from its own network, always awake, and only the chat's API calls reach Render (and wake it).
+
+`site/vercel.json` does three things: it serves the built website; it passes `/api/...`, `/audit/...`, `/approvals/...` and `/health` through to the Render service (so the browser still talks to one address); and it sends `/console/...` to the Render service, because the console needs a WebSocket, which Vercel cannot pass through. The Render address is written in that file (`hexley.onrender.com`); change it there if the service is renamed.
+
+Steps: in Vercel, Add New, Project, import the repository, set **Root Directory** to `site` (the framework shows as Vite), and deploy. Under Settings, General, make sure **Include source files outside of the Root Directory in the Build Step** is on: the website imports the mascot from the `design` folder.
+
+Then open `https://<project>.vercel.app/#token=<your token>`. The token is stored by that address, separately from the Render address, so sign in once on each.
+
+**Not checked:** this configuration has not run on Vercel. Two things to watch: a request that arrives while Render is asleep may time out once (reload and it works), and the console opens on the Render address, not the Vercel one.
