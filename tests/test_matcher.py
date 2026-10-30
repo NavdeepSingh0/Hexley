@@ -57,6 +57,10 @@ def test_index_holds_only_the_registered_fields(index):
     ("dispatch 2026-11-02", ("date", "2026-11-02")), ("02/11/2026", ("date", "2026-11-02")),
     ("2 November 2026", ("date", "2026-11-02")), ("November 2nd, 2026", ("date", "2026-11-02")),
     ("5 nov 2026", ("date", "2026-11-05")), ("5th Nov, 2026", ("date", "2026-11-05")),
+    # found by scripts/benchmarks/matcher_fuzz.py on 30 Oct 2026 and closed the same day
+    ("02-11-2026", ("date", "2026-11-02")), ("02.11.2026", ("date", "2026-11-02")), ("2026.11.02", ("date", "2026-11-02")),
+    ("2026/11/02", ("date", "2026-11-02")), ("dispatch 20261102", ("date", "2026-11-02")), ("20261105", ("date", "2026-11-05")),
+    ("FSD_14", ("code", "fsd14")), ("fsd_09", ("code", "fsd09")),
 ])
 def test_supported_representations_are_detected(index, text, expected):
     assert expected in kinds(index, text), f"{text!r} should match {expected}"
@@ -74,6 +78,8 @@ def test_a_realistic_leaking_email_matches_every_restricted_value(index):
     "11 50", "24000", "2,401", "11500", "FSD-15", "FSD-140", "two thousand four hundred and one",
     "Item A 9mm brass casings", "Quote received, PO to follow.", "Validity: 30 days. Delivery: 3 weeks from PO.",
     "dispatch 2026-11-03", "2026-13-45", "50/50", "Reference 2026/114",
+    # the new forms must not flag other dates, other codes or other eight-digit numbers
+    "03-11-2026", "02.12.2026", "2026.11.03", "20261103", "20261302", "12345678", "20241102", "FSD_15", "FSD_140", "invoice 4471-2026",
 ])
 def test_unrelated_text_is_not_flagged(index, text):
     assert kinds(index, text) == set(), f"{text!r} must not match"

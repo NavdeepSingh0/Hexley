@@ -49,10 +49,12 @@ _MONTHS.update({m[:3]: i for m, i in list(_MONTHS.items())} | {"sept": 9})
 _MONTH_RE = "|".join(sorted(_MONTHS, key=len, reverse=True))
 
 _ISO = re.compile(r"\b(\d{4})-(\d{2})-(\d{2})\b")
-_DMY = re.compile(r"\b(\d{1,2})[/.](\d{1,2})[/.](\d{4})\b")
+_DMY = re.compile(r"\b(\d{1,2})[/.\-](\d{1,2})[/.\-](\d{4})\b")  # 02/11/2026, 02.11.2026, 02-11-2026
+_YMD_DOT = re.compile(r"\b(\d{4})[./](\d{2})[./](\d{2})\b")  # 2026.11.02, 2026/11/02
+_YMD_COMPACT = re.compile(r"(?<!\d)(20\d{2})(\d{2})(\d{2})(?!\d)")  # 20261102; a date only if it is a valid one
 _D_MON_Y = re.compile(rf"\b(\d{{1,2}})(?:st|nd|rd|th)?\s+({_MONTH_RE})\.?,?\s+(\d{{4}})\b")
 _MON_D_Y = re.compile(rf"\b({_MONTH_RE})\.?\s+(\d{{1,2}})(?:st|nd|rd|th)?,?\s+(\d{{4}})\b")
-_CODE = re.compile(r"\b([a-z]{2,4})[-\s]?(\d{1,3})\b")
+_CODE = re.compile(r"\b([a-z]{2,4})[-_\s]?(\d{1,3})\b")  # FSD-14, fsd14, FSD 14, FSD_14
 _NUMBER = re.compile(r"(\d{1,2}(?:,\d{2})+,\d{3}|\d{1,3}(?:[,.\s]\d{3})+|\d+(?:\.\d+)?)"
                      r"(?:\s*(k|thousand|hundred|lakhs?|lacs?|crores?|million)\b)?")  # Indian grouping first (plan Q4)
 _SPACED_DIGITS = re.compile(r"(?<![\d.,])\d(?: \d){3,}(?![\d.,])")  # 2 4 0 0: four or more single digits, one space apart
@@ -119,7 +121,8 @@ def candidates(norm: str, known_codes: frozenset[str] | None = None) -> list[Can
     "have 2,400" would be read as a code "have2" and swallow part of a number."""
     found: list[Candidate] = []
     text = norm
-    date_forms = ((_ISO, lambda m: (m[1], m[2], m[3])), (_DMY, lambda m: (m[3], m[2], m[1])),
+    date_forms = ((_ISO, lambda m: (m[1], m[2], m[3])), (_YMD_DOT, lambda m: (m[1], m[2], m[3])),
+                  (_DMY, lambda m: (m[3], m[2], m[1])), (_YMD_COMPACT, lambda m: (m[1], m[2], m[3])),
                   (_D_MON_Y, lambda m: (m[3], _MONTHS[m[2]], m[1])), (_MON_D_Y, lambda m: (m[3], _MONTHS[m[1]], m[2])))
     for pattern, parts in date_forms:
         for m in list(pattern.finditer(text)):

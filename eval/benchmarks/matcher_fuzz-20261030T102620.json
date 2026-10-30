@@ -1,0 +1,512 @@
+{
+ "machine": {
+  "date": "2026-10-30T10:26:20+00:00",
+  "commit": "328c443",
+  "dirty": true,
+  "python": "3.13.7",
+  "os": "Windows-11-10.0.26300-SP0",
+  "cpu": "Intel64 Family 6 Model 191 Stepping 2, GenuineIntel"
+ },
+ "seed": 20261030,
+ "per_variant_n": 25,
+ "by_what_our_docs_say": {
+  "supported": {
+   "recognised": 775,
+   "n": 775,
+   "rate": 1.0,
+   "ci95": [
+    0.9951,
+    1.0
+   ]
+  },
+  "declared gap": {
+   "recognised": 0,
+   "n": 125,
+   "rate": 0.0,
+   "ci95": [
+    0.0,
+    0.0298
+   ]
+  },
+  "not documented": {
+   "recognised": 0,
+   "n": 250,
+   "rate": 0.0,
+   "ci95": [
+    0.0,
+    0.0151
+   ]
+  }
+ },
+ "variants": [
+  {
+   "family": "quantity",
+   "way": "exact digits",
+   "docs_say": "supported",
+   "recognised": 25,
+   "n": 25,
+   "surprise": false,
+   "examples_missed": []
+  },
+  {
+   "family": "quantity",
+   "way": "thousands comma 2,400",
+   "docs_say": "supported",
+   "recognised": 25,
+   "n": 25,
+   "surprise": false,
+   "examples_missed": []
+  },
+  {
+   "family": "quantity",
+   "way": "Indian grouping 1,25,000",
+   "docs_say": "supported",
+   "recognised": 25,
+   "n": 25,
+   "surprise": false,
+   "examples_missed": []
+  },
+  {
+   "family": "quantity",
+   "way": "space grouping 2 400",
+   "docs_say": "supported",
+   "recognised": 25,
+   "n": 25,
+   "surprise": false,
+   "examples_missed": []
+  },
+  {
+   "family": "quantity",
+   "way": "non-breaking space grouping",
+   "docs_say": "supported",
+   "recognised": 25,
+   "n": 25,
+   "surprise": false,
+   "examples_missed": []
+  },
+  {
+   "family": "quantity",
+   "way": "dot grouping 2.400",
+   "docs_say": "supported",
+   "recognised": 25,
+   "n": 25,
+   "surprise": false,
+   "examples_missed": []
+  },
+  {
+   "family": "quantity",
+   "way": "with decimals 2400.00",
+   "docs_say": "supported",
+   "recognised": 25,
+   "n": 25,
+   "surprise": false,
+   "examples_missed": []
+  },
+  {
+   "family": "quantity",
+   "way": "full-width digits",
+   "docs_say": "supported",
+   "recognised": 25,
+   "n": 25,
+   "surprise": false,
+   "examples_missed": []
+  },
+  {
+   "family": "quantity",
+   "way": "Devanagari digits",
+   "docs_say": "supported",
+   "recognised": 25,
+   "n": 25,
+   "surprise": false,
+   "examples_missed": []
+  },
+  {
+   "family": "quantity",
+   "way": "Arabic-Indic digits",
+   "docs_say": "supported",
+   "recognised": 25,
+   "n": 25,
+   "surprise": false,
+   "examples_missed": []
+  },
+  {
+   "family": "quantity",
+   "way": "zero-width characters inside",
+   "docs_say": "supported",
+   "recognised": 25,
+   "n": 25,
+   "surprise": false,
+   "examples_missed": []
+  },
+  {
+   "family": "quantity",
+   "way": "soft hyphens inside",
+   "docs_say": "supported",
+   "recognised": 25,
+   "n": 25,
+   "surprise": false,
+   "examples_missed": []
+  },
+  {
+   "family": "quantity",
+   "way": "URL-encoded digits",
+   "docs_say": "supported",
+   "recognised": 25,
+   "n": 25,
+   "surprise": false,
+   "examples_missed": []
+  },
+  {
+   "family": "quantity",
+   "way": "HTML-entity digits",
+   "docs_say": "supported",
+   "recognised": 25,
+   "n": 25,
+   "surprise": false,
+   "examples_missed": []
+  },
+  {
+   "family": "quantity",
+   "way": "English number words",
+   "docs_say": "supported",
+   "recognised": 25,
+   "n": 25,
+   "surprise": false,
+   "examples_missed": []
+  },
+  {
+   "family": "quantity",
+   "way": "digits spaced apart 2 4 0 0",
+   "docs_say": "supported",
+   "recognised": 25,
+   "n": 25,
+   "surprise": false,
+   "examples_missed": []
+  },
+  {
+   "family": "quantity",
+   "way": "approximation 'about 2,400' (value not exact)",
+   "docs_say": "declared gap",
+   "recognised": 0,
+   "n": 25,
+   "surprise": false,
+   "examples_missed": [
+    "about 12,200",
+    "about 54,800"
+   ]
+  },
+  {
+   "family": "quantity",
+   "way": "letters for digits (O for 0, l for 1)",
+   "docs_say": "declared gap",
+   "recognised": 0,
+   "n": 25,
+   "surprise": false,
+   "examples_missed": [
+    "l2O69",
+    "S46BO"
+   ]
+  },
+  {
+   "family": "quantity",
+   "way": "hexadecimal 0x960",
+   "docs_say": "not documented",
+   "recognised": 0,
+   "n": 25,
+   "surprise": false,
+   "examples_missed": [
+    "0x2f25",
+    "0xd598"
+   ]
+  },
+  {
+   "family": "quantity",
+   "way": "digits reversed 0042",
+   "docs_say": "not documented",
+   "recognised": 0,
+   "n": 25,
+   "surprise": false,
+   "examples_missed": [
+    "96021",
+    "08645"
+   ]
+  },
+  {
+   "family": "quantity",
+   "way": "digits split by letters 2x4x0x0",
+   "docs_say": "not documented",
+   "recognised": 0,
+   "n": 25,
+   "surprise": false,
+   "examples_missed": [
+    "1x2x0x6x9",
+    "5x4x6x8x0"
+   ]
+  },
+  {
+   "family": "quantity",
+   "way": "split in two parts 24 and 00",
+   "docs_say": "not documented",
+   "recognised": 0,
+   "n": 25,
+   "surprise": false,
+   "examples_missed": [
+    "12 and then 069",
+    "54 and then 680"
+   ]
+  },
+  {
+   "family": "quantity (round)",
+   "way": "unit suffix 2.4k",
+   "docs_say": "supported",
+   "recognised": 25,
+   "n": 25,
+   "surprise": false,
+   "examples_missed": []
+  },
+  {
+   "family": "quantity (round)",
+   "way": "unit suffix 2.4 thousand",
+   "docs_say": "supported",
+   "recognised": 25,
+   "n": 25,
+   "surprise": false,
+   "examples_missed": []
+  },
+  {
+   "family": "quantity (round)",
+   "way": "unit suffix 24 hundred",
+   "docs_say": "supported",
+   "recognised": 25,
+   "n": 25,
+   "surprise": false,
+   "examples_missed": []
+  },
+  {
+   "family": "depot code",
+   "way": "exact FSD-14",
+   "docs_say": "supported",
+   "recognised": 25,
+   "n": 25,
+   "surprise": false,
+   "examples_missed": []
+  },
+  {
+   "family": "depot code",
+   "way": "lower case",
+   "docs_say": "supported",
+   "recognised": 25,
+   "n": 25,
+   "surprise": false,
+   "examples_missed": []
+  },
+  {
+   "family": "depot code",
+   "way": "no separator FSD14",
+   "docs_say": "supported",
+   "recognised": 25,
+   "n": 25,
+   "surprise": false,
+   "examples_missed": []
+  },
+  {
+   "family": "depot code",
+   "way": "space FSD 14",
+   "docs_say": "supported",
+   "recognised": 25,
+   "n": 25,
+   "surprise": false,
+   "examples_missed": []
+  },
+  {
+   "family": "depot code",
+   "way": "non-breaking hyphen",
+   "docs_say": "supported",
+   "recognised": 25,
+   "n": 25,
+   "surprise": false,
+   "examples_missed": []
+  },
+  {
+   "family": "depot code",
+   "way": "full-width letters",
+   "docs_say": "supported",
+   "recognised": 25,
+   "n": 25,
+   "surprise": false,
+   "examples_missed": []
+  },
+  {
+   "family": "depot code",
+   "way": "zero-width characters inside",
+   "docs_say": "supported",
+   "recognised": 25,
+   "n": 25,
+   "surprise": false,
+   "examples_missed": []
+  },
+  {
+   "family": "depot code",
+   "way": "underscore FSD_14",
+   "docs_say": "not documented",
+   "recognised": 0,
+   "n": 25,
+   "surprise": false,
+   "examples_missed": [
+    "FSD_40",
+    "FSD_16"
+   ]
+  },
+  {
+   "family": "depot code",
+   "way": "letters spaced F S D 14",
+   "docs_say": "not documented",
+   "recognised": 0,
+   "n": 25,
+   "surprise": false,
+   "examples_missed": [
+    "F S D 40",
+    "F S D 16"
+   ]
+  },
+  {
+   "family": "depot code",
+   "way": "look-alike letters F5D-14",
+   "docs_say": "declared gap",
+   "recognised": 0,
+   "n": 25,
+   "surprise": false,
+   "examples_missed": [
+    "F5D-40",
+    "F5D-16"
+   ]
+  },
+  {
+   "family": "depot code",
+   "way": "spoken 'depot fourteen'",
+   "docs_say": "declared gap",
+   "recognised": 0,
+   "n": 25,
+   "surprise": false,
+   "examples_missed": [
+    "depot forty",
+    "depot sixteen"
+   ]
+  },
+  {
+   "family": "dispatch date",
+   "way": "ISO 2026-11-02",
+   "docs_say": "supported",
+   "recognised": 25,
+   "n": 25,
+   "surprise": false,
+   "examples_missed": []
+  },
+  {
+   "family": "dispatch date",
+   "way": "dd/mm/yyyy",
+   "docs_say": "supported",
+   "recognised": 25,
+   "n": 25,
+   "surprise": false,
+   "examples_missed": []
+  },
+  {
+   "family": "dispatch date",
+   "way": "2 November 2026",
+   "docs_say": "supported",
+   "recognised": 25,
+   "n": 25,
+   "surprise": false,
+   "examples_missed": []
+  },
+  {
+   "family": "dispatch date",
+   "way": "2 Nov 2026",
+   "docs_say": "supported",
+   "recognised": 25,
+   "n": 25,
+   "surprise": false,
+   "examples_missed": []
+  },
+  {
+   "family": "dispatch date",
+   "way": "November 2nd, 2026",
+   "docs_say": "supported",
+   "recognised": 25,
+   "n": 25,
+   "surprise": false,
+   "examples_missed": []
+  },
+  {
+   "family": "dispatch date",
+   "way": "dd-mm-yyyy",
+   "docs_say": "not documented",
+   "recognised": 0,
+   "n": 25,
+   "surprise": false,
+   "examples_missed": [
+    "25-11-2026",
+    "02-12-2026"
+   ]
+  },
+  {
+   "family": "dispatch date",
+   "way": "compact 20261102",
+   "docs_say": "not documented",
+   "recognised": 0,
+   "n": 25,
+   "surprise": false,
+   "examples_missed": [
+    "20261125",
+    "20261202"
+   ]
+  },
+  {
+   "family": "dispatch date",
+   "way": "dotted 2026.11.02",
+   "docs_say": "not documented",
+   "recognised": 0,
+   "n": 25,
+   "surprise": false,
+   "examples_missed": [
+    "2026.11.25",
+    "2026.12.02"
+   ]
+  },
+  {
+   "family": "dispatch date",
+   "way": "relative 'the day after tomorrow'",
+   "docs_say": "declared gap",
+   "recognised": 0,
+   "n": 25,
+   "surprise": false,
+   "examples_missed": [
+    "the day after tomorrow",
+    "the day after tomorrow"
+   ]
+  },
+  {
+   "family": "dispatch date",
+   "way": "words 'the second of November'",
+   "docs_say": "not documented",
+   "recognised": 0,
+   "n": 25,
+   "surprise": false,
+   "examples_missed": [
+    "the twenty-five of November",
+    "the two of December"
+   ]
+  }
+ ],
+ "false_positives": {
+  "flagged": 0,
+  "n": 400,
+  "ci95": [
+   0.0,
+   0.0095
+  ],
+  "examples": []
+ },
+ "note": "variants were chosen by us; this is not an attacker's best list"
+}

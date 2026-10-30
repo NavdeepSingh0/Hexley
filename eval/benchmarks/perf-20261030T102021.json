@@ -1,0 +1,139 @@
+{
+ "machine": {
+  "date": "2026-10-30T10:20:21+00:00",
+  "commit": "328c443",
+  "dirty": true,
+  "python": "3.13.7",
+  "os": "Windows-11-10.0.26300-SP0",
+  "cpu": "Intel64 Family 6 Model 191 Stepping 2, GenuineIntel"
+ },
+ "what": "speed of Sentinel on one machine, loopback, mock tools, audit fsync on",
+ "index": "50 rows of a stock register, 3 fingerprinted fields each (quantity, depot code, dispatch date)",
+ "decision_only": {
+  "allowed read (no outbound)": {
+   "effect": "ALLOW",
+   "rules": [],
+   "n": 20000,
+   "unit": "microseconds",
+   "p50": 7.6,
+   "p95": 20.2,
+   "p99": 21.8,
+   "max": 185.8,
+   "mean": 9.553,
+   "decisions_per_second_single_thread": 104677
+  },
+  "allowed send to the officer's own address (scans the index)": {
+   "effect": "ALLOW",
+   "rules": [],
+   "n": 20000,
+   "unit": "microseconds",
+   "p50": 141.1,
+   "p95": 286.4,
+   "p99": 396.4,
+   "max": 2030.5,
+   "mean": 163.488,
+   "decisions_per_second_single_thread": 6117
+  },
+  "allowed send to the vendor, clean body (scans the index)": {
+   "effect": "ALLOW",
+   "rules": [],
+   "n": 20000,
+   "unit": "microseconds",
+   "p50": 137.9,
+   "p95": 283.3,
+   "p99": 397.5,
+   "max": 833.5,
+   "mean": 159.399,
+   "decisions_per_second_single_thread": 6274
+  },
+  "blocked: restricted value in the body (R2)": {
+   "effect": "BLOCK",
+   "rules": [
+    "R2"
+   ],
+   "n": 20000,
+   "unit": "microseconds",
+   "p50": 85.5,
+   "p95": 160.3,
+   "p99": 233.1,
+   "max": 1213.5,
+   "mean": 96.467,
+   "decisions_per_second_single_thread": 10366
+  },
+  "blocked: tool not on the slip (R1)": {
+   "effect": "BLOCK",
+   "rules": [
+    "R1"
+   ],
+   "n": 20000,
+   "unit": "microseconds",
+   "p50": 49.2,
+   "p95": 75.2,
+   "p99": 134.9,
+   "max": 2271.9,
+   "mean": 53.923,
+   "decisions_per_second_single_thread": 18545
+  }
+ },
+ "one_audit_record": {
+  "n": 300,
+  "unit": "milliseconds",
+  "p50": 2.087,
+  "p95": 2.538,
+  "p99": 2.954,
+  "max": 12.099,
+  "mean": 2.082
+ },
+ "whole_check_over_http": {
+  "n": 600,
+  "unit": "milliseconds",
+  "p50": 10.794,
+  "p95": 12.982,
+  "p99": 13.947,
+  "max": 22.547,
+  "mean": 10.112
+ },
+ "same_proxy_library_without_sentinel": {
+  "n": 300,
+  "unit": "milliseconds",
+  "p50": 38.299,
+  "p95": 67.444,
+  "p99": 88.038,
+  "max": 131.66,
+  "mean": 42.4
+ },
+ "tool_call_through_the_gateway": {
+  "n": 300,
+  "unit": "milliseconds",
+  "p50": 48.833,
+  "p95": 86.121,
+  "p99": 98.734,
+  "max": 142.703,
+  "mean": 53.482
+ },
+ "same_call_straight_to_the_tool_server": {
+  "n": 300,
+  "unit": "milliseconds",
+  "p50": 4.7,
+  "p95": 9.444,
+  "p99": 10.639,
+  "max": 12.751,
+  "mean": 5.405
+ },
+ "added_by_the_proxy_library_alone_at_p50_ms": 33.599,
+ "added_by_sentinel_on_top_of_the_proxy_at_p50_ms": 10.534,
+ "added_in_total_at_p50_ms": 44.133,
+ "concurrent": {
+  "sessions": 16,
+  "calls_each": 60,
+  "wall_seconds": 7.04,
+  "checks_per_second": 136.4,
+  "n": 960,
+  "unit": "milliseconds",
+  "p50": 60.367,
+  "p95": 121.268,
+  "p99": 1261.212,
+  "max": 2833.53,
+  "mean": 91.18
+ }
+}

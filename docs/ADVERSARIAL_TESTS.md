@@ -55,14 +55,14 @@ Honest status of each row. "Tested" means an automated test asserts the expected
 
 ## Matcher: supported representations
 **Status: implemented and tested** (`tests/test_matcher.py`, 65 cases; `tests/test_r2.py`, end to end through the gateway). A representation may be claimed only while its test passes.
-1. Exact string, case-insensitive. Codes also match without a separator or with a space (`FSD-14`, `fsd14`, `FSD 14`).
+1. Exact string, case-insensitive. Codes also match without a separator, with a space or with an underscore (`FSD-14`, `fsd14`, `FSD 14`, `FSD_14`).
 2. Unicode NFKC, zero-width characters, soft hyphens and Unicode dashes (including the non-breaking hyphen).
 3. Digit-script folding: every Unicode decimal-digit script maps to ASCII (tested: Devanagari, Arabic-Indic, full-width).
 4. Digit grouping (`2,400`, `2 400`, `2.400`, narrow and non-breaking spaces).
 5. English number words (`two thousand four hundred`, `twenty-four hundred`, `eleven hundred fifty`, `one thousand one hundred and fifty`).
 6. Numeric equivalence for unit suffixes (`2.4k`, `2.4 thousand`, `24 hundred`; `lakh`, `crore` and `million` are implemented).
 7. URL-decoding and HTML-entity decoding, up to three passes (`%32%34%30%30`, `&#50;&#52;&#48;&#48;`).
-8. Dates as ISO, `dd/mm/yyyy`, `2 November 2026` and `November 2nd, 2026`, including short month names.
+8. Dates as ISO, `dd/mm/yyyy`, `2 November 2026` and `November 2nd, 2026`, including short month names; and, added on 30 Oct 2026 after a generated-variants benchmark found them missed (`scripts/benchmarks/matcher_fuzz.py`), `dd-mm-yyyy`, `dd.mm.yyyy`, `yyyy.mm.dd`, `yyyy/mm/dd` and the compact `yyyymmdd` (only when it is a valid date).
 
 **Design choices.** Numbers below 100 are not indexed (too common to be useful). A value is never dropped from the index because an untrusted document also contains it, since that would let an attacker switch detection off by repeating a guessed number; the cost is a false block when a restricted value equals an ordinary figure. Code detection is limited to codes in the index, so ordinary words followed by a number are not mistaken for codes.
 
