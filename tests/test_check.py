@@ -361,3 +361,23 @@ async def test_the_powershell_tool_is_decided_like_bash_and_its_windows_paths_ar
     assert wipe_hook["effect"] == "BLOCK" and read_env["effect"] == "BLOCK" and fine["effect"] == "ALLOW"
     assert stack.rt.store.get(slip["session_id"]).coverage["Bash"]["mediated"] is True  # decided under the one name
 
+
+# ---- the contract the browser extension reads (docs/plans/EXTENSION_PLAN.md) ---------------------------------------------------
+async def test_the_approval_card_and_mascot_state_have_the_shape_the_extension_reads(stack):
+    """The extension looks for status == "pending" (lower case) and reads tool, summary, args, expires_in. It once compared against
+    "PENDING", so the Review panel opened empty and could not approve anything. This pins the strings it depends on."""
+    slip = await new_slip(stack)
+    async with hook(stack, slip) as c:
+        held = await pre(c, "Bash", {"command": "rm -rf build"}, "x1")
+    assert held["effect"] == "ASK" and held["approval_id"]
+    async with stack.api() as api:
+        cards = (await api.get("/approvals")).json()["pending"]
+        card = next(a for a in cards if a["approval_id"] == held["approval_id"])
+        assert card["status"] == "pending"
+        assert card["tool"] == "Bash" and card["args"] == {"command": "rm -rf build"} and card["summary"]
+        assert isinstance(card["expires_in"], int) and card["expires_in"] > 0
+        mascot = (await api.get("/api/v1/mascot/state")).json()
+        assert set(mascot) == {"state", "message", "session_id"} and mascot["state"] == "needs-approval"
+        assert (await api.post(f"/approvals/{card['approval_id']}", json={"decision": "deny"})).status_code == 200
+        assert (await api.post(f"/approvals/{card['approval_id']}", json={"decision": "deny"})).status_code == 409  # already resolved
+

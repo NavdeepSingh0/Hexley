@@ -152,7 +152,8 @@ async function fetchApprovalCard() {
     const res = await apiFetch('/approvals')
     if (!res.ok) return
     const data = await res.json()
-    const pending = (data.pending || []).find(c => c.status === 'PENDING')
+    // Sentinel's approval cards carry the status in lower case ("pending"); GET /approvals lists only pending ones anyway.
+    const pending = (data.pending || []).find(c => c.status === 'pending')
     if (pending) renderApprovalCard(pending)
   } catch (_) { /* no-op */ }
 }
