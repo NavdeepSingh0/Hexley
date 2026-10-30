@@ -44,7 +44,8 @@ def action(tool, session, args=None):
 ])
 def test_r1_sentinel_column(tool, allowed, expect_effect, expect_reason):
     s = make_session(Column.SENTINEL, allowed)
-    d = decide(action(tool, s), s, REGISTRY)
+    # The vendor on file, because a send that names no destination is refused whatever else is true (plan F3).
+    d = decide(action(tool, s, {"to": "sales@shakti.example"} if tool == "send_email" else None), s, REGISTRY)
     assert d.effect == expect_effect and d.reason_code == expect_reason
     if expect_effect == Effect.BLOCK:
         assert d.rule_ids == [RuleId.R1]

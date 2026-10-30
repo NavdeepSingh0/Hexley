@@ -76,6 +76,10 @@ def port_in_use(port: int, host: str = "127.0.0.1") -> bool:
     return False
 
 
+def _env_list(name: str) -> list[str]:
+    return [p.strip() for p in os.environ.get(name, "").split(",") if p.strip()]
+
+
 def tool_server_env(environ, connectors: UpstreamSet) -> dict[str, str]:
     """What the built-in tool server starts with. On a hosting platform the connectors' credentials are in this process's
     environment, and each must reach only its own connector (D-052)."""
@@ -198,8 +202,12 @@ async def _up(args: argparse.Namespace) -> None:
         # OAuth sign-in on the gateway's public address: the AI client signs in, the officer approves the slip here.
         from .oauth import SentinelOAuthProvider
 
-        rt.oauth = SentinelOAuthProvider(rt, base_url=public_url, consent_base_url=args.consent_url,
-                                         preset=args.oauth_preset, slip_ttl=args.oauth_ttl, on_request=print_officer_code)
+        try:
+            rt.oauth = SentinelOAuthProvider(rt, base_url=public_url, consent_base_url=args.consent_url,
+                                             preset=args.oauth_preset, slip_ttl=args.oauth_ttl, on_request=print_officer_code,
+                                             destinations=args.oauth_destination, internal=args.oauth_internal)
+        except ValueError as e:
+            raise SystemExit(f"Nothing was started.\n  - {e}") from e
     api_app = create_api(rt)
     rt.runs.pace = args.pace  # type: ignore[union-attr]
     env = {**tool_server_env(os.environ, connectors), "SENTINEL_DOWNSTREAM_TOKEN": downstream,
@@ -273,7 +281,13 @@ def main(argv: list[str] | None = None) -> None:
     up.add_argument("--tunnel", action="store_true", help="open a free cloudflared tunnel to the gateway and use its address")
     up.add_argument("--cloudflared", help="path to cloudflared (default: PATH, then the winget install location)")
     up.add_argument("--consent-url", help="where the officer's consent page lives (default: the gateway's own address)")
-    up.add_argument("--oauth-preset", default="quotation_processing", help="slip template approved by an OAuth sign-in")
+    up.add_argument("--oauth-preset", default=os.environ.get("SENTINEL_OAUTH_PRESET") or "quotation_processing",
+                    help="slip template approved by an OAuth sign-in (also $SENTINEL_OAUTH_PRESET)")
+    up.add_argument("--oauth-destination", action="append", default=_env_list("SENTINEL_OAUTH_DESTINATIONS"), metavar="ENTRY",
+                    help="where that slip may send: a domain, an address, repo:owner/name, channel:id or page:id (repeatable; also "
+                         "$SENTINEL_OAUTH_DESTINATIONS, comma separated)")
+    up.add_argument("--oauth-internal", action="append", default=_env_list("SENTINEL_OAUTH_INTERNAL"), metavar="ENTRY",
+                    help="those destinations that are inside the organisation (repeatable; also $SENTINEL_OAUTH_INTERNAL)")
     up.add_argument("--oauth-ttl", type=int, default=3600, help="seconds an OAuth-approved slip lasts")
     for p in (up, cn := sub.add_parser("connectors", help="say which connectors are configured and whether they answer")):
         p.add_argument("--upstreams", default=str(DEFAULT_UPSTREAMS), help="connector configuration (names, never values)")

@@ -106,7 +106,10 @@ def destination_keys(args: dict[str, Any], destination_args: list[str], kind: st
         if key and any(_ambiguous_target(args, a) for a in destination_args):
             return [], [f"{shown} (the call names more than one target)"]
         return ([key], []) if key else ([], [shown])
-    return keys_in([v for a in destination_args if (v := _get(args, a)) is not None], kind)
+    values = [v for a in destination_args if (v := _get(args, a)) is not None]
+    if destination_args and not values:
+        return [], ["(no destination given)"]  # Gmail's send_message and reply run without `to`: where it goes would go unchecked
+    return keys_in(values, kind)
 
 
 def recipients_in(value: Any) -> tuple[list[str], list[str]]:

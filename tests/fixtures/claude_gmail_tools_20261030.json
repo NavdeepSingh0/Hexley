@@ -1,0 +1,12 @@
+{
+  "source": "Tool definitions of Claude's own Gmail connector as offered to Claude Code on 30 Oct 2026, copied by hand: argument names and required lists only.",
+  "tools": {
+    "send_message": {"properties": ["attachments", "bcc", "body", "cc", "draftId", "htmlBody", "includeSignature", "replyThreadId", "replyToMessageId", "subject", "to"], "required": []},
+    "reply": {"properties": ["attachments", "bcc", "body", "cc", "htmlBody", "includeSignature", "messageId", "replyAll", "to"], "required": ["messageId"]},
+    "forward": {"properties": ["attachments", "bcc", "cc", "forwardText", "htmlBody", "includeSignature", "messageId", "to"], "required": ["messageId"]},
+    "create_draft": {"properties": ["attachments", "bcc", "body", "cc", "htmlBody", "includeSignature", "replyToMessageId", "subject", "to"], "required": []},
+    "search_threads": {"properties": ["includeTrash", "pageSize", "pageToken", "query", "view"], "required": []},
+    "get_thread": {"properties": ["messageFormat", "threadId"], "required": ["threadId"]},
+    "get_message": {"properties": ["messageFormat", "messageId"], "required": ["messageId"]}
+  }
+}

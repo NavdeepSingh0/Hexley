@@ -44,6 +44,10 @@ from .tools.server import COLUMN_HEADER, SESSION_HEADER, TOKEN_HEADER
 
 log = logging.getLogger("sentinel.gateway")
 
+# Hexley's own tools for clients with no hook (cooperative.py). Named here because cooperative.py imports the check route, which
+# imports this module.
+META_TOOLS = frozenset({"hexley_setup", "hexley_check", "hexley_report"})
+
 # The session of the call being forwarded, so the downstream client can label it (for the mail sink).
 _current: ContextVar[Session | None] = ContextVar("sentinel_current_session", default=None)
 # The recorded hash of the message a fixed-template tool is allowed to send (set only while that call runs).
@@ -80,15 +84,21 @@ class SentinelMiddleware(Middleware):
         allowed = set(session.contract.allowed_tools)
         if session.column == Column.SENTINEL:
             tools = [t for t in tools if t.name not in self.rt.shadowed]
-            await self._observe_definitions(tools)
+            # Hexley's own three tools decide nothing and reach no outside system; their descriptions tell the model what to do on
+            # purpose, so they are not put through the check that looks for exactly that in other servers' tools.
+            await self._observe_definitions([t for t in tools if t.name not in META_TOOLS])
+        # They are offered only on a slip for a client whose context Hexley cannot see (plan F3). Every other session keeps exactly
+        # the tools it had, because what a model is offered changes what it does, and the measured results depend on that.
+        if not offers_meta_tools(session):
+            tools = [t for t in tools if t.name not in META_TOOLS]
         if session.column == Column.UNPROTECTED:
             # The baseline sees every backend tool, but never a gateway-local tool its slip does not allow:
             # otherwise the like-for-like comparison would differ between columns (D-028).
             return [t for t in tools if not self.rt.registry.get(t.name).local or t.name in allowed]
         # Listing is a convenience for the agent, not a control: R1 is enforced again on every call. A tool whose definition
         # changed since it was approved, or whose description reads like instructions, is not shown (plan Q5).
-        return [t for t in tools if t.name in allowed and self.rt.registry.is_known(t.name)
-                and (session.column != Column.SENTINEL or self.rt.pins.blocked(t.name) is None)]
+        return [t for t in tools if t.name in META_TOOLS or (t.name in allowed and self.rt.registry.is_known(t.name)
+                and (session.column != Column.SENTINEL or self.rt.pins.blocked(t.name) is None))]
 
     async def _observe_names(self, tools) -> None:
         """Shadowing (plan F2): a name offered by more than one server is ambiguous, and which one answers would be up to
@@ -235,6 +245,15 @@ class SentinelMiddleware(Middleware):
         session = await self._session()
         tool = context.message.name
         args = context.message.arguments or {}
+        if tool in META_TOOLS:
+            # Asking Hexley is not itself an action to decide: it is how a client without a hook reaches the rules (plan F3).
+            if not offers_meta_tools(session):
+                raise ToolError("Blocked: this task's permission slip does not use this tool.")
+            reset = _current.set(session)
+            try:
+                return await call_next(context)
+            finally:
+                _current.reset(reset)
         reset = _current.set(session)
         try:
             await self._ensure_catalog(context)
@@ -309,6 +328,10 @@ class SentinelMiddleware(Middleware):
                 if address not in session.untrusted_destinations:  # remember the first source, and the exact call
                     session.untrusted_destinations[address] = tool
                     session.untrusted_actions[address] = action_id
+
+
+def offers_meta_tools(session: Session) -> bool:
+    return session.column == Column.SENTINEL and session.contract.unseen_context
 
 
 def counts_toward_freeze(decision: Decision) -> bool:
@@ -402,6 +425,30 @@ def build_gateway(rt: Runtime) -> FastMCP:
         from .oauth import register_consent_routes
 
         register_consent_routes(proxy, oauth)
+
+    @proxy.tool
+    async def hexley_setup(tools: list[str]) -> dict:
+        """Set Hexley up in a client with no hook. Give the names of all the connector tools you have. Returns the text the person
+        pastes into their personal preferences, and what this task's permission slip does with each tool."""
+        from .cooperative import setup_view
+
+        return setup_view(rt, _current.get(), tools)
+
+    @proxy.tool
+    async def hexley_check(connector: str, tool: str, arguments: dict | None = None) -> dict:
+        """Ask Hexley whether a connector's tool may run, before running it. Give the connector's name, the tool's name and the exact
+        arguments. Run the tool only if the answer says proceed: true."""
+        from .cooperative import check
+
+        return await check(rt, _current.get(), connector, tool, arguments or {})
+
+    @proxy.tool
+    async def hexley_report(connector: str, tool: str, check_id: str, result: str) -> dict:
+        """Tell Hexley what a connector's tool returned, so later checks know what this task has read. Give the check_id from
+        hexley_check and the text the tool returned."""
+        from .cooperative import report
+
+        return await report(rt, _current.get(), connector, tool, check_id, result)
 
     @proxy.tool
     async def send_quote_ack(quote_id: str) -> str:

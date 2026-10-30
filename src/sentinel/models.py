@@ -114,6 +114,9 @@ class ToolEntry(_Model):
     # one key (owner + name -> "repo:owner/name"); a dotted name reads a nested argument ("parent.page_id"). Plan F2.
     destination_kind: Literal["email", "url", "path", "repo", "channel", "page"] = "email"
     requires_human_verification: bool = False
+    # Arguments Sentinel cannot check, so a call using one is refused (R1): Gmail's `draftId` sends a stored draft whatever the
+    # other arguments say, and its base64 `attachments` cannot be read for restricted values. Plan F3.
+    unchecked_args: list[str] = Field(default_factory=list)
     egress_template: str | None = None  # a tool that sends only through this fixed template (hardened mode)
     local: bool = False  # implemented inside the gateway, not forwarded to the tool server
 

@@ -34,6 +34,7 @@ def decide(action: AgentAction, session: Session, registry: Registry, approved: 
         entry = registry.get(action.tool)
         recipients, unparseable = destinations.destination_keys(
             action.args, entry.destination_args, entry.destination_kind) if entry.outbound else ([], [])
+        unparseable = unparseable + [f"{a} (cannot be checked)" for a in entry.unchecked_args if action.args.get(a)]
         if entry.outbound:
             # cc, bcc, reply_to and the like are destinations whether or not the registry listed them (plan Q4)
             for k in effects.extra_destination_args(action.args, entry.destination_args):

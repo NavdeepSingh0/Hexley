@@ -64,6 +64,8 @@ def canonical_tool(raw: str) -> tuple[str, str, str | None]:
         server, sep, tool = raw[len("mcp__"):].partition("__")
         if not sep or not server or not tool:
             return raw, "mcp", None
+        # Claude's own connector reaches Claude Code as `claude_ai_Gmail` and is named `Gmail` on Claude.ai: one set of labels.
+        server = server.lower().replace(" ", "_").removeprefix("claude_ai_")
         return f"{server}.{tool}", "mcp", server
     return ALIASES.get(raw, raw), "builtin", None
 

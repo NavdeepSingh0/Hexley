@@ -45,7 +45,8 @@ from starlette.requests import Request
 from starlette.responses import HTMLResponse, RedirectResponse, Response
 
 from .confirm import ConfirmError, confirm_draft
-from .contracts import SessionError, SlipError, draft_contract, mint_session_token, verify_session_token
+from .contracts import (SessionError, SlipError, draft_contract, mint_session_token, normalise_destination_entry,
+                        verify_session_token)
 from .events import make_event
 from .models import Column
 from .runtime import Runtime
@@ -82,13 +83,20 @@ class SentinelOAuthProvider(OAuthProvider):
     def __init__(self, rt: Runtime, *, base_url: str, consent_base_url: str | None = None,
                  preset: str = "quotation_processing", work_item_id: str | None = "Q-1043", slip_ttl: int = 3600,
                  request_ttl: int = 300, code_ttl: int = 300, max_attempts: int = 5, max_clients: int = 200,
-                 max_pending: int = 50, on_request=None):
+                 max_pending: int = 50, on_request=None, destinations: list[str] | None = None,
+                 internal: list[str] | None = None):
         super().__init__(base_url=base_url,
                          client_registration_options=ClientRegistrationOptions(enabled=True),
                          revocation_options=RevocationOptions(enabled=False))  # disconnecting simply lets the token lapse
         self.rt = rt
         self.consent_base = (consent_base_url or base_url).rstrip("/")
         self.preset, self.work_item_id, self.slip_ttl = preset, work_item_id, slip_ttl
+        # A deployment's own destinations for its slip (plan F3). They are the officer's, shown on the consent page, and not in git.
+        self.destinations = [normalise_destination_entry(d) for d in (destinations or [])]
+        self.internal = [normalise_destination_entry(d) for d in (internal or [])]
+        outside = [d for d in self.internal if d not in self.destinations]
+        if outside:
+            raise SlipError(f"internal destination {', '.join(outside)} is not in the allowed destinations")
         self.request_ttl, self.code_ttl, self.max_attempts = request_ttl, code_ttl, max_attempts
         self.max_clients, self.max_pending = max_clients, max_pending
         self.on_request = on_request  # called with the new PendingRequest: prints the officer code in the terminal
@@ -117,7 +125,10 @@ class SentinelOAuthProvider(OAuthProvider):
             del self.codes[code]
 
     def _slip_draft(self):
-        templates = {**self.rt.templates, self.preset: {**self.rt.templates[self.preset], "ttl_seconds": self.slip_ttl}}
+        spec = {**self.rt.templates[self.preset], "ttl_seconds": self.slip_ttl}
+        if self.destinations:
+            spec.update(allowed_recipient_domains=self.destinations, internal_destinations=self.internal)
+        templates = {**self.rt.templates, self.preset: spec}
         # A work item (a quotation id) belongs only to a slip that is about one; any other slip, such as the one for working with
         # your own document, must not be tied to a quotation's vendor (plan R1: found when preparing the Claude.ai test).
         needs_item = bool(self.rt.templates[self.preset].get("requires_work_item")) or self.preset == "quotation_processing"

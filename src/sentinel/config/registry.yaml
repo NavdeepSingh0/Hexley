@@ -403,6 +403,57 @@ tools:
     destination_args: [page_id]
     destination_kind: page
 
+  # ---- Claude's own Gmail connector, judged and not hosted (plan F3, D-057) ---------------------------------------------
+  # Names as a client reports them: `mcp__claude_ai_Gmail__send_message` or Gmail:send_message both read as gmail.send_message.
+  # Everything read from a mailbox is untrusted (anyone can send a mail) and restricted. send_message is the only tool that
+  # sends: its draftId sends a stored draft whatever the other arguments say, and its attachments are base64 that cannot be
+  # read for restricted values, so both are refused. reply and forward are left off, because their recipients default to the
+  # original mail's, which an attacker writes. Labels, trash, spam and drafts other than creating one are left off too.
+  gmail.search_threads:
+    capability: read
+    resource_class: mail_message
+    outbound: false
+    consequential: false
+    output_integrity: untrusted
+    output_confidentiality: restricted
+    fingerprint_fields: [all]
+
+  gmail.get_thread:
+    capability: read
+    resource_class: mail_message
+    outbound: false
+    consequential: false
+    output_integrity: untrusted
+    output_confidentiality: restricted
+    fingerprint_fields: [all]
+
+  gmail.get_message:
+    capability: read
+    resource_class: mail_message
+    outbound: false
+    consequential: false
+    output_integrity: untrusted
+    output_confidentiality: restricted
+    fingerprint_fields: [all]
+
+  gmail.create_draft:
+    capability: write
+    resource_class: mail_draft
+    outbound: false                   # a draft stays in the account; sending one by its id is refused above
+    consequential: false
+    output_integrity: trusted
+    output_confidentiality: internal
+
+  gmail.send_message:
+    capability: send
+    resource_class: email_external
+    outbound: true
+    consequential: true
+    output_integrity: trusted
+    output_confidentiality: internal
+    destination_args: [to]            # cc and bcc are destinations too (effects.extra_destination_args)
+    unchecked_args: [draftId, attachments]
+
   # ---- connector preset: mail (mcp-mail-server 2.1.2, from its README; plan F2, D-054) ---------------------------------
   # Anyone can send a mail, so everything read from a mailbox is untrusted (R7, R8); a mailbox is private, so it is restricted
   # with every value fingerprinted (R2). Deliberately NOT listed, so no slip can allow them: reply_to_email and

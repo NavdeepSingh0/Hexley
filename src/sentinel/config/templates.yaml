@@ -1,5 +1,22 @@
 # Permission-slip templates. The officer confirms a slip built from one of these in the console.
 # The agent never creates or widens a slip.
+claude_connectors:
+  # Plan F3: Claude's own connectors, judged by Hexley. The destinations are the deployment's, given to `up` by the officer
+  # (--oauth-destination, --oauth-internal), never written in git. Hexley cannot see everything such a client reads, so the
+  # session counts as having read untrusted content from its first call, and the Rule of Two is on.
+  objective: >-
+    Work with the connectors on this Claude account, sending only to the destinations named on this slip.
+  allowed_tools: [gmail.search_threads, gmail.get_thread, gmail.get_message, gmail.create_draft, gmail.send_message]
+  resource_classes: [mail_message, mail_draft, email_external]
+  allowed_recipient_domains: []
+  max_records: 50
+  max_messages: 5
+  max_records_out: 0
+  ttl_seconds: 3600
+  unseen_context: true
+  strict_flows: true
+  freeze_after: 5
+
 vendor_maintenance:
   objective: >-
     Update a vendor's registered bank details after the vendor's written request, then confirm to the vendor.
