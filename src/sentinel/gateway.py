@@ -12,6 +12,7 @@ Sentinel holds each upstream's credential, and a tool name that two servers offe
 
 from __future__ import annotations
 
+import base64
 import json
 import logging
 import time
@@ -354,8 +355,22 @@ def audit_unavailable(action: AgentAction) -> Decision:
         evidence=[Evidence(kind="audit", detail="durable audit write failed or missed its deadline")])
 
 
+def _part_text(part) -> str:
+    """The readable text of one result part. A real server may put the payload in an embedded resource and only a status
+    line in `text` (GitHub's get_file_contents does), and everything Sentinel checks reads this, so it must see the payload."""
+    resource = getattr(part, "resource", None)
+    if resource is None:
+        return getattr(part, "text", "") or ""
+    if getattr(resource, "text", None):
+        return resource.text
+    try:  # a text file sent as a blob is still text; real binary stays unread (a declared limit)
+        return base64.b64decode(getattr(resource, "blob", "") or "", validate=True).decode("utf-8")
+    except ValueError:
+        return ""
+
+
 def _result_text(result) -> str:
-    parts = [getattr(p, "text", "") for p in (getattr(result, "content", None) or [])]
+    parts = [_part_text(p) for p in (getattr(result, "content", None) or [])]
     structured = getattr(result, "structured_content", None)
     if structured:
         parts.append(json.dumps(structured, default=str))

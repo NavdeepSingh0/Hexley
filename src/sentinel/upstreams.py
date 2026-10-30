@@ -61,6 +61,9 @@ class Upstream(BaseModel):
     # The tool-name prefix. Empty means the tools keep their own names, which is how one server can try to shadow another's
     # tool (send_email offered twice): allowed so that the refusal can be shown and tested, never the default.
     namespace: str | None = None
+    # How the connection starts. "legacy" is the classic initialize handshake that published servers speak; "auto" first
+    # probes the newer discovery request, and GitHub's server (v2.0.3, stdio) then refuses the handshake as a duplicate.
+    protocol: Literal["legacy", "auto"] = "legacy"
     enabled: bool = True
 
     @field_validator("name")
@@ -181,10 +184,11 @@ def client_factory(upstream: Upstream, creds: Credentials):
             command = shutil.which(command) or command  # npx is npx.cmd on Windows; a process start needs the full name
         transport = StdioTransport(command=command, args=[creds.fill(a) for a in upstream.args],
                                    env=child_env(upstream, creds), keep_alive=True)
-        return lambda: ProxyClient(transport, forward_incoming_headers=False)
+        return lambda: ProxyClient(transport, forward_incoming_headers=False, mode=upstream.protocol)
     url = creds.fill(upstream.url or "")
     headers = {k: creds.fill(v) for k, v in upstream.headers.items()}
-    return lambda: ProxyClient(StreamableHttpTransport(url, headers=headers), forward_incoming_headers=False)
+    return lambda: ProxyClient(StreamableHttpTransport(url, headers=headers), forward_incoming_headers=False,
+                               mode=upstream.protocol)
 
 
 class Prefix(Namespace):

@@ -23,7 +23,7 @@ upstreams:
     transport: stdio
     description: Notion (official MCP server)
     command: npx
-    args: ["-y", "@notionhq/notion-mcp-server"]
+    args: ["-y", "@notionhq/notion-mcp-server@2.6.1"]  # pinned: a new version is a deliberate step, and the definition pins catch a change
     env:
       NOTION_TOKEN: ${NOTION_TOKEN}
 

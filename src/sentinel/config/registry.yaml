@@ -160,3 +160,245 @@ tools:
     requires_human_verification: true   # R4: a person confirms every change to where money goes
     output_integrity: trusted
     output_confidentiality: internal
+
+  # ---- connector preset: GitHub (official MCP server v2.0.3, toolsets repos and issues; plan F2, D-052) ----------------
+  # Tool names are github__<tool>. Anything an issue or a file says may have been written by an outsider, so every read is
+  # untrusted (R7, R8). A file may come from a private repository, so file reads are restricted and every value in them is
+  # fingerprinted (R2). Every write names its repository (owner + repo): the slip lists the repositories by name (R1), and
+  # the officer marks the private ones internal. Tools not listed here (create or fork a repository, collaborators, ...)
+  # get the default labels and no slip can allow them. The token's own repository limit at GitHub is a second wall.
+  github__issue_read:
+    capability: read
+    resource_class: github_issue
+    outbound: false
+    consequential: false
+    output_integrity: untrusted       # anyone can open an issue or comment on a public repository
+    output_confidentiality: internal
+
+  github__list_issues:
+    capability: read
+    resource_class: github_issue
+    outbound: false
+    consequential: false
+    output_integrity: untrusted
+    output_confidentiality: internal
+
+  github__search_issues:
+    capability: read
+    resource_class: github_issue
+    outbound: false
+    consequential: false
+    output_integrity: untrusted
+    output_confidentiality: internal
+
+  github__get_file_contents:
+    capability: read
+    resource_class: github_code
+    outbound: false
+    consequential: false
+    output_integrity: untrusted       # a contributor or a pull request can put instructions in a file
+    output_confidentiality: restricted   # the file may be in a private repository
+    fingerprint_fields: [all]
+
+  github__list_commits:
+    capability: read
+    resource_class: github_code
+    outbound: false
+    consequential: false
+    output_integrity: untrusted       # commit messages are written by contributors
+    output_confidentiality: internal
+
+  github__list_branches:
+    capability: read
+    resource_class: github_code
+    outbound: false
+    consequential: false
+    output_integrity: trusted
+    output_confidentiality: internal
+
+  github__add_issue_comment:
+    capability: send
+    resource_class: github_issue
+    outbound: true                    # a comment on a public repository is published to the world
+    consequential: true
+    output_integrity: trusted
+    output_confidentiality: internal
+    destination_args: [owner, repo]
+    destination_kind: repo
+
+  github__issue_write:
+    capability: send
+    resource_class: github_issue
+    outbound: true
+    consequential: true
+    output_integrity: trusted
+    output_confidentiality: internal
+    destination_args: [owner, repo]
+    destination_kind: repo
+
+  github__create_or_update_file:
+    capability: write
+    resource_class: github_code
+    outbound: true                    # writing to a repository is data leaving if the repository is public
+    consequential: true
+    output_integrity: trusted
+    output_confidentiality: internal
+    destination_args: [owner, repo]
+    destination_kind: repo
+
+  github__create_branch:
+    capability: write
+    resource_class: github_code
+    outbound: true
+    consequential: true
+    output_integrity: trusted
+    output_confidentiality: internal
+    destination_args: [owner, repo]
+    destination_kind: repo
+
+  github__delete_file:
+    capability: write
+    resource_class: github_code
+    outbound: true
+    consequential: true
+    requires_human_verification: true  # R4: a deletion waits for the officer
+    output_integrity: trusted
+    output_confidentiality: internal
+    destination_args: [owner, repo]
+    destination_kind: repo
+
+  # ---- connector preset: Notion (official MCP server 2.6.1; plan F2, D-053) --------------------------------------------
+  # Tool names are notion__API-<tool>. Whoever can edit a page can write instructions into it, so every read of content is
+  # untrusted (R7, R8), and a workspace is private, so content is restricted with every value fingerprinted (R2). Every write
+  # names its page: the slip lists pages by id (R1), and the officer marks private ones internal. A write to a block inside
+  # an allowed page is refused, because Sentinel does not know the page tree: write to the page itself. Not listed, so no
+  # slip can allow them: delete a block, move a page, change a database's structure, list the workspace's users.
+  notion__API-get-self:
+    capability: read
+    resource_class: notion_account
+    outbound: false
+    consequential: false
+    output_integrity: trusted
+    output_confidentiality: internal
+
+  notion__API-post-search:              # a read, though the server marks every POST as destructive
+    capability: read
+    resource_class: notion_page
+    outbound: false
+    consequential: false
+    output_integrity: untrusted
+    output_confidentiality: restricted
+    fingerprint_fields: [all]
+
+  notion__API-retrieve-a-page:
+    capability: read
+    resource_class: notion_page
+    outbound: false
+    consequential: false
+    output_integrity: untrusted
+    output_confidentiality: restricted
+    fingerprint_fields: [all]
+
+  notion__API-retrieve-page-markdown:
+    capability: read
+    resource_class: notion_page
+    outbound: false
+    consequential: false
+    output_integrity: untrusted
+    output_confidentiality: restricted
+    fingerprint_fields: [all]
+
+  notion__API-get-block-children:
+    capability: read
+    resource_class: notion_page
+    outbound: false
+    consequential: false
+    output_integrity: untrusted
+    output_confidentiality: restricted
+    fingerprint_fields: [all]
+
+  notion__API-retrieve-a-comment:
+    capability: read
+    resource_class: notion_page
+    outbound: false
+    consequential: false
+    output_integrity: untrusted
+    output_confidentiality: restricted
+    fingerprint_fields: [all]
+
+  notion__API-query-data-source:        # a read, though the server marks every POST as destructive
+    capability: read
+    resource_class: notion_database
+    outbound: false
+    consequential: false
+    output_integrity: untrusted
+    output_confidentiality: restricted
+    fingerprint_fields: [all]
+
+  notion__API-retrieve-a-data-source:
+    capability: read
+    resource_class: notion_database
+    outbound: false
+    consequential: false
+    output_integrity: untrusted
+    output_confidentiality: internal
+
+  notion__API-retrieve-a-database:
+    capability: read
+    resource_class: notion_database
+    outbound: false
+    consequential: false
+    output_integrity: untrusted
+    output_confidentiality: internal
+
+  notion__API-post-page:
+    capability: write
+    resource_class: notion_page
+    outbound: true                    # a page others can read, possibly shared to the web
+    consequential: true
+    output_integrity: trusted
+    output_confidentiality: internal
+    destination_args: [parent.page_id]
+    destination_kind: page
+
+  notion__API-patch-block-children:     # append to a page
+    capability: write
+    resource_class: notion_page
+    outbound: true
+    consequential: true
+    output_integrity: trusted
+    output_confidentiality: internal
+    destination_args: [block_id]
+    destination_kind: page
+
+  notion__API-create-a-comment:
+    capability: send
+    resource_class: notion_page
+    outbound: true
+    consequential: true
+    output_integrity: trusted
+    output_confidentiality: internal
+    destination_args: [parent.page_id]
+    destination_kind: page
+
+  notion__API-patch-page:
+    capability: write
+    resource_class: notion_page
+    outbound: true
+    consequential: true
+    requires_human_verification: true  # R4: this call can also put a page in the trash
+    output_integrity: trusted
+    output_confidentiality: internal
+    destination_args: [page_id]
+    destination_kind: page
+
+  notion__API-update-page-markdown:
+    capability: write
+    resource_class: notion_page
+    outbound: true
+    consequential: true
+    requires_human_verification: true  # R4: this call can replace a page's whole content
+    output_integrity: trusted
+    output_confidentiality: internal
+    destination_args: [page_id]
+    destination_kind: page

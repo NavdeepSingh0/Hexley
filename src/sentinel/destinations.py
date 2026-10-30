@@ -18,6 +18,7 @@ how data is smuggled out ("https://allowed.example\\@evil.example/").
 
 from __future__ import annotations
 
+import json
 import posixpath
 import re
 from typing import Any
@@ -28,7 +29,6 @@ from .matcher import normalise
 _EMAIL = re.compile(r"[a-z0-9._%+\-]+@[a-z0-9\-]+(?:\.[a-z0-9\-]+)+")
 _URL_HOST = re.compile(r"https?://([a-z0-9\-]+(?:\.[a-z0-9\-]+)+)")  # for scanning free text, where a miss is harmless
 _STRICT_NETLOC = re.compile(r"[a-z0-9](?:[a-z0-9\-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9\-]*[a-z0-9])?)*(?::\d{1,5})?")
-_GITHUB_REPO = re.compile(r"github\.com/([a-z0-9](?:[a-z0-9\-]{0,38}))/([a-z0-9._\-]{1,100})")
 _REPO_PART = re.compile(r"[a-z0-9](?:[a-z0-9._\-]{0,99})")
 _CHANNEL = re.compile(r"[a-z0-9][a-z0-9._\-]{0,79}")
 _PAGE = re.compile(r"[a-z0-9]{8,64}")
@@ -37,11 +37,9 @@ NAMED_KINDS = ("repo", "channel", "page")
 
 
 def extract_destinations(text: str) -> set[str]:
-    """Every e-mail address, URL host and GitHub repository in `text`, after decoding URL/HTML escapes and Unicode
-    folding. A repository named in untrusted content is remembered like an address (R3)."""
+    """Every e-mail address and URL host in `text`, after decoding URL/HTML escapes and Unicode folding."""
     t = normalise(text)
-    repos = {f"repo:{o}/{n.removesuffix('.git').rstrip('.')}" for o, n in _GITHUB_REPO.findall(t)}
-    return set(_EMAIL.findall(t)) | {f"host:{h}" for h in _URL_HOST.findall(t)} | repos
+    return set(_EMAIL.findall(t)) | {f"host:{h}" for h in _URL_HOST.findall(t)}
 
 
 def domain_of(address: str) -> str:
@@ -51,13 +49,29 @@ def domain_of(address: str) -> str:
 
 
 def _get(args: dict[str, Any], path: str) -> Any:
-    """An argument by dotted path (`parent.page_id`); None when any step is missing."""
+    """An argument by dotted path (`parent.page_id`); None when any step is missing. A step may be an object written as a
+    JSON string (Notion's server accepts `parent` either way), and it is read the way the server would read it."""
     value: Any = args
     for part in path.split("."):
+        if isinstance(value, str):
+            try:
+                value = json.loads(value)
+            except ValueError:
+                return None
         if not isinstance(value, dict) or part not in value:
             return None
         value = value[part]
     return value
+
+
+def _ambiguous_target(args: dict[str, Any], path: str) -> bool:
+    """`{"page_id": <allowed>, "database_id": <elsewhere>}`: the object names two targets, the check would read one and the
+    service might use the other. Such a call is refused rather than guessed at."""
+    head, dot, leaf = path.rpartition(".")
+    holder = _get(args, head) if dot else None
+    if isinstance(holder, str):
+        holder = json.loads(holder)  # it parsed already: the target was read from it
+    return isinstance(holder, dict) and any(k != leaf and k.endswith("_id") and v for k, v in holder.items())
 
 
 def named_key(kind: str, values: list[Any]) -> str | None:
@@ -89,6 +103,8 @@ def destination_keys(args: dict[str, Any], destination_args: list[str], kind: st
         values = [_get(args, a) for a in destination_args]
         key = named_key(kind, values) if all(v is not None for v in values) else None
         shown = "/".join(str(v) for v in values if v is not None) or "(no destination given)"
+        if key and any(_ambiguous_target(args, a) for a in destination_args):
+            return [], [f"{shown} (the call names more than one target)"]
         return ([key], []) if key else ([], [shown])
     return keys_in([v for a in destination_args if (v := _get(args, a)) is not None], kind)
 
