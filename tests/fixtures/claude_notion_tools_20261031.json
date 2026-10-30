@@ -1,0 +1,512 @@
+{
+ "source": "Tool definitions of Claude's own Notion connector as offered to Claude Code on 31 Oct 2026: argument names, nested ones as parent.page_id, and required lists, read by a fresh session's ToolSearch.",
+ "tools": {
+  "notion-convert-page-to-skill": {
+   "properties": [
+    "instructions_version",
+    "page_url",
+    "telemetry"
+   ],
+   "required": [
+    "page_url"
+   ]
+  },
+  "notion-create-attachment": {
+   "properties": [
+    "content",
+    "content_type",
+    "filename",
+    "instructions_version",
+    "source_file_id",
+    "source_url",
+    "telemetry"
+   ],
+   "required": []
+  },
+  "notion-create-comment": {
+   "properties": [
+    "discussion_id",
+    "instructions_version",
+    "markdown",
+    "page_id",
+    "reply_to_comment_id",
+    "rich_text",
+    "selection_with_ellipsis",
+    "telemetry"
+   ],
+   "required": [
+    "page_id"
+   ]
+  },
+  "notion-create-database": {
+   "properties": [
+    "database_type",
+    "description",
+    "instructions_version",
+    "parent",
+    "parent.page_id",
+    "parent.type",
+    "schema",
+    "telemetry",
+    "title"
+   ],
+   "required": []
+  },
+  "notion-create-file-upload": {
+   "properties": [
+    "content_type",
+    "filename",
+    "instructions_version",
+    "telemetry"
+   ],
+   "required": [
+    "filename"
+   ]
+  },
+  "notion-create-folder": {
+   "properties": [
+    "instructions_version",
+    "parent",
+    "parent.page_id",
+    "parent.folder_id",
+    "telemetry",
+    "title"
+   ],
+   "required": [
+    "parent",
+    "title"
+   ]
+  },
+  "notion-create-pages": {
+   "properties": [
+    "allow_async",
+    "creation_mode",
+    "instructions_version",
+    "pages",
+    "parent",
+    "parent.page_id",
+    "parent.database_id",
+    "parent.data_source_id",
+    "parent.teamspace_id",
+    "parent.type",
+    "telemetry"
+   ],
+   "required": [
+    "pages"
+   ]
+  },
+  "notion-create-view": {
+   "properties": [
+    "configure",
+    "data_source_id",
+    "database_id",
+    "instructions_version",
+    "name",
+    "parent_page_id",
+    "show_data_source_title",
+    "telemetry",
+    "type"
+   ],
+   "required": [
+    "data_source_id",
+    "name",
+    "type"
+   ]
+  },
+  "notion-delete-databases": {
+   "properties": [
+    "database_ids",
+    "instructions_version",
+    "telemetry",
+    "user_confirmed"
+   ],
+   "required": [
+    "database_ids"
+   ]
+  },
+  "notion-delete-pages": {
+   "properties": [
+    "instructions_version",
+    "page_ids",
+    "telemetry",
+    "user_confirmed"
+   ],
+   "required": [
+    "page_ids"
+   ]
+  },
+  "notion-download-attachment": {
+   "properties": [
+    "file_upload_id",
+    "instructions_version",
+    "telemetry"
+   ],
+   "required": [
+    "file_upload_id"
+   ]
+  },
+  "notion-download-skill": {
+   "properties": [
+    "id",
+    "instructions_version",
+    "telemetry"
+   ],
+   "required": [
+    "id"
+   ]
+  },
+  "notion-duplicate-page": {
+   "properties": [
+    "instructions_version",
+    "page_id",
+    "telemetry"
+   ],
+   "required": [
+    "page_id"
+   ]
+  },
+  "notion-fetch": {
+   "properties": [
+    "id",
+    "include_discussions",
+    "include_file_urls",
+    "include_transcript",
+    "instructions_version",
+    "telemetry"
+   ],
+   "required": [
+    "id"
+   ]
+  },
+  "notion-get-comments": {
+   "properties": [
+    "discussion_id",
+    "include_all_blocks",
+    "include_resolved",
+    "instructions_version",
+    "page_id",
+    "telemetry"
+   ],
+   "required": [
+    "page_id"
+   ]
+  },
+  "notion-get-enabled-skills": {
+   "properties": [
+    "instructions_version",
+    "telemetry"
+   ],
+   "required": []
+  },
+  "notion-get-file-download-urls": {
+   "properties": [
+    "instructions_version",
+    "references",
+    "telemetry"
+   ],
+   "required": [
+    "references"
+   ]
+  },
+  "notion-get-self": {
+   "properties": [
+    "instructions_version",
+    "telemetry"
+   ],
+   "required": []
+  },
+  "notion-get-tool-access": {
+   "properties": [
+    "instructions_version",
+    "telemetry",
+    "tool_names"
+   ],
+   "required": []
+  },
+  "notion-get-version-changes": {
+   "properties": [
+    "authors",
+    "end_time",
+    "instructions_version",
+    "page",
+    "sources",
+    "start_time",
+    "telemetry"
+   ],
+   "required": [
+    "page"
+   ]
+  },
+  "notion-list-page-backlinks": {
+   "properties": [
+    "cursor",
+    "instructions_version",
+    "page_id",
+    "page_size",
+    "telemetry",
+    "types"
+   ],
+   "required": [
+    "page_id"
+   ]
+  },
+  "notion-memory-search": {
+   "properties": [
+    "instructions_version",
+    "limit",
+    "query",
+    "telemetry"
+   ],
+   "required": [
+    "query"
+   ]
+  },
+  "notion-move-pages": {
+   "properties": [
+    "instructions_version",
+    "new_parent",
+    "new_parent.page_id",
+    "new_parent.database_id",
+    "new_parent.data_source_id",
+    "new_parent.type",
+    "page_or_database_ids",
+    "telemetry"
+   ],
+   "required": [
+    "page_or_database_ids",
+    "new_parent"
+   ]
+  },
+  "notion-query-data-sources": {
+   "properties": [
+    "data",
+    "instructions_version",
+    "telemetry"
+   ],
+   "required": [
+    "data"
+   ]
+  },
+  "notion-query-multiple-data-sources": {
+   "properties": [
+    "data_source_urls",
+    "instructions_version",
+    "mode",
+    "params",
+    "query",
+    "telemetry"
+   ],
+   "required": [
+    "query",
+    "data_source_urls"
+   ]
+  },
+  "notion-restore-pages": {
+   "properties": [
+    "instructions_version",
+    "page_ids",
+    "telemetry"
+   ],
+   "required": [
+    "page_ids"
+   ]
+  },
+  "notion-search": {
+   "properties": [
+    "data_source_url",
+    "filters",
+    "instructions_version",
+    "max_highlight_length",
+    "page_size",
+    "page_url",
+    "query",
+    "query_type",
+    "sort",
+    "teamspace_id",
+    "telemetry"
+   ],
+   "required": [
+    "query"
+   ]
+  },
+  "notion-update-data-source": {
+   "properties": [
+    "data_source_id",
+    "description",
+    "in_trash",
+    "instructions_version",
+    "is_inline",
+    "page_layout",
+    "statements",
+    "telemetry",
+    "title"
+   ],
+   "required": [
+    "data_source_id"
+   ]
+  },
+  "notion-update-enabled-skills": {
+   "properties": [
+    "add_skill_urls",
+    "instructions_version",
+    "remove_skill_urls",
+    "surfaces",
+    "telemetry"
+   ],
+   "required": []
+  },
+  "notion-update-folder": {
+   "properties": [
+    "command",
+    "file_upload_ids",
+    "file_urls",
+    "folder_id",
+    "instructions_version",
+    "telemetry",
+    "title"
+   ],
+   "required": [
+    "folder_id",
+    "command"
+   ]
+  },
+  "notion-update-page": {
+   "properties": [
+    "allow_async",
+    "allow_deleting_content",
+    "command",
+    "content",
+    "content_updates",
+    "cover",
+    "icon",
+    "instructions_version",
+    "is_skill",
+    "new_str",
+    "page_id",
+    "position",
+    "properties",
+    "telemetry",
+    "template_id",
+    "verification_expiry_days",
+    "verification_status"
+   ],
+   "required": [
+    "page_id",
+    "command"
+   ]
+  },
+  "notion-update-view": {
+   "properties": [
+    "configure",
+    "instructions_version",
+    "name",
+    "telemetry",
+    "view_id"
+   ],
+   "required": [
+    "view_id"
+   ]
+  },
+  "notion-view-version": {
+   "properties": [
+    "cursor",
+    "instructions_version",
+    "page",
+    "telemetry",
+    "time"
+   ],
+   "required": [
+    "page",
+    "time"
+   ]
+  },
+  "notion-calendar-cancel-events": {
+   "properties": [
+    "events",
+    "instructions_version",
+    "telemetry"
+   ],
+   "required": [
+    "events"
+   ]
+  },
+  "notion-calendar-create-events": {
+   "properties": [
+    "events",
+    "events.calendar.accountId",
+    "events.calendar.calendarId",
+    "instructions_version",
+    "telemetry",
+    "timeZone"
+   ],
+   "required": [
+    "timeZone",
+    "events"
+   ]
+  },
+  "notion-calendar-list-calendar-resources": {
+   "properties": [
+    "calendar",
+    "ignoreWorkingLocation",
+    "instructions_version",
+    "maxCount",
+    "minCapacity",
+    "telemetry",
+    "timeSlots",
+    "timeZone"
+   ],
+   "required": [
+    "timeSlots",
+    "minCapacity",
+    "timeZone"
+   ]
+  },
+  "notion-calendar-list-calendars": {
+   "properties": [
+    "instructions_version",
+    "onlyAccountEmails",
+    "telemetry"
+   ],
+   "required": []
+  },
+  "notion-calendar-list-contacts": {
+   "properties": [
+    "instructions_version",
+    "queries",
+    "telemetry"
+   ],
+   "required": []
+  },
+  "notion-calendar-list-coworkers-events": {
+   "properties": [
+    "coworkerEmails",
+    "instructions_version",
+    "telemetry",
+    "timeMax",
+    "timeMin",
+    "timeZone"
+   ],
+   "required": [
+    "coworkerEmails",
+    "timeMin",
+    "timeMax",
+    "timeZone"
+   ]
+  },
+  "notion-calendar-list-events": {
+   "properties": [
+    "includeDeclinedInvites",
+    "instructions_version",
+    "telemetry",
+    "timeMax",
+    "timeMin",
+    "timeZone"
+   ],
+   "required": [
+    "timeMin",
+    "timeMax",
+    "timeZone"
+   ]
+  }
+ }
+}

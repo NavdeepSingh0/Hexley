@@ -208,7 +208,8 @@ async def test_errors_listed_not_dropped(stack, monkeypatch):
     monkeypatch.setattr(harness, "scripted_cases", lambda: [broken, good])
     monkeypatch.setattr(harness, "hardened_cases", lambda: [])
     r = await harness.run_scripted(stack)
-    assert {e["case"] for e in r["errors"]} == {"supported/broken"} and len(r["errors"]) == 3  # once per column
+    # The message prints the recorded errors: this has failed once with an extra case and the cause was lost (31 Oct).
+    assert {e["case"] for e in r["errors"]} == {"supported/broken"} and len(r["errors"]) == 3, r["errors"]  # once per column
     assert any(c["case"] == "supported/broken" and c["error"] for c in r["cells"])  # the cell is kept, with its error
     assert r["metrics"]["fingerprint_enforcement"]["by_column"]["sentinel"]["supported_attempts"] == 1  # but not counted
 

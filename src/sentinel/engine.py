@@ -49,7 +49,8 @@ def decide(action: AgentAction, session: Session, registry: Registry, approved: 
                    rules.rule_r1_egress(action, entry, session.contract)]
         if session.column == Column.SENTINEL:  # the R1-only baseline runs R1 and nothing else
             contacts = isinstance(action.args.get("command"), str) and bool(effects.shell_effect(action.args["command"]).urls)
-            matches = session.index.scan_args(action.args) if (entry.outbound or contacts) else []
+            scanned = destinations.without_named_destination(action.args, entry.destination_args, entry.destination_kind)
+            matches = session.index.scan_args(scanned) if (entry.outbound or contacts) else []
             # An address that IS the recipient is not a leak of itself (you may write to a customer who is in the database).
             matches = [m for m in matches if not (m.kind == "email" and m.canonical in recipients)]
             if recipients and not unparseable and all(

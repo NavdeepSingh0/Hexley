@@ -95,6 +95,16 @@ def named_key(kind: str, values: list[Any]) -> str | None:
     return f"page:{page}" if _PAGE.fullmatch(page) else None
 
 
+def without_named_destination(args: dict[str, Any], destination_args: list[str], kind: str) -> dict[str, Any]:
+    """The arguments R2 scans for restricted values. A repository, channel or page must match the slip exactly (R1), so naming it
+    carries no data out, while a result this session read often contains that very name (a page's id, a repository in a file's
+    address), which R2 would otherwise call a leak. An e-mail address or URL stays in: a URL's query can carry data."""
+    if kind not in NAMED_KINDS:
+        return args
+    drop = {a.split(".", 1)[0] for a in destination_args}
+    return {k: v for k, v in args.items() if k not in drop}
+
+
 def destination_keys(args: dict[str, Any], destination_args: list[str], kind: str) -> tuple[list[str], list[str]]:
     """The destination keys of a call, from the tool's registry entry: keys plus the values that made none (junk, refused
     by R1). For a repository, channel or page the listed arguments together make ONE key, and a missing one is junk: an

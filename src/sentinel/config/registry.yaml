@@ -457,6 +457,163 @@ tools:
     destination_args: [to]            # cc and bcc are destinations too (effects.extra_destination_args)
     unchecked_args: [draftId, attachments]
 
+  # ---- Claude's own Slack connector, judged and not hosted (plan F3, D-057) ---------------------------------------------
+  # Names read as slack.slack_send_message. Anyone in a workspace can write a message, so everything read from it is untrusted;
+  # a workspace is private, so messages are restricted with every value fingerprinted. Every send names its channel or person by
+  # id, and the slip lists them exactly. A stored draft is refused, because what it sends cannot be seen here. Left off, so no slip
+  # can allow them: creating conversations, canvases, lists, reactions, file uploads and reading profiles.
+  slack.slack_read_channel:
+    capability: read
+    resource_class: slack_message
+    outbound: false
+    consequential: false
+    output_integrity: untrusted
+    output_confidentiality: restricted
+    fingerprint_fields: [all]
+
+  slack.slack_read_thread:
+    capability: read
+    resource_class: slack_message
+    outbound: false
+    consequential: false
+    output_integrity: untrusted
+    output_confidentiality: restricted
+    fingerprint_fields: [all]
+
+  slack.slack_search_public:
+    capability: read
+    resource_class: slack_message
+    outbound: false
+    consequential: false
+    output_integrity: untrusted
+    output_confidentiality: restricted
+    fingerprint_fields: [all]
+
+  slack.slack_search_public_and_private:
+    capability: read
+    resource_class: slack_message
+    outbound: false
+    consequential: false
+    output_integrity: untrusted
+    output_confidentiality: restricted
+    fingerprint_fields: [all]
+
+  slack.slack_search_channels:
+    capability: read
+    resource_class: slack_channel
+    outbound: false
+    consequential: false
+    output_integrity: untrusted
+    output_confidentiality: internal
+
+  slack.slack_list_user_channels:
+    capability: read
+    resource_class: slack_channel
+    outbound: false
+    consequential: false
+    output_integrity: untrusted
+    output_confidentiality: internal
+
+  slack.slack_send_message_draft:
+    capability: write
+    resource_class: slack_draft
+    outbound: false                   # a draft stays with the person; sending a stored draft by its id is refused
+    consequential: false
+    output_integrity: trusted
+    output_confidentiality: internal
+
+  slack.slack_send_message:
+    capability: send
+    resource_class: slack_message
+    outbound: true
+    consequential: true
+    output_integrity: trusted
+    output_confidentiality: internal
+    destination_args: [channel_id]
+    destination_kind: channel
+    unchecked_args: [draft_id]
+
+  slack.slack_schedule_message:
+    capability: send
+    resource_class: slack_message
+    outbound: true
+    consequential: true
+    output_integrity: trusted
+    output_confidentiality: internal
+    destination_args: [channel_id]
+    destination_kind: channel
+
+  # ---- Claude's own Notion connector, judged and not hosted (plan F3, D-057) --------------------------------------------
+  # Names read as notion.notion-fetch. Whoever can edit a page can write instructions into it, so everything read is untrusted, and
+  # a workspace is private, so content is restricted with every value fingerprinted. Every write names its page; the slip lists pages
+  # by id. Updating a page can erase it, so that waits for the officer. Left off, so no slip can allow them: delete, move, duplicate,
+  # restore, databases and views, folders, attachments, skills, memory and calendar.
+  notion.notion-search:
+    capability: read
+    resource_class: notion_page
+    outbound: false
+    consequential: false
+    output_integrity: untrusted
+    output_confidentiality: restricted
+    fingerprint_fields: [all]
+    free_text_args: [query]           # a search, not a statement
+  notion.notion-fetch:
+    capability: read
+    resource_class: notion_page
+    outbound: false
+    consequential: false
+    output_integrity: untrusted
+    output_confidentiality: restricted
+    fingerprint_fields: [all]
+
+  notion.notion-get-comments:
+    capability: read
+    resource_class: notion_page
+    outbound: false
+    consequential: false
+    output_integrity: untrusted
+    output_confidentiality: restricted
+    fingerprint_fields: [all]
+
+  notion.notion-get-self:
+    capability: read
+    resource_class: notion_account
+    outbound: false
+    consequential: false
+    output_integrity: trusted
+    output_confidentiality: internal
+
+  notion.notion-create-comment:
+    capability: send
+    resource_class: notion_page
+    outbound: true
+    consequential: true
+    output_integrity: trusted
+    output_confidentiality: internal
+    destination_args: [page_id]
+    destination_kind: page
+
+  notion.notion-create-pages:
+    capability: write
+    resource_class: notion_page
+    outbound: true                    # a page others can read, possibly shared to the web
+    consequential: true
+    output_integrity: trusted
+    output_confidentiality: internal
+    destination_args: [parent.page_id]
+    destination_kind: page
+
+  notion.notion-update-page:
+    capability: write
+    resource_class: notion_page
+    outbound: true
+    consequential: true
+    requires_human_verification: true  # R4: this call can replace or erase a page's content
+    output_integrity: trusted
+    output_confidentiality: internal
+    destination_args: [page_id]
+    destination_kind: page
+
   # ---- connector preset: mail (mcp-mail-server 2.1.2, from its README; plan F2, D-054) ---------------------------------
   # Anyone can send a mail, so everything read from a mailbox is untrusted (R7, R8); a mailbox is private, so it is restricted
   # with every value fingerprinted (R2). Deliberately NOT listed, so no slip can allow them: reply_to_email and

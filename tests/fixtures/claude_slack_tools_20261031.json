@@ -1,0 +1,327 @@
+{
+ "source": "Tool definitions of Claude's own Slack connector as offered to Claude Code on 31 Oct 2026: argument names and required lists, read by a fresh session's ToolSearch.",
+ "tools": {
+  "slack_add_list_record": {
+   "properties": [
+    "columns",
+    "list_id"
+   ],
+   "required": [
+    "list_id",
+    "columns"
+   ]
+  },
+  "slack_add_reaction": {
+   "properties": [
+    "channel_id",
+    "emoji",
+    "message_ts"
+   ],
+   "required": [
+    "channel_id",
+    "message_ts",
+    "emoji"
+   ]
+  },
+  "slack_complete_file_upload": {
+   "properties": [
+    "channel_id",
+    "file_id",
+    "initial_comment",
+    "thread_ts",
+    "title"
+   ],
+   "required": [
+    "file_id"
+   ]
+  },
+  "slack_create_canvas": {
+   "properties": [
+    "content",
+    "title"
+   ],
+   "required": [
+    "title",
+    "content"
+   ]
+  },
+  "slack_create_conversation": {
+   "properties": [
+    "channel_name",
+    "is_private",
+    "user_ids"
+   ],
+   "required": []
+  },
+  "slack_create_list": {
+   "properties": [
+    "columns",
+    "description",
+    "name"
+   ],
+   "required": [
+    "name"
+   ]
+  },
+  "slack_get_reactions": {
+   "properties": [
+    "channel_id",
+    "message_ts"
+   ],
+   "required": [
+    "channel_id",
+    "message_ts"
+   ]
+  },
+  "slack_list_channel_members": {
+   "properties": [
+    "channel_id",
+    "cursor",
+    "include_bots",
+    "include_deleted",
+    "limit",
+    "response_format"
+   ],
+   "required": [
+    "channel_id"
+   ]
+  },
+  "slack_read_canvas": {
+   "properties": [
+    "canvas_id"
+   ],
+   "required": [
+    "canvas_id"
+   ]
+  },
+  "slack_read_channel": {
+   "properties": [
+    "channel_id",
+    "cursor",
+    "latest",
+    "limit",
+    "oldest",
+    "response_format"
+   ],
+   "required": [
+    "channel_id"
+   ]
+  },
+  "slack_read_file": {
+   "properties": [
+    "file_id"
+   ],
+   "required": [
+    "file_id"
+   ]
+  },
+  "slack_read_list": {
+   "properties": [
+    "cursor",
+    "format",
+    "limit",
+    "list_id",
+    "list_title",
+    "schema_only"
+   ],
+   "required": []
+  },
+  "slack_read_thread": {
+   "properties": [
+    "channel_id",
+    "cursor",
+    "latest",
+    "limit",
+    "message_ts",
+    "oldest",
+    "response_format"
+   ],
+   "required": [
+    "channel_id",
+    "message_ts"
+   ]
+  },
+  "slack_read_user_profile": {
+   "properties": [
+    "include_locale",
+    "response_format",
+    "user_id"
+   ],
+   "required": []
+  },
+  "slack_schedule_message": {
+   "properties": [
+    "channel_id",
+    "message",
+    "post_at",
+    "reply_broadcast",
+    "thread_ts"
+   ],
+   "required": [
+    "channel_id",
+    "message",
+    "post_at"
+   ]
+  },
+  "slack_search_channels": {
+   "properties": [
+    "channel_types",
+    "cursor",
+    "include_archived",
+    "keywords",
+    "limit",
+    "natural_language_query",
+    "response_format"
+   ],
+   "required": []
+  },
+  "slack_search_public": {
+   "properties": [
+    "after",
+    "before",
+    "content_types",
+    "context_channel_id",
+    "cursor",
+    "filters",
+    "include_bots",
+    "include_context",
+    "keywords",
+    "limit",
+    "max_context_length",
+    "natural_language_query",
+    "only_my_channels",
+    "response_format",
+    "sort",
+    "sort_dir"
+   ],
+   "required": []
+  },
+  "slack_search_public_and_private": {
+   "properties": [
+    "after",
+    "before",
+    "channel_types",
+    "content_types",
+    "context_channel_id",
+    "cursor",
+    "filters",
+    "include_bots",
+    "include_context",
+    "keywords",
+    "limit",
+    "max_context_length",
+    "natural_language_query",
+    "only_my_channels",
+    "response_format",
+    "sort",
+    "sort_dir"
+   ],
+   "required": []
+  },
+  "slack_search_users": {
+   "properties": [
+    "cursor",
+    "keywords",
+    "limit",
+    "natural_language_query",
+    "response_format"
+   ],
+   "required": []
+  },
+  "slack_send_message": {
+   "properties": [
+    "channel_id",
+    "draft_id",
+    "message",
+    "reply_broadcast",
+    "thread_ts",
+    "unfurl_app_links"
+   ],
+   "required": [
+    "channel_id",
+    "message"
+   ]
+  },
+  "slack_send_message_draft": {
+   "properties": [
+    "channel_id",
+    "message",
+    "thread_ts"
+   ],
+   "required": [
+    "channel_id",
+    "message"
+   ]
+  },
+  "slack_update_canvas": {
+   "properties": [
+    "action",
+    "canvas_id",
+    "content",
+    "section_id",
+    "sections"
+   ],
+   "required": [
+    "canvas_id"
+   ]
+  },
+  "slack_update_list": {
+   "properties": [
+    "columns_to_add",
+    "columns_to_delete",
+    "columns_to_update",
+    "description",
+    "icon",
+    "list_id",
+    "name"
+   ],
+   "required": [
+    "list_id"
+   ]
+  },
+  "slack_update_list_record": {
+   "properties": [
+    "list_id",
+    "record_id",
+    "updated_columns"
+   ],
+   "required": [
+    "list_id",
+    "record_id",
+    "updated_columns"
+   ]
+  },
+  "slack_get_file_upload_url": {
+   "properties": [
+    "alt_txt",
+    "content_length",
+    "filename",
+    "snippet_type"
+   ],
+   "required": [
+    "filename",
+    "content_length"
+   ]
+  },
+  "slack_list_user_channels": {
+   "properties": [
+    "cursor",
+    "exclude_archived",
+    "format",
+    "limit",
+    "name_prefix",
+    "team_id",
+    "types"
+   ],
+   "required": []
+  },
+  "slack_search_emojis": {
+   "properties": [
+    "query"
+   ],
+   "required": [
+    "query"
+   ]
+  }
+ }
+}

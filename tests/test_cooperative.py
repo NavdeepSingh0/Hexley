@@ -14,6 +14,7 @@ import httpx
 import pytest
 import pytest_asyncio
 
+from sentinel import destinations
 from sentinel.check import canonical_tool
 from sentinel.contracts import SlipError
 from sentinel.cooperative import ADVISORY, preferences_text, raw_name
@@ -232,7 +233,7 @@ async def test_a_mail_search_is_not_read_as_sql_and_a_database_query_still_is(st
             await c.call_tool("query_db", {"query": "DROP TABLE customers"})
 
 
-@pytest.mark.parametrize("fixture, prefix", [("claude_gmail_tools_20261030.json", "gmail."), ("github_tools_v2.0.3.json", "github__"),
+@pytest.mark.parametrize("fixture, prefix", [("claude_gmail_tools_20261030.json", "gmail."), ("claude_slack_tools_20261031.json", "slack."), ("claude_notion_tools_20261031.json", "notion."), ("github_tools_v2.0.3.json", "github__"),
                                              ("notion_tools_v2.6.1.json", "notion__")])
 def test_every_preset_tool_with_a_query_argument_says_what_that_argument_is(fixture, prefix):
     doc = json.loads((Path(__file__).parent / "fixtures" / fixture).read_text(encoding="utf-8"))
@@ -283,6 +284,106 @@ def test_the_only_tool_that_sends_is_send_message_and_its_unreadable_arguments_a
     assert set(PRESET["send_message"].unchecked_args) == {"draftId", "attachments"}
 
 
+# ---- the preset against Claude's real Slack tools -----------------------------------------------------------------------
+SLACK = json.loads((Path(__file__).parent / "fixtures" / "claude_slack_tools_20261031.json").read_text(encoding="utf-8"))["tools"]
+SLACK_PRESET = {n.removeprefix("slack."): _REG.get(n) for n in _REG.names() if n.startswith("slack.")}
+
+
+def test_every_slack_tool_in_the_preset_exists_with_the_arguments_it_names():
+    assert SLACK_PRESET
+    for name, entry in SLACK_PRESET.items():
+        assert name in SLACK, name
+        for arg in [*entry.destination_args, *entry.unchecked_args]:
+            assert arg in SLACK[name]["properties"], (name, arg)
+
+
+def test_every_slack_send_names_a_required_channel_and_nothing_else_sends():
+    senders = {n for n, e in SLACK_PRESET.items() if e.outbound}
+    assert senders == {"slack_send_message", "slack_schedule_message"}
+    for name in senders:
+        assert SLACK_PRESET[name].destination_kind == "channel" and "channel_id" in SLACK[name]["required"]
+
+
+async def _slack_slip(stack, **over) -> dict:
+    return await _slip(stack, allowed_tools=["slack.slack_read_channel", "slack.slack_send_message"], allowed_destinations=["channel:C0ALLOWED"],
+                       internal_destinations=["channel:C0ALLOWED"], **over)
+
+
+async def test_a_message_to_a_channel_off_the_slip_gets_a_no_and_the_one_on_it_may_run(stack):
+    async with stack.client(_token(await _slack_slip(stack))) as c:
+        assert (await _ask(c, "slack_send_message", {"channel_id": "C0ALLOWED", "message": "Done."}, connector="Slack"))["proceed"] is True
+        assert (await _ask(c, "slack_send_message", {"channel_id": "C0OTHER", "message": "Done."}, connector="Slack"))["proceed"] is False
+        assert (await _ask(c, "slack_send_message", {"message": "Done."}, connector="Slack"))["proceed"] is False
+        assert (await _ask(c, "slack_send_message", {"channel_id": "C0ALLOWED", "message": "x", "draft_id": "D1"}, connector="Slack"))["proceed"] is False
+        assert (await _ask(c, "slack_create_conversation", {"channel_name": "leak"}, connector="Slack"))["proceed"] is False
+
+
+# ---- the preset against Claude's real Notion tools ----------------------------------------------------------------------
+NOTION = json.loads((Path(__file__).parent / "fixtures" / "claude_notion_tools_20261031.json").read_text(encoding="utf-8"))["tools"]
+NOTION_PRESET = {n.removeprefix("notion."): _REG.get(n) for n in _REG.names() if n.startswith("notion.")}
+PAGE, OTHER = "1a2b3c4d-5e6f-4a8b-9c0d-1e2f3a4b5c6d", "9f8e7d6c-5b4a-4c3d-8e2f-1a0b9c8d7e6f"
+
+
+def test_every_notion_tool_in_the_preset_exists_with_the_arguments_it_names():
+    assert NOTION_PRESET
+    for name, entry in NOTION_PRESET.items():
+        assert name in NOTION, name
+        for arg in [*entry.destination_args, *entry.unchecked_args, *entry.free_text_args]:
+            assert arg in NOTION[name]["properties"], (name, arg)
+
+
+def test_notion_tools_that_destroy_or_move_things_stay_off_the_preset():
+    assert not {"notion-delete-pages", "notion-delete-databases", "notion-move-pages", "notion-update-data-source"} & set(NOTION_PRESET)
+    assert NOTION_PRESET["notion-update-page"].requires_human_verification
+
+
+async def test_naming_a_page_the_session_read_about_is_not_a_leak_but_its_contents_still_are(stack):
+    """Found live on Notion: a clean comment was refused by R2 because the page ids share a prefix with text the session had read."""
+    slip = await _slip(stack, allowed_tools=["notion.notion-fetch", "notion.notion-create-comment"],
+                       allowed_destinations=[f"page:{PAGE}", f"page:{OTHER}"], internal_destinations=[f"page:{PAGE}"])
+    async with stack.client(_token(slip)) as c:
+        read = await _ask(c, "notion-fetch", {"id": PAGE}, connector="Notion")
+        await c.call_tool("hexley_report", {"connector": "Notion", "tool": "notion-fetch", "check_id": read["check_id"],
+                                           "result": f"Page {OTHER}, parent {PAGE}. Salary of A. Rao is 1840500."})
+        leak = await _ask(c, "notion-create-comment", {"page_id": OTHER, "markdown": "A. Rao 1840500"}, connector="Notion")
+        assert leak["proceed"] is False and "restricted data" in leak["reason"]
+        slip_id = slip["session_id"]
+        clean = asyncio.create_task(_ask(c, "notion-create-comment", {"page_id": OTHER, "markdown": "Reviewed."}, connector="Notion"))
+        for _ in range(300):
+            found = [a for a in stack.rt.approvals.pending() if a.session_id == slip_id]
+            if found:
+                break
+            await asyncio.sleep(0.02)
+        assert found, "a clean comment must be held for the officer, not refused as a leak"
+        stack.rt.approvals.resolve(found[0].approval_id, True)
+        assert (await clean)["proceed"] is True
+
+
+def test_only_a_named_destination_is_left_out_of_the_scan():
+    args = {"owner": "acme", "repo": "site", "body": "x"}
+    assert destinations.without_named_destination(args, ["owner", "repo"], "repo") == {"body": "x"}
+    assert destinations.without_named_destination({"parent": {"page_id": "p"}, "pages": []}, ["parent.page_id"], "page") == {"pages": []}
+    url = {"url": "https://a.example/?q=1840500"}
+    assert destinations.without_named_destination(url, ["url"], "url") == url  # a query string can carry data
+    mail = {"to": "a@b.example", "body": "x"}
+    assert destinations.without_named_destination(mail, ["to"], "email") == mail
+
+
+async def test_a_notion_write_off_the_slip_or_naming_a_second_target_gets_a_no(stack):
+    slip = await _slip(stack, allowed_tools=["notion.notion-search", "notion.notion-create-pages", "notion.notion-create-comment"],
+                       allowed_destinations=[f"page:{PAGE}"], internal_destinations=[f"page:{PAGE}"])
+    pages = [{"properties": {"title": "x"}}]
+    async with stack.client(_token(slip)) as c:
+        assert (await _ask(c, "notion-search", {"query": "quote 1042"}, connector="Notion"))["proceed"] is True
+        assert (await _ask(c, "notion-create-pages", {"parent": {"page_id": PAGE}, "pages": pages}, connector="Notion"))["proceed"] is True
+        assert (await _ask(c, "notion-create-comment", {"page_id": PAGE.replace("-", ""), "markdown": "Noted."}, connector="Notion"))["proceed"] is True
+        assert (await _ask(c, "notion-create-pages", {"parent": {"page_id": OTHER}, "pages": pages}, connector="Notion"))["proceed"] is False
+        assert (await _ask(c, "notion-create-pages", {"pages": pages}, connector="Notion"))["proceed"] is False
+        two = {"parent": {"page_id": PAGE, "database_id": OTHER}, "pages": pages}
+        assert (await _ask(c, "notion-create-pages", two, connector="Notion"))["proceed"] is False
+        assert (await _ask(c, "notion-delete-pages", {"page_ids": [PAGE]}, connector="Notion"))["proceed"] is False
+
+
 # ---- the general hole this closed, and the slip's own destinations --------------------------------------------------------
 async def test_any_outbound_tool_called_with_its_destination_left_out_is_refused(stack):
     slip = await _slip(stack, allowed_tools=["send_email"], unseen_context=False, strict_flows=False,
@@ -299,7 +400,7 @@ def test_a_deployment_names_its_slips_destinations_and_an_internal_one_must_be_o
     draft = provider._slip_draft()
     assert draft.allowed_recipient_domains == ["boss@team.example", "team.example"]
     assert draft.internal_destinations == ["boss@team.example"] and draft.unseen_context and draft.strict_flows
-    assert draft.allowed_tools == TOOLS and not draft.work_item_id
+    assert set(TOOLS) <= set(draft.allowed_tools) and not draft.work_item_id
     with pytest.raises(SlipError):
         SentinelOAuthProvider(stack.rt, base_url="https://hexley.site", destinations=["team.example"], internal=["boss@elsewhere.example"])
     with pytest.raises(SlipError):
