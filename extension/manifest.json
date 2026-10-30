@@ -34,10 +34,6 @@
     "http://localhost/*"
   ],
 
-  "optional_host_permissions": [
-    "https://*.trycloudflare.com/*"
-  ],
-
   "web_accessible_resources": [
     {
       "resources": ["overlay.html", "overlay.js", "sentinel-mascot.js", "icon.svg"],
