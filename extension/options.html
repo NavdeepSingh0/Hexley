@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sentinel — Options</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0D0D14;
+      --surface:  #16161F;
+      --surface2: #1E1E2A;
+      --border:   rgba(255,255,255,0.08);
+      --text:     #FFFFFF;
+      --muted:    #A9A9BC;
+      --violet:   #A98BFF;
+      --green:    #34E8A3;
+      --red:      #FF5468;
+      --font:     "Helvetica Neue", Helvetica, Arial, sans-serif;
+      --radius:   12px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 14px;
+      line-height: 1.5;
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 48px 16px;
+    }
+
+    .page { width: 100%; max-width: 480px; }
+
+    /* Header */
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+    .header svg { width: 36px; height: 36px; flex: none; }
+    .header h1 { font-size: 20px; font-weight: 700; }
+    .header p  { font-size: 13px; color: var(--muted); margin-top: 2px; }
+
+    /* Card */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 16px;
+    }
+    .card h2 {
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--violet);
+      margin-bottom: 16px;
+    }
+
+    /* Form */
+    label {
+      display: block;
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    input[type="text"], input[type="url"], input[type="password"] {
+      width: 100%;
+      padding: 10px 14px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 14px;
+      outline: none;
+      margin-bottom: 16px;
+      transition: border-color .15s;
+    }
+    input:focus { border-color: var(--violet); }
+
+    /* Remember checkbox */
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .checkbox-row input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--violet); cursor: pointer; }
+    .checkbox-row label { margin-bottom: 0; font-size: 13px; color: var(--muted); cursor: pointer; }
+    .checkbox-row .warn { font-size: 11px; color: var(--red); margin-top: 2px; display: block; }
+
+    /* Buttons */
+    .btn-row { display: flex; gap: 8px; }
+    button {
+      padding: 10px 20px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-family: var(--font);
+      font-size: 14px;
+      font-weight: 600;
+      transition: opacity .15s;
+    }
+    button:hover { opacity: .85; }
+    button:disabled { opacity: .4; cursor: default; }
+    .btn-primary { background: var(--violet); color: #fff; }
+    .btn-secondary {
+      background: var(--surface2);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    /* Status */
+    #status {
+      margin-top: 16px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      display: none;
+    }
+    #status.ok    { background: rgba(52,232,163,.12); color: var(--green); border: 1px solid rgba(52,232,163,.25); }
+    #status.error { background: rgba(255,84,104,.12);  color: var(--red);   border: 1px solid rgba(255,84,104,.25); }
+    #status.info  { background: var(--surface2); color: var(--muted); border: 1px solid var(--border); }
+
+    /* Tips */
+    .tip {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.6;
+      margin-bottom: 12px;
+    }
+    .tip code {
+      background: var(--surface2);
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-family: monospace;
+      color: var(--violet);
+    }
+    .tip strong { color: var(--text); }
+
+    /* Rule */
+    hr { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <!-- Header -->
+    <div class="header">
+      <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="2" y="3" width="32" height="30" rx="9" fill="#A98BFF" opacity=".15"/>
+        <rect x="2" y="3" width="32" height="30" rx="9" stroke="#A98BFF" stroke-width="1.5"/>
+        <rect x="7" y="11" width="22" height="14" rx="4" fill="#07070A"/>
+        <line x1="13" y1="18" x2="13" y2="22" stroke="#A98BFF" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="23" y1="18" x2="23" y2="22" stroke="#A98BFF" stroke-width="2.5" stroke-linecap="round"/>
+      </svg>
+      <div>
+        <h1>Sentinel</h1>
+        <p>Connect to your Sentinel server</p>
+      </div>
+    </div>
+
+    <!-- Main config card -->
+    <div class="card">
+      <h2>Connection</h2>
+
+      <p class="tip">
+        Run <code>python -m sentinel up --demo</code> in your Sentinel directory.
+        It prints a link like <code>http://127.0.0.1:8000/#token=…</code><br><br>
+        <strong>Paste the full link below</strong> — or enter the address and token separately.
+      </p>
+
+      <label for="full-link">Full link from Sentinel (recommended)</label>
+      <input type="url" id="full-link" placeholder="http://127.0.0.1:8000/#token=..." autocomplete="off" spellcheck="false">
+
+      <hr>
+
+      <label for="base-url">Server address</label>
+      <input type="url" id="base-url" placeholder="http://127.0.0.1:8000" autocomplete="off" spellcheck="false">
+
+      <label for="token-input">Officer token</label>
+      <input type="password" id="token-input" placeholder="Paste token here" autocomplete="off" spellcheck="false">
+
+      <div class="checkbox-row">
+        <input type="checkbox" id="remember">
+        <div>
+          <label for="remember">Remember across browser restarts</label>
+          <span class="warn">⚠ Stores the token on disk. Only enable on a trusted device.</span>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn-primary" id="save-btn">Save &amp; test</button>
+        <button class="btn-secondary" id="clear-btn">Clear</button>
+      </div>
+
+      <div id="status" role="status" aria-live="polite"></div>
+    </div>
+
+    <!-- Info card -->
+    <div class="card">
+      <h2>What this extension does</h2>
+      <p class="tip">
+        It shows Sentinel's mascot on <strong>claude.ai</strong> and <strong>chatgpt.com</strong>,
+        reacting to real gateway decisions as they happen.<br><br>
+        It also lets you <strong>approve or deny</strong> held actions from the browser,
+        without switching to the Sentinel console.<br><br>
+        <strong>It does not enforce anything.</strong> Sentinel's gateway does that.
+        The extension only shows what Sentinel decided.
+      </p>
+    </div>
+  </div>
+
+  <script src="options.js"></script>
+</body>
+</html>

@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sentinel overlay</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        transparent;
+      --violet:    #A98BFF;
+      --green:     #34E8A3;
+      --blue:      #5B9BFF;
+      --amber:     #FFB62E;
+      --red:       #FF5468;
+      --ink:       #07070A;
+      --surface:   #16161F;
+      --surface2:  #1E1E2A;
+      --border:    rgba(255,255,255,0.08);
+      --text:      #FFFFFF;
+      --text-muted:#A9A9BC;
+      --font:      "Helvetica Neue", Helvetica, Arial, sans-serif;
+      --radius:    14px;
+    }
+
+    [data-theme="light"] {
+      --surface:   #FFFFFF;
+      --surface2:  #F4F3FA;
+      --border:    rgba(0,0,0,0.08);
+      --text:      #07070A;
+      --text-muted:#6B6B7E;
+    }
+
+    html, body {
+      width: 220px;
+      height: 220px;
+      background: transparent;
+      overflow: hidden;
+      font-family: var(--font);
+    }
+
+    /* ── Wrap ─────────────────────────────────────────── */
+    #wrap {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 220px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    /* ── Minimised dot ────────────────────────────────── */
+    #dot-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+      transition: transform .15s ease;
+    }
+    #dot-btn:hover { transform: scale(1.1); }
+    #dot-btn svg { width: 24px; height: 24px; }
+
+    /* ── Mascot wrapper ───────────────────────────────── */
+    #mascot-wrap {
+      position: relative;
+      width: 80px;
+      height: 80px;
+    }
+
+    sentinel-mascot {
+      display: block;
+    }
+
+    /* ── Minimise button ──────────────────────────────── */
+    #minimise-btn {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      font-size: 12px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity .15s;
+    }
+    #mascot-wrap:hover #minimise-btn { opacity: 1; }
+
+    /* ── Connection pill ──────────────────────────────── */
+    #pill {
+      margin-top: 4px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      font-size: 11px;
+      color: var(--text-muted);
+      white-space: nowrap;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      max-width: 200px;
+    }
+    #pill[data-ok="1"] {
+      color: var(--green);
+      border-color: var(--green);
+    }
+
+    /* ── Review button ────────────────────────────────── */
+    #review-btn {
+      margin-top: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      background: var(--amber);
+      border: none;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--ink);
+      font-family: var(--font);
+    }
+    #review-btn:hover { opacity: .85; }
+
+    /* ── Approval panel ───────────────────────────────── */
+    #approval-panel {
+      margin-top: 8px;
+      width: 200px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+      font-size: 12px;
+      color: var(--text);
+    }
+
+    #approval-panel h3 {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--amber);
+      margin-bottom: 6px;
+    }
+
+    #approval-tool {
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+
+    #approval-summary {
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      line-height: 1.4;
+    }
+
+    #approval-args-wrap {
+      background: var(--surface2);
+      border-radius: 6px;
+      padding: 6px 8px;
+      margin-bottom: 6px;
+    }
+
+    #approval-args {
+      font-family: monospace;
+      font-size: 10px;
+      color: var(--text-muted);
+      white-space: pre-wrap;
+      word-break: break-all;
+      max-height: 60px;
+      overflow-y: auto;
+    }
+
+    #approval-timer {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .approval-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .approval-actions button {
+      flex: 1;
+      padding: 6px 0;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-family: var(--font);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    #approve-btn {
+      background: var(--green);
+      color: var(--ink);
+    }
+    #approve-btn:hover { opacity: .85; }
+    #approve-btn:disabled { opacity: .4; cursor: default; }
+
+    #deny-btn {
+      background: var(--surface2);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    #deny-btn:hover { background: var(--red); color: #fff; border-color: var(--red); }
+    #deny-btn:disabled { opacity: .4; cursor: default; }
+  </style>
+</head>
+<body>
+  <!-- Minimised dot (shown when overlay is collapsed) -->
+  <button id="dot-btn" hidden title="Show Sentinel" aria-label="Show Sentinel mascot">
+    <!-- Simple sentinel-face icon -->
+    <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="4" y="5" width="24" height="22" rx="7" fill="#A98BFF" opacity=".15"/>
+      <rect x="4" y="5" width="24" height="22" rx="7" stroke="#A98BFF" stroke-width="1.5"/>
+      <rect x="9" y="10" width="14" height="10" rx="3" fill="#07070A"/>
+      <line x1="12" y1="15" x2="12" y2="19" stroke="#A98BFF" stroke-width="2" stroke-linecap="round"/>
+      <line x1="20" y1="15" x2="20" y2="19" stroke="#A98BFF" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+  </button>
+
+  <!-- Main overlay wrap -->
+  <div id="wrap">
+    <div id="mascot-wrap">
+      <sentinel-mascot
+        id="mascot"
+        state="sleeping"
+        size="80"
+        placement="above"
+        theme="dark"
+      ></sentinel-mascot>
+
+      <button id="minimise-btn" title="Minimise" aria-label="Minimise Sentinel">–</button>
+    </div>
+
+    <!-- Connection status pill -->
+    <div id="pill" role="status" aria-live="polite">
+      <span id="pill-text">Loading…</span>
+    </div>
+
+    <!-- Review button (shown when needs-approval) -->
+    <button id="review-btn" hidden aria-label="Review held action">Review</button>
+
+    <!-- Approval panel -->
+    <section id="approval-panel" hidden aria-label="Pending approval">
+      <h3>Needs approval</h3>
+      <div id="approval-tool"></div>
+      <div id="approval-summary"></div>
+      <div id="approval-args-wrap">
+        <pre id="approval-args"></pre>
+      </div>
+      <div id="approval-timer" aria-live="polite"></div>
+      <div class="approval-actions">
+        <button id="approve-btn">Approve</button>
+        <button id="deny-btn">Deny</button>
+      </div>
+    </section>
+  </div>
+
+  <!-- The mascot Web Component — copied from design/mascot/ -->
+  <script type="module" src="sentinel-mascot.js"></script>
+  <script src="overlay.js"></script>
+</body>
+</html>

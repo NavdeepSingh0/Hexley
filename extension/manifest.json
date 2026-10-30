@@ -1,0 +1,51 @@
+{
+  "manifest_version": 3,
+  "name": "Sentinel",
+  "version": "0.1.0",
+  "description": "Shows Sentinel's mascot on claude.ai and chatgpt.com, reacting to real gateway decisions. Lets you approve or deny held actions from the browser.",
+
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    },
+    "default_title": "Sentinel"
+  },
+
+  "background": {
+    "service_worker": "background.js"
+  },
+
+  "content_scripts": [
+    {
+      "matches": ["https://claude.ai/*", "https://chatgpt.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
+  },
+
+  "permissions": ["storage"],
+
+  "host_permissions": [
+    "http://127.0.0.1/*",
+    "http://localhost/*"
+  ],
+
+  "optional_host_permissions": [
+    "https://*.trycloudflare.com/*"
+  ],
+
+  "web_accessible_resources": [
+    {
+      "resources": ["overlay.html", "overlay.js", "sentinel-mascot.js", "styles.css"],
+      "matches": ["https://claude.ai/*", "https://chatgpt.com/*"]
+    }
+  ]
+}
