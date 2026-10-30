@@ -260,7 +260,7 @@ export const PAGES = {
           ['Call a tool of an unclassified connector', 'Deny: it is not on the slip (R1)'],
           ['Send restricted data to a place that is not internal', 'Deny (R2); the call never runs'],
           ['Send after the session read untrusted content', 'Hold for the officer (R7); once approved, an identical retry runs once'],
-          ['Write to agent or editor configuration, or read a credential file', 'Deny. That covers Claude Code's own settings file when it is written with Write or Edit, or by a shell command in a common form (redirection, tee, sed -i, cp, mv, rm, inline Python)'],
+          ['Write to agent or editor configuration, or read a credential file', 'Deny. That covers the settings file of Claude Code itself when it is written with Write or Edit, or by a shell command in a common form (redirection, tee, sed -i, cp, mv, rm, inline Python)'],
           ['Run a command that deletes or cannot be undone', 'Hold for the officer'],
           ['Read a file, search, or use another built-in tool Sentinel does not decide on', 'Allow, and list it as seen but not mediated'],
         ]} />

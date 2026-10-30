@@ -11,6 +11,10 @@ export const FAQ = [
     a: <>An instruction in the prompt is advice the model can be persuaded to drop. In our recorded runs of one real model, the unprotected setup delivered the restricted data in every usable run on the poisoned quotation. The counts and their limits are in <Link to="/#evidence">the evidence</Link>.</>,
   },
   {
+    q: 'How is this different from AWS Cedar policies and Microsoft FIDES?',
+    a: <>They are good, and we use their ideas. AWS's AgentCore Policy (generally available since March 2026) evaluates Cedar policies in AWS's gateway on the caller, the tool and the tool's parameters; most policies are stateless, and it now has opt-in session-aware ones. Microsoft's FIDES (experimental in Agent Framework since May 2026, Python) labels data inside an agent built with that framework and hides untrusted results from the model. Sentinel sits outside the agent, so it can work with an agent nobody can modify, and its policy input is the task a person approved plus what the session has read. We have no formal guarantee, we do not hide data from the model yet, and our evidence is a small set of cases we wrote ourselves. Facts about their products are from their own pages, read on 30 October 2026.</>,
+  },
+  {
     q: 'Is it a guarantee?',
     a: <>No. It is a measurement on a set of cases we wrote, plus a stated list of routes it does not cover. Nobody who has not read the rules has attacked it yet; that result will be reported on its own line. <Link to="/docs/limits">Limits and honest scope</Link>.</>,
   },
