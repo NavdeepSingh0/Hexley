@@ -64,7 +64,8 @@ def connect_view(rt: Runtime) -> dict:
     mcp_url = f"{public_url}/mcp" if public_url else rt.gateway_url
     methods = [{"id": "header", "status": METHOD_STATUS["header"], "steps": HEADER_STEPS}]
     if oauth is not None:
-        methods.insert(0, {"id": "oauth", "status": METHOD_STATUS["oauth"], "steps": OAUTH_STEPS})
+        steps = OAUTH_STEPS if getattr(oauth, "google", None) is None else [*OAUTH_STEPS[:-1], "Continue with Google, then Allow"]
+        methods.insert(0, {"id": "oauth", "status": METHOD_STATUS["oauth"], "steps": steps})
     return {"public_url": public_url, "mcp_url": mcp_url, "methods": methods,
             "clients": [{"id": i, "name": n, "kind": k, "status": s, "method": m, "snippet": sn,
                          "screenshot": sc if s == "tested" else None,

@@ -24,6 +24,7 @@ import uvicorn
 
 from .api import SITE_DIST, create_api
 from .gateway import build_gateway
+from .google_login import GoogleLoginError, google_from_env
 from .oneport import OnePort
 from .runtime import build_runtime, rotate_audit_log
 from .upstreams import DEFAULT_CONFIG as DEFAULT_UPSTREAMS, DEFAULT_ENV_FILE, UpstreamSet, install_log_redaction
@@ -83,7 +84,7 @@ def _env_list(name: str) -> list[str]:
 def tool_server_env(environ, connectors: UpstreamSet) -> dict[str, str]:
     """What the built-in tool server starts with. On a hosting platform the connectors' credentials are in this process's
     environment, and each must reach only its own connector (D-052)."""
-    return {k: v for k, v in environ.items() if k not in connectors.creds.values}
+    return {k: v for k, v in environ.items() if k not in connectors.creds.values and not k.startswith("HEXLEY_GOOGLE_")}
 
 
 async def warm_connectors(gateway, connectors: UpstreamSet, delay: float = 1.0) -> None:
@@ -206,8 +207,11 @@ async def _up(args: argparse.Namespace) -> None:
             rt.oauth = SentinelOAuthProvider(rt, base_url=public_url, consent_base_url=args.consent_url,
                                              preset=args.oauth_preset, slip_ttl=args.oauth_ttl, on_request=print_officer_code,
                                              destinations=args.oauth_destination, internal=args.oauth_internal)
-        except ValueError as e:
+            rt.oauth.google = google_from_env(os.environ, api_token, public_url)
+        except (ValueError, GoogleLoginError) as e:
             raise SystemExit(f"Nothing was started.\n  - {e}") from e
+        if rt.oauth.google is not None:
+            install_log_redaction([rt.oauth.google.client_secret])
     api_app = create_api(rt)
     rt.runs.pace = args.pace  # type: ignore[union-attr]
     env = {**tool_server_env(os.environ, connectors), "SENTINEL_DOWNSTREAM_TOKEN": downstream,

@@ -2,10 +2,18 @@
 
 > **The name:** the product is now Hexley (`hexley.site`). The program's command (`python -m sentinel`), the repository and the code keep the old name until after judging, and recorded proof files say Sentinel because that is what was said then. If asked: "We renamed it this week; the code follows after the finale."
 
-30 Oct 2026. Everything here was checked against the running program today. Quote only the numbers in section 4, with their "n". If a number is not in this file, do not say it.
+31 Oct 2026. Everything here was checked against the running program. Quote only the numbers in section 4, with their "n". If a number is not in this file, do not say it.
 
 ## 1. Before you go on (30 minutes ahead)
-**Start it** (the folder is the repository, the same one as always):
+**The hosted site is `https://hexley.site`** (AWS, Sydney). It serves the website, console, API and gateway. To open the console you need the officer token; print it in your own terminal, never on the projector:
+```
+ssh -i $env:USERPROFILE\.ssh\hexley.pem ubuntu@54.79.105.94 "sudo grep SENTINEL_API_TOKEN /etc/hexley/hexley.env"
+```
+Then open `https://hexley.site/#token=<that token>`. From India the first load is slow: open every page you will show once beforehand, so the browser has cached them.
+
+**A restart of the server logs out every AI client and session.** Do not redeploy on the morning of the demo.
+
+**Local fallback, if the hosted site or the network fails** (the folder is the repository, the same one as always):
 ```
 cd "C:\Projects\zinnovatio 4.0\sentinel"
 python -m uv run python -m sentinel up --demo --tools-port 8300
@@ -60,6 +68,15 @@ SAY: "Change one record, delete one, reorder two: verification fails and says wh
 **5:40 Close (20 s).**
 SAY: "Tested: about 750 automated tests, a labelled corpus, 30 recordings of a real model, real clients. Not done: a blind attacker and an adaptive attacker. Our limits are on the next page of the site, because a security tool that hides its limits is not one."
 
+## 2B. Real connectors (about 2 minutes, after section 2)
+SAY: "That was our own demo tools. This is the real thing. Hexley does not rebuild Gmail or Slack and does not hold their passwords: Claude keeps its own connectors, and Hexley only decides whether each call may run."
+
+Show one of these, whichever you rehearsed. Each ran on real accounts on 31 Oct, once per condition.
+- **Claude Code with Claude's own Gmail, Slack and Notion:** a send to an address not on the slip is refused before it reaches the service, and the honest one goes through.
+- **Antigravity with GitHub's own server:** an issue carries hidden steps to comment on a private repository. The read works, the comment is refused with Hexley's own sentence, and the private repository stays untouched.
+
+**Say this before anyone asks:** "In these attack runs we told the AI to follow the planted steps, as a stand-in for a fooled model. The models we tested ignored the plain injection by themselves, so this shows Hexley's refusal, not a model being tricked."
+
 ## 3. Optional extras (each 1 to 2 minutes; pick by time and by what you rehearsed)
 **A. Not tied to one task: Hexley Chat, electoral office (90 s).** Open `/chat`, pick **Electoral office: a compromised circular**, mode **Scripted attacker**, confirm the slip, send.
 SAY: "No quotations, no stock. A district office summarises circulars for the chief electoral officer. One circular hides an instruction to e-mail the whole voter roll to an address only it names. The same rules: the e-mail is denied, the real summary still goes. This is the local-AI case the SIH problem statements ask for: with a local model, nothing leaves the building, and Hexley limits what the agent can do with what it reads."
@@ -72,7 +89,8 @@ SAY: "The model never sees the file by magic: it reads it through a tool, so Hex
 **C. Other connectors in the same chat (1 min, say it; show the docs page).** Open `/docs/connect-claude-code-hook`.
 SAY: "A gateway only decides what goes through it. If a user also has Gmail switched on in the same chat, or attaches a file, Hexley does not see that. We say it plainly. For clients that support hooks, like Claude Code, the client itself asks Hexley before every tool call, whichever server the tool belongs to, and a Hexley that is down blocks the call. We ran five real Claude Code sessions: the same over-share that was delivered with no hook was denied with it, and the tool never ran. One session per condition, not a measurement."
 
-**D. The Claude.ai connector (only if you tested it today).** Command: `python -m uv run python -m sentinel up --demo --tunnel --oauth-preset own_document --tools-port 8300`. In Claude.ai add the printed address as a custom connector, choose Sign in now, and type the six-digit officer code from the terminal. Switch Gmail and other connectors **off**. Tested once on a free account on 27 Oct. If anything fails, show `/integrations` instead: it has the recorded evidence.
+**D. Claude.ai, where there is no hook (only if you tested it on Claude.ai itself; it had not been when this was written).** The connector address is `https://hexley.site/mcp`. On the sign-in page, enter the officer token once; after that this browser needs one click. Ask Claude to run `hexley_setup` with its connector tools, and paste the text it returns into your personal preferences.
+SAY: "On Claude.ai a connector runs on the vendor's servers and nothing asks us, so this route is advisory. The text tells Claude to ask Hexley first. Nothing forces it to, and a hidden instruction can try to talk it out of it. In Claude Code, where we can measure it, Claude asked first in every run, and obeyed every no."
 
 **E. The browser extension (only if the signed-in claude.ai page was checked).** Load the `extension/` folder unpacked, paste the link into its Settings. It shows the mascot on claude.ai reacting to real decisions and lets the officer approve from the browser. It enforces nothing. It was tested in a real browser on claude.ai's check page, **not on a signed-in page**: look at it before you show it.
 
@@ -92,7 +110,9 @@ SAY: "A gateway only decides what goes through it. If a user also has Gmail swit
 | Matcher on generated variants | **775 of 775** documented ways of writing a value recognised; **0 of 400** ordinary sentences wrongly flagged | "31 ways of writing a value, written by us. The benchmark also found four ways we had missed; we closed them." |
 | Incident-shaped scenarios | of 20 harmful steps: **13 refused, 6 held for the officer, 1 not stopped** (the paraphrase gap); of 20 benign steps: **19 allowed, 1 held, 0 wrongly refused** | "15 scenarios in the shape of reported incidents: our own, synthetic data, not the original exploits." |
 | How many of 28 reported incidents | **about 12 to 18 of 28 (43 to 64 percent)** in the complete state, 11 today; **10 are out of reach by design** (browser agents, supply chain, server-side) | "A counterfactual reading by us, and only where the agent's calls pass through Hexley. Most of those incidents happened inside closed products." |
-| Tests | about 780 automated tests (781 passed at the last full run) | |
+| Real connectors through Hexley, 31 Oct | Gmail, Slack and Notion through Claude's own connectors in Claude Code; GitHub's own server in Antigravity. **Real send, attack refused, honest task running: one run per condition** | "A demonstration on test accounts. In the attack runs the AI was told to follow the planted steps; no model was actually fooled." |
+| Is it told, does it ask? (Claude Code, **no hook**, not Claude.ai) | With the preferences text it asked Hexley first in **5 of 5** runs on each of 2 models, also when a mail said to skip it; without the text **0 of 5**; when Hexley said no, the send did not run in **10 of 10** (about 72 to 100%) | "Both models ignored that injection with no Hexley at all, so we do not claim this stopped an attack. Advisory, and not measured on Claude.ai." |
+| Tests | about 980 automated tests (see the last row of `docs/PHASE_LOG.md`) | |
 
 ## 5. Likely questions
 - **"How is this different from AWS Cedar and Microsoft FIDES?"** See `docs/research/DIFFERENCES_CEDAR_FIDES.md` (30-second answer inside). Short: they are good and we use their ideas. Cedar's AgentCore Policy decides on the caller, the tool and its parameters inside AWS's gateway (and now has session-aware policies you write per pattern); FIDES labels data inside agents built with Microsoft's framework. Hexley sits outside the agent, so it works with agents nobody can modify, and its input is the task a person approved plus what the session read. We have no formal guarantee and do not hide data from the model yet. They have bigger evaluations. Never say "nothing like this exists".
@@ -103,12 +123,14 @@ SAY: "A gateway only decides what goes through it. If a user also has Gmail swit
 - **"Does it make the agent dumber?"** "It limits actions, not thinking. 0 of 28 valid actions blocked in our clean tasks; some valid sends wait for the officer, and we report how many."
 - **"Does the model provider see our data?"** "Yes: what the agent reads goes to its model. Hexley guards the exits. Two answers: a local model (it runs on your computer through Ollama in Hexley Chat), and replacing restricted values with placeholders so the model never sees them, which is planned, not built."
 - **"Who is the customer?"** "Offices that run agents on sensitive records: government departments (the SIH local-AI problems), finance, health. The officer is the person who approves the task."
-- **"Does it work with ChatGPT, Gmail, GitHub?"** "Claude.ai through sign-in and Claude Code through a token or the hook: tested once each. ChatGPT: not tested. GitHub and Gmail as protected connectors: next on the roadmap, not built."
+- **"Does it work with ChatGPT, Gmail, GitHub?"** "Gmail, Slack and Notion through Claude's own connectors in Claude Code, and GitHub's own server in Antigravity: run on real test accounts, once per condition. Enforced where the client has a hook. Claude.ai has no hook, so that route is advisory. ChatGPT: not tested."
+- **"What about Antigravity's terminal?"** "Not judged. Its MCP tools go through our hook; `git` in its terminal does not. And it does not show us what a tool returned, so we cannot do the data check there. We say so."
+- **"What did your teammate see, the bounced e-mail?"** "Most likely a real mail through ChatGPT's own connector; we have not confirmed the route. Hexley has no code that sends real mail from that route, so it did not go through us. That is the whole point: a direct connector goes around any gateway, so the demo account must only use the route we judge."
 - **"Is it production-ready?"** "No. Identity is one token, state is in memory. The product roadmap lists what is left: storage that survives a restart, officer sign-in and roles, a phone approval page, an audit export, packaging."
 - **"Pricing?"** "The pricing page is illustrative. Nothing is offered or sold."
 
 ## 6. Never say
-"100 percent secure", "unbreakable", "nothing like this exists", "works with every AI", "tested with ChatGPT/Gmail/GitHub", "Hindi interface", "phone approval" (the card is in the console, not a phone page), "we beat Cedar/FIDES", any rate without its n, or that the live model "always" follows the attack.
+"100 percent secure", "unbreakable", "nothing like this exists", "works with every AI", "tested with ChatGPT", "tested on Claude.ai" (until it is), "Hexley stopped a fooled model" (none was), "all 18 tool-call incidents", "75 percent", "Hindi interface", "phone approval" (the card is in the console, not a phone page), "we beat Cedar/FIDES", any rate without its n, or that the live model "always" follows the attack.
 
 ## 7. If something goes wrong
 | Problem | Do |
@@ -119,4 +141,7 @@ SAY: "A gateway only decides what goes through it. If a user also has Gmail swit
 | No Wi-Fi | Everything in section 2 works offline. Skip the live model, Claude.ai and the tunnel. |
 | Console frozen or blank | Press `F5`; if the token message returns, open the printed link again. |
 | A judge types a new attack | "Good: that is the blind test we have not run yet. Try it in Scripted mode and we will show what is decided and why." |
-| The hosted site (Render, Vercel) | Not part of this demo: it had errors and will be redeployed later. Do not open it on stage. |
+| `hexley.site` is down or very slow | Use the local fallback in section 1. Say: "Same program on this laptop." |
+| An AI client says it needs to sign in again | The server restarted. Approve it again on the sign-in page. |
+| AWS account restricted (the identity check had failed) | Local fallback for today; Render is the hosting backup (`docs/DEPLOY.md`). |
+| A connector asks to log in | Reconnect it in Claude's connector settings, on the **test** account. |

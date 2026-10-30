@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hexley: privacy</title>
+<style>
+:root{color-scheme:dark light}
+body{margin:0;background:#07070a;color:#f2f1ed;font:17px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:720px;margin:0 auto;padding:48px 16px 80px}
+h1{font-size:34px;margin:0 0 8px}h2{font-size:20px;margin:32px 0 8px}
+p,li{color:#d6d5d0}.muted{color:#a3a29d;font-size:15px}a{color:#b69cff}
+@media (prefers-color-scheme:light){body{background:#fff;color:#1f1f1e}p,li{color:#3b3b39}.muted{color:#6b6a66}a{color:#5b3bd6}}
+</style>
+</head>
+<body>
+<main>
+<h1>Privacy</h1>
+<p class="muted">Hexley is a demonstration built by team 404 Disruptors for Zinnovatio 4.0. Last updated 31 October 2026. It is not a commercial service, and it is not meant for real personal, financial or health data.</p>
+
+<h2>What Hexley does</h2>
+<p>Hexley decides whether an AI tool call may run, against a permission slip. When you connect an AI app, you sign in so that Hexley knows who approved the connection.</p>
+
+<h2>Signing in with Google</h2>
+<ul>
+<li>Hexley asks Google only for your email address and whether it is verified (the scopes <code>openid</code> and <code>email</code>).</li>
+<li>It does not read your mail, files, contacts or anything else in your Google account, and it does not keep a Google token.</li>
+<li>Your browser keeps a signed login cookie holding your address, for up to 30 days. Logging out removes it.</li>
+</ul>
+
+<h2>What Hexley processes when it decides</h2>
+<ul>
+<li>The name and arguments of each tool call, and, where the app reports it, what the tool returned. These are held in the server's memory for the session, so that later decisions know what the session has read, and are lost when the server restarts.</li>
+<li>The audit log records decisions. It keeps hashes of arguments and results, not their text, but it does keep the tool's name and the reason for a decision, which can name a destination such as an address or a repository.</li>
+<li>Hexley does not sell or share this data, and it does not use it to train any model.</li>
+</ul>
+
+<h2>Where it runs</h2>
+<p>On a server rented from Amazon Web Services in Sydney, Australia. The connections to it are encrypted.</p>
+
+<h2>Your choices</h2>
+<p>You can disconnect Hexley in your AI app at any time, and log out on the sign-in page. To ask for anything to be removed, contact team 404 Disruptors through the Zinnovatio 4.0 organisers.</p>
+</main>
+</body>
+</html>

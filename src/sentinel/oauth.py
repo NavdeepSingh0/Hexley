@@ -21,6 +21,7 @@ Demo-grade, not production identity management: one officer, in-memory state, a 
 
 from __future__ import annotations
 
+import hashlib
 import hmac
 import html
 import logging
@@ -28,7 +29,7 @@ import secrets
 import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from urllib.parse import parse_qs
+from urllib.parse import parse_qs, urlencode, urlsplit
 
 from fastmcp.server.auth.auth import AccessToken, ClientRegistrationOptions, OAuthProvider, RevocationOptions
 from mcp.server.auth.provider import (
@@ -48,6 +49,7 @@ from .confirm import ConfirmError, confirm_draft
 from .contracts import (SessionError, SlipError, draft_contract, mint_session_token, normalise_destination_entry,
                         verify_session_token)
 from .events import make_event
+from .google_login import LOGIN_SECONDS, GoogleLogin, GoogleLoginError
 from .models import Column
 from .runtime import Runtime
 
@@ -100,6 +102,7 @@ class SentinelOAuthProvider(OAuthProvider):
         self.request_ttl, self.code_ttl, self.max_attempts = request_ttl, code_ttl, max_attempts
         self.max_clients, self.max_pending = max_clients, max_pending
         self.on_request = on_request  # called with the new PendingRequest: prints the officer code in the terminal
+        self.google: GoogleLogin | None = None  # Sign in with Google, set by `up` when configured (D-060). When set, it is the only way
         self.clients: dict[str, OAuthClientInformationFull] = {}
         self.pending: dict[str, PendingRequest] = {}
         self.codes: dict[str, SentinelAuthCode] = {}
@@ -168,8 +171,30 @@ class SentinelOAuthProvider(OAuthProvider):
                          "allowed_destinations": slip.allowed_recipient_domains, "max_messages": slip.max_messages,
                          "ttl_seconds": self.slip_ttl}}
 
-    async def decide(self, request_id: str, decision: str, officer_code: str) -> str:
-        """The officer approves or denies. Returns the address to send the browser back to the AI client."""
+    # ---- who the officer is, without a code each time (D-060) ------------------------------------------------------
+    def login_value(self) -> str:
+        """What the officer's browser holds after logging in: derived from the officer's token, so it survives a restart, stops
+        working when the token changes, and cannot be turned back into the token."""
+        return hmac.new(self.rt.api_token.encode(), b"hexley-officer-login-v1", hashlib.sha256).hexdigest()
+
+    def is_officer(self, cookie: str | None) -> bool:
+        if self.google is not None:
+            return self.google.email_from(cookie) is not None
+        return bool(cookie) and hmac.compare_digest(cookie.encode(), self.login_value().encode())
+
+    def token_ok(self, secret: str) -> bool:
+        return self.google is None and bool(secret) and hmac.compare_digest(secret.strip().encode(), self.rt.api_token.encode())
+
+    def same_origin(self, origin: str | None) -> bool:
+        """A form on another site must not approve a connection with the officer's login. A browser sends Origin on a POST."""
+        if origin is None:
+            return True
+        parts = urlsplit(self.consent_base)
+        return origin == f"{parts.scheme}://{parts.netloc}"
+
+    async def decide(self, request_id: str, decision: str, officer_code: str, verified: bool = False) -> str:
+        """The officer approves or denies. Returns the address to send the browser back to the AI client. `verified` means the
+        officer has already shown who they are by the login or the token, so no code is needed."""
         req = self._get_pending(request_id)
         redirect = str(req.params.redirect_uri)
         if decision == "deny":
@@ -177,7 +202,8 @@ class SentinelOAuthProvider(OAuthProvider):
             return construct_redirect_uri(redirect, error="access_denied", state=req.params.state)
         if decision != "approve":
             raise OAuthError(422, "The decision must be approve or deny.")
-        if not (officer_code and hmac.compare_digest(officer_code.strip().encode(), req.officer_code.encode())):
+        code_ok = self.google is None and officer_code and hmac.compare_digest(officer_code.strip().encode(), req.officer_code.encode())
+        if not verified and not code_ok:
             req.attempts += 1
             if req.attempts >= self.max_attempts:
                 del self.pending[request_id]
@@ -263,16 +289,21 @@ class SentinelOAuthProvider(OAuthProvider):
         return None
 
 
+LOGIN_COOKIE = "hexley_officer"
+STATE_COOKIE = "hexley_google_state"
+LOGIN_DAYS = 30
+
+
 # ---- the consent page (served by the gateway, so it works over the public tunnel too) --------------------------------
 _PAGE = """<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Sentinel: approve the permission slip</title><style>
+<title>Hexley: approve the permission slip</title><style>
 :root{{color-scheme:dark}}body{{margin:0;background:#1f1f1e;color:#f2f1ed;font:18px/1.45 "Helvetica Neue",Helvetica,Arial,sans-serif}}
 main{{max-width:760px;margin:0 auto;padding:40px 16px}}.label{{text-transform:uppercase;letter-spacing:.18em;font-size:13px;color:#a3a29d}}
 h1{{font-size:34px;letter-spacing:-.01em;margin:8px 0 20px}}.slip{{border:2px solid #f2f1ed;padding:16px 20px;margin:0 0 24px}}
 dl{{display:grid;grid-template-columns:170px 1fr;gap:6px 14px;margin:12px 0 0}}dt{{color:#a3a29d}}dd{{margin:0;font-weight:600}}
-input{{font:inherit;font-size:28px;letter-spacing:.3em;width:9em;padding:8px 12px;background:#262625;color:#f2f1ed;border:1px solid #3b3b39}}
+input{{font:inherit;font-size:20px;width:100%;max-width:26em;box-sizing:border-box;padding:10px 12px;background:#262625;color:#f2f1ed;border:1px solid #3b3b39}}
 button{{font:inherit;font-weight:600;padding:10px 22px;margin-right:10px;border:2px solid #f2f1ed;background:#f2f1ed;color:#1f1f1e;cursor:pointer}}
-button.ghost{{background:none;color:#f2f1ed}}.err{{color:#ff7f73;font-weight:600;margin:0 0 16px}}.muted{{color:#a3a29d;font-size:15px}}
+button.ghost{{background:none;color:#f2f1ed}}a.google{{display:inline-block;font-weight:600;padding:12px 24px;background:#f2f1ed;color:#1f1f1e;text-decoration:none}}.err{{color:#ff7f73;font-weight:600;margin:0 0 16px}}.muted{{color:#a3a29d;font-size:15px}}
 </style></head><body><main><p class="label">Hexley · officer approval</p>{body}</main></body></html>"""
 
 
@@ -282,8 +313,33 @@ def _page(body: str, status: int = 200) -> HTMLResponse:
         "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; frame-ancestors 'none'"})
 
 
-def _consent_body(view: dict, error: str = "") -> str:
+def _proof_field(officer: bool, google: GoogleLogin | None = None, email: str | None = None) -> str:
+    if google is not None:
+        return f"<p>Signed in as <b>{html.escape(email or '')}</b>.</p>" if email else ""
+    if officer:
+        return "<p>You are logged in as the officer on this browser.</p>"
+    return ("<p>Officer token, needed once on this browser. A code from the server's log works too.</p>"
+            '<p><input name="officer_code" type="password" autocomplete="current-password" autofocus></p>')
+
+
+def _sign_out(officer: bool) -> str:
+    if not officer:
+        return ""
+    return ('<form method="post" action="/oauth/sign-out"><button class="ghost" name="back" value="1">Log out on this browser</button></form>')
+
+
+def _consent_body(view: dict, error: str = "", officer: bool = False, google: GoogleLogin | None = None, email: str | None = None) -> str:
     e = html.escape
+    allow = "Allow" if google is not None else "Approve"
+    if google is not None and not email:
+        start = f'/oauth/google/start?{urlencode({"request": view["request_id"]})}'
+        action = (f'<p><a class="google" href="{e(start)}">Continue with Google</a></p>'
+                  f'<form method="post" action="/oauth/consent"><input type="hidden" name="request" value="{e(view["request_id"])}">'
+                  '<button class="ghost" name="decision" value="deny">Deny</button></form>')
+    else:
+        action = (f'<form method="post" action="/oauth/consent"><input type="hidden" name="request" value="{e(view["request_id"])}">'
+                  f'{_proof_field(officer, google, email)}'
+                  f'<button name="decision" value="approve">{allow}</button><button class="ghost" name="decision" value="deny">Deny</button></form>')
     slip = view["slip"]
     tools = ", ".join(slip["allowed_tools"])
     return (f"<h1>{e(view['client_name'])} wants to connect to Hexley</h1>"
@@ -292,11 +348,9 @@ def _consent_body(view: dict, error: str = "") -> str:
 <p><b>{e(slip['objective'])}</b></p><dl><dt>Allowed actions</dt><dd>{e(tools)}</dd>
 <dt>May write to</dt><dd>{e(', '.join(slip['allowed_destinations']) or 'nobody')}</dd>
 <dt>Message limit</dt><dd>{slip['max_messages']}</dd><dt>Lasts</dt><dd>{slip['ttl_seconds'] // 60} minutes</dd></dl></div>
-<form method="post" action="/oauth/consent"><input type="hidden" name="request" value="{e(view['request_id'])}">
-<p>Officer code (shown in the Sentinel terminal and console):</p>
-<p><input name="officer_code" inputmode="numeric" autocomplete="off" maxlength="6" autofocus></p>
-<button name="decision" value="approve">Approve</button><button class="ghost" name="decision" value="deny">Deny</button></form>
-<p class="muted">Only approve if you started this connection. The AI can do what the slip lists and nothing else.</p>""")
+{action}
+<p class="muted">Only approve if you started this connection. The AI can do what the slip lists and nothing else.</p>
+{_sign_out(officer)}""")
 
 
 def register_consent_routes(server, provider: SentinelOAuthProvider) -> None:
@@ -305,18 +359,69 @@ def register_consent_routes(server, provider: SentinelOAuthProvider) -> None:
     @server.custom_route("/oauth/consent", methods=["GET"])
     async def consent_get(request: Request) -> Response:
         try:
-            return _page(_consent_body(provider.view(request.query_params.get("request", ""))))
+            cookie = request.cookies.get(LOGIN_COOKIE)
+            email = provider.google.email_from(cookie) if provider.google else None
+            return _page(_consent_body(provider.view(request.query_params.get("request", "")), officer=provider.is_officer(cookie),
+                                       google=provider.google, email=email))
         except OAuthError as e:
             return _page(f'<h1>Sign-in not available</h1><p class="err">{html.escape(e.detail)}</p>', e.status)
 
     @server.custom_route("/oauth/consent", methods=["POST"])
     async def consent_post(request: Request) -> Response:
+        if not provider.same_origin(request.headers.get("origin")):
+            return _page('<h1>Sign-in not available</h1><p class="err">This request came from another site.</p>', 403)
         form = {k: v[0] for k, v in parse_qs((await request.body()).decode("utf-8", "replace")).items()}
         request_id = form.get("request", "")
+        proof = form.get("officer_code", "")
+        logged_in = provider.is_officer(request.cookies.get(LOGIN_COOKIE))
+        by_token = provider.token_ok(proof)
         try:
-            target = await provider.decide(request_id, form.get("decision", ""), form.get("officer_code", ""))
+            target = await provider.decide(request_id, form.get("decision", ""), proof, verified=logged_in or by_token)
         except OAuthError as e:
             if e.status == 403:  # a wrong code: let the officer try again on the same page
-                return _page(_consent_body(provider.view(request_id), e.detail), 403)
+                return _page(_consent_body(provider.view(request_id), e.detail, officer=logged_in, google=provider.google), 403)
             return _page(f'<h1>Sign-in not available</h1><p class="err">{html.escape(e.detail)}</p>', e.status)
-        return RedirectResponse(target, status_code=303, headers={"Cache-Control": "no-store", "Referrer-Policy": "no-referrer"})
+        response = RedirectResponse(target, status_code=303, headers={"Cache-Control": "no-store", "Referrer-Policy": "no-referrer"})
+        if by_token and form.get("decision") == "approve":
+            response.set_cookie(LOGIN_COOKIE, provider.login_value(), max_age=LOGIN_DAYS * 86400, path="/oauth/", httponly=True,
+                                samesite="lax", secure=provider.consent_base.startswith("https://"))
+        return response
+
+    @server.custom_route("/oauth/google/start", methods=["GET"])
+    async def google_start(request: Request) -> Response:
+        if provider.google is None:
+            return _page('<h1>Not available</h1><p class="err">Google sign-in is not configured here.</p>', 404)
+        try:
+            provider.view(request.query_params.get("request", ""))  # a live request only: this page cannot be used to fish for logins
+            target, state = provider.google.start(request.query_params["request"])
+        except (OAuthError, GoogleLoginError) as e:
+            return _page(f'<h1>Sign-in not available</h1><p class="err">{html.escape(getattr(e, "detail", str(e)))}</p>', 410)
+        response = RedirectResponse(target, status_code=303, headers={"Cache-Control": "no-store", "Referrer-Policy": "no-referrer"})
+        response.set_cookie(STATE_COOKIE, state, max_age=600, path="/oauth/google/", httponly=True, samesite="lax",
+                            secure=provider.consent_base.startswith("https://"))
+        return response
+
+    @server.custom_route("/oauth/google/callback", methods=["GET"])
+    async def google_callback(request: Request) -> Response:
+        if provider.google is None:
+            return _page('<h1>Not available</h1><p class="err">Google sign-in is not configured here.</p>', 404)
+        q = request.query_params
+        try:
+            if q.get("error"):
+                raise GoogleLoginError("Google sign-in was cancelled. Start again from the AI app.")
+            email, request_id = await provider.google.finish(q.get("state", ""), request.cookies.get(STATE_COOKIE), q.get("code", ""))
+        except GoogleLoginError as e:
+            return _page(f'<h1>Sign-in not available</h1><p class="err">{html.escape(str(e))}</p>', 403)
+        response = RedirectResponse(f"/oauth/consent?{urlencode({'request': request_id})}", status_code=303, headers={"Cache-Control": "no-store"})
+        response.set_cookie(LOGIN_COOKIE, provider.google.login_value(email), max_age=LOGIN_SECONDS, path="/oauth/", httponly=True, samesite="lax",
+                            secure=provider.consent_base.startswith("https://"))
+        response.delete_cookie(STATE_COOKIE, path="/oauth/google/")
+        return response
+
+    @server.custom_route("/oauth/sign-out", methods=["POST"])
+    async def sign_out(request: Request) -> Response:
+        if not provider.same_origin(request.headers.get("origin")):
+            return _page('<h1>Not available</h1><p class="err">This request came from another site.</p>', 403)
+        response = _page("<h1>Logged out</h1><p>This browser will be asked for the officer token next time.</p>")
+        response.delete_cookie(LOGIN_COOKIE, path="/oauth/")
+        return response
