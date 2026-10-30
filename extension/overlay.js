@@ -25,14 +25,13 @@ const CONNECTED_STATES = new Set([
 let sentinelBase = 'http://127.0.0.1:8000'
 let token        = ''
 let pollTimer    = null
-let minimised    = false
 let lastState    = null
 let approvalCard = null      // cached approval card when needs-approval
 
 // ── DOM refs (set after DOMContentLoaded) ────────────────────────────────────
 let mascot, pill, pillText, reviewBtn, approvalPanel,
     approvalTool, approvalSummary, approvalArgs, approvalTimer,
-    approveBtn, denyBtn, wrap, dotBtn
+    approveBtn, denyBtn, wrap
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 function authHeader() {
@@ -194,17 +193,7 @@ async function resolveApproval(decision) {
 }
 
 // ── Minimise / expand ─────────────────────────────────────────────────────────
-function setMinimised(val) {
-  minimised = val
-  wrap.dataset.minimised = val ? '1' : '0'
-  dotBtn.hidden = !val
-  mascot.hidden = val
-  // Tell the content script to resize the iframe
-  window.parent.postMessage(
-    { source: 'sentinel-overlay', type: val ? 'minimise' : 'expand' },
-    '*'
-  )
-}
+// (Minimise UI removed — mascot is always visible)
 
 // ── Theme from parent page ─────────────────────────────────────────────────────
 window.addEventListener('message', (e) => {
@@ -230,7 +219,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   approveBtn    = document.getElementById('approve-btn')
   denyBtn       = document.getElementById('deny-btn')
   wrap          = document.getElementById('wrap')
-  dotBtn        = document.getElementById('dot-btn')
 
   // Load settings
   const stored = await chrome.storage.session.get(['sentinelBase', 'token'])
@@ -242,10 +230,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (!token) {
     showPill('Not configured — open options')
   }
-
-  // Minimise button (top-right "–")
-  document.getElementById('minimise-btn').addEventListener('click', () => setMinimised(true))
-  dotBtn.addEventListener('click', () => setMinimised(false))
 
   // Review button
   reviewBtn.addEventListener('click', () => {

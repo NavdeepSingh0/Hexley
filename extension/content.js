@@ -70,78 +70,60 @@
   document.documentElement.appendChild(host)
 
   // ── Sidebar slide ──────────────────────────────────────────────────────────
-  // We watch the left sidebar element (if any) and mirror its width into
-  // the host's `left` so the mascot slides right when the sidebar opens.
-  //
-  // Claude.ai:    nav sidebar is a <nav> or <aside> that grows from 0 → ~260px
-  // ChatGPT.com:  sidebar is a <nav> on the left; its width changes similarly
-  //
-  // Strategy: find the element whose right-edge is closest to the left viewport
-  // edge (i.e. the leftmost sidebar), read its offsetWidth, and set host.left.
-  const BASE_LEFT = 20 // px from left edge when sidebar is closed
+  // Watch where the main content starts (its left edge = sidebar width).
+  // Claude.ai: <main> shifts right when the sidebar opens.
+  // ChatGPT.com: same pattern.
+  // transition on host.style.left gives the smooth slide effect.
+  const BASE_LEFT = 20 // px from left edge when sidebar is fully closed
 
   function getSidebarWidth() {
-    // Claude.ai sidebar selector — covers both old and new layouts
-    const selectors = [
-      '[data-testid="sidebar"]',
-      'nav[class*="sidebar"]',
-      'aside[class*="sidebar"]',
-      '[class*="Sidebar"]',
-      'nav[class*="Sidebar"]',
-      // ChatGPT.com
-      'nav[aria-label="Chat history"]',
-      '#sidebar',
-      '[data-sidebar]',
+    // Strategy 1: main element's left edge IS the sidebar width
+    const main = document.querySelector('main') ||
+                 document.querySelector('[role="main"]') ||
+                 document.querySelector('[data-testid="conversation-turn-0"]')?.closest('div[class]')
+    if (main) {
+      const left = Math.round(main.getBoundingClientRect().left)
+      if (left > 10) return left  // sidebar is open (main shifted right)
+    }
+
+    // Strategy 2: look for a fixed/sticky left nav whose right edge > 40px
+    const navCandidates = [
+      ...document.querySelectorAll('nav, aside, [role="navigation"]'),
     ]
-    for (const sel of selectors) {
-      try {
-        const el = document.querySelector(sel)
-        if (el) {
-          const w = el.getBoundingClientRect().width
-          if (w > 40) return Math.round(w) // ignore tiny/collapsed states
-        }
-      } catch (_) { /* skip */ }
+    for (const el of navCandidates) {
+      const r = el.getBoundingClientRect()
+      // Must be: near left edge, tall (> half viewport), not tiny
+      if (r.left < 10 && r.width > 40 && r.height > window.innerHeight * 0.4) {
+        return Math.round(r.width)
+      }
     }
     return 0
   }
 
   function updateHostLeft() {
     const sidebarW = getSidebarWidth()
-    const newLeft = BASE_LEFT + sidebarW
-    host.style.left = `${newLeft}px`
+    host.style.left = `${BASE_LEFT + sidebarW}px`
   }
 
-  // Run once now, then watch for DOM mutations that resize the sidebar
+  // Run immediately and on every layout change
   updateHostLeft()
 
+  // ResizeObserver on <main> — fires when its size/position changes
   const sidebarObserver = new ResizeObserver(updateHostLeft)
 
-  function attachSidebarObserver() {
-    const selectors = [
-      '[data-testid="sidebar"]', 'nav[class*="sidebar"]', 'aside[class*="sidebar"]',
-      '[class*="Sidebar"]', 'nav[aria-label="Chat history"]', '#sidebar',
-    ]
-    for (const sel of selectors) {
-      try {
-        const el = document.querySelector(sel)
-        if (el) { sidebarObserver.observe(el); return }
-      } catch (_) { /* skip */ }
-    }
+  function observeMain() {
+    const main = document.querySelector('main') || document.querySelector('[role="main"]')
+    if (main) sidebarObserver.observe(main)
   }
+  observeMain()
 
-  // Try immediately; if the sidebar isn't in the DOM yet, wait for it
-  attachSidebarObserver()
-
-  // MutationObserver to catch deferred sidebar renders (SPA pages)
+  // MutationObserver: catch SPA renders where <main> appears late
   const domObserver = new MutationObserver(() => {
     updateHostLeft()
-    attachSidebarObserver()
+    observeMain()
   })
-  domObserver.observe(document.body || document.documentElement, {
-    childList: true, subtree: false,
-  })
+  domObserver.observe(document.documentElement, { childList: true, subtree: true })
 
-  // Also re-check on window resize (layout shift can change sidebar width)
   window.addEventListener('resize', updateHostLeft, { passive: true })
 
   // ── Messages from the overlay ──────────────────────────────────────────────
