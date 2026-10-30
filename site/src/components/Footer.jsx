@@ -12,7 +12,7 @@ export default function Footer() {
     <footer className="footer">
       <div className="footer-inner">
         <div className="footer-brand">
-          <p className="footer-word">SENTINEL</p>
+          <p className="footer-word">HEXLEY</p>
           <p className="footer-line">Built for Zinnovatio 4.0 by team 404 Disruptors. Every record, mailbox and document shown is synthetic.</p>
         </div>
         {COLUMNS.map(([title, links]) => (

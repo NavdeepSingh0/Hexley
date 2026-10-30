@@ -90,7 +90,7 @@ export default function Nav() {
       <div className="nav" ref={bar}>
         <Link to="/" className="nav-brand" aria-label="Hexley home">
           <span aria-hidden="true" className="nav-mark"><sentinel-mascot state="idle" size="30" still="" /></span>
-          <span className="nav-word">SENTINEL</span>
+          <span className="nav-word">HEXLEY</span>
         </Link>
         <nav className="nav-links" aria-label="Main">
           <Menu id="product" menu={MENUS.product} open={open} setOpen={setOpen} />

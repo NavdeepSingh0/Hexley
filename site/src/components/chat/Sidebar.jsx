@@ -23,7 +23,7 @@ export default function Sidebar({ chats, activeId, onNew, onOpen, onRemove, mode
         <div className="cx-side-top">
           <Link to="/" className="cx-brand" aria-label="Hexley home">
             <span aria-hidden="true" className="cx-brand-mark"><sentinel-mascot state="idle" size="28" still="" /></span>
-            <span className="cx-brand-word">SENTINEL</span>
+            <span className="cx-brand-word">HEXLEY</span>
           </Link>
           <button type="button" className="cx-icon-btn cx-side-close" onClick={onClose} aria-label="Close the chat list"><Icon name="close" size={18} /></button>
         </div>

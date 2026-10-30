@@ -30,7 +30,7 @@ export function MascotSlot({ state, message }) {
 export function TopBar({ view, lost, mascot, helpOpen, onHelp }) {
   return (
     <header className="topbar">
-      <div className="logo">SENTINEL</div>
+      <div className="logo">HEXLEY</div>
       {view ? <span className={`s-badge ${view.source === 'live' ? 's-badge--tested' : ''}`}>{SOURCE_NAME[view.source]}</span> : null}
       {lost ? <span className="s-badge lost" role="status">Connection lost, retrying</span> : null}
       <div className="spacer" />
