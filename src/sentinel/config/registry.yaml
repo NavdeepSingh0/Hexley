@@ -402,3 +402,69 @@ tools:
     output_confidentiality: internal
     destination_args: [page_id]
     destination_kind: page
+
+  # ---- connector preset: mail (mcp-mail-server 2.1.2, from its README; plan F2, D-054) ---------------------------------
+  # Anyone can send a mail, so everything read from a mailbox is untrusted (R7, R8); a mailbox is private, so it is restricted
+  # with every value fingerprinted (R2). Deliberately NOT listed, so no slip can allow them: reply_to_email and
+  # continue_email_thread take no recipient (the recipient comes from a mail an attacker can write, so R1 would have nothing
+  # to check; use send_email), delete and move, and save_attachment.
+  gmail__check_connection:
+    capability: read
+    resource_class: mail_account
+    outbound: false
+    consequential: false
+    output_integrity: trusted
+    output_confidentiality: internal
+
+  gmail__list_mailboxes:
+    capability: read
+    resource_class: mail_account
+    outbound: false
+    consequential: false
+    output_integrity: trusted
+    output_confidentiality: internal
+
+  gmail__search_messages:
+    capability: read
+    resource_class: mail_message
+    outbound: false
+    consequential: false
+    output_integrity: untrusted
+    output_confidentiality: restricted
+    fingerprint_fields: [all]
+
+  gmail__find_unreplied_messages:
+    capability: read
+    resource_class: mail_message
+    outbound: false
+    consequential: false
+    output_integrity: untrusted
+    output_confidentiality: restricted
+    fingerprint_fields: [all]
+
+  gmail__get_message:
+    capability: read
+    resource_class: mail_message
+    outbound: false
+    consequential: false
+    output_integrity: untrusted
+    output_confidentiality: restricted
+    fingerprint_fields: [all]
+
+  gmail__get_messages:
+    capability: read
+    resource_class: mail_message
+    outbound: false
+    consequential: false
+    output_integrity: untrusted
+    output_confidentiality: restricted
+    fingerprint_fields: [all]
+
+  gmail__send_email:
+    capability: send
+    resource_class: email_external
+    outbound: true
+    consequential: true
+    output_integrity: trusted
+    output_confidentiality: internal
+    destination_args: [to]            # cc and bcc are destinations too (effects.extra_destination_args)

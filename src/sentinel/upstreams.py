@@ -64,6 +64,9 @@ class Upstream(BaseModel):
     # How the connection starts. "legacy" is the classic initialize handshake that published servers speak; "auto" first
     # probes the newer discovery request, and GitHub's server (v2.0.3, stdio) then refuses the handshake as a duplicate.
     protocol: Literal["legacy", "auto"] = "legacy"
+    # Variables that are settings, not secrets (an account's own address appears in every mail, so treating it as a held
+    # credential would withhold every result). They still come from the credentials file and never appear in this config.
+    public_vars: list[str] = Field(default_factory=list)
     enabled: bool = True
 
     @field_validator("name")
@@ -143,6 +146,7 @@ class Credentials:
     """The values Sentinel holds for its upstreams. `repr` never shows a value."""
 
     values: dict[str, str] = field(default_factory=dict, repr=False)
+    public: frozenset[str] = frozenset()  # variables that are settings, not secrets (Upstream.public_vars)
 
     @classmethod
     def load(cls, env_file: Path | None = None, environ: dict[str, str] | None = None,
@@ -162,7 +166,7 @@ class Credentials:
 
     def secret_values(self) -> list[str]:
         """Every held value long enough to be a credential, for withholding results and scrubbing logs."""
-        return [v for v in self.values.values() if len(v) >= 8]
+        return [v for k, v in self.values.items() if k not in self.public and len(v) >= 8]
 
 
 def child_env(upstream: Upstream, creds: Credentials, environ: dict[str, str] | None = None) -> dict[str, str]:
@@ -218,6 +222,7 @@ class UpstreamSet:
              environ: dict[str, str] | None = None) -> UpstreamSet:
         ups = load_upstreams(config)
         creds = Credentials.load(env_file, environ, wanted=[v for u in ups for v in u.variables()])
+        creds.public = frozenset(v for u in ups for v in u.public_vars)
         running, skipped = [], {}
         for u in ups:
             if not u.enabled:

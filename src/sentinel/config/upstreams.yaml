@@ -36,13 +36,22 @@ upstreams:
       Authorization: Bearer ${SLACK_USER_TOKEN}
     enabled: false
 
-  # Gmail over IMAP and SMTP with an app password, through a community server chosen after reading its code.
+  # Gmail over IMAP and SMTP with an app password, through a community server (mcp-mail-server, MIT, read before choosing:
+  # D-054). MAIL_ALLOWED_ROOTS is deliberately not set, which keeps its file access off. Not enabled until Navdeep has
+  # agreed to run it and its real tool list has been checked against the preset.
   - name: gmail
     transport: stdio
     description: Gmail (community IMAP/SMTP server, app password)
     command: npx
-    args: ["-y", "TBD-after-code-read"]
+    args: ["-y", "mcp-mail-server@2.1.2"]
     env:
-      EMAIL_ADDRESS: ${GMAIL_ADDRESS}
-      EMAIL_PASSWORD: ${GMAIL_APP_PASSWORD}
+      IMAP_HOST: imap.gmail.com
+      IMAP_PORT: "993"
+      IMAP_SECURE: "true"
+      SMTP_HOST: smtp.gmail.com
+      SMTP_PORT: "465"
+      SMTP_SECURE: "true"
+      EMAIL_USER: ${GMAIL_ADDRESS}
+      EMAIL_PASS: ${GMAIL_APP_PASSWORD}
+    public_vars: [GMAIL_ADDRESS]
     enabled: false

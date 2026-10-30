@@ -57,8 +57,11 @@ def decide(action: AgentAction, session: Session, registry: Registry, approved: 
             results.append(rules.rule_r2(action, entry, matches))
             # Credentials found in data: checked on every tool, not only outbound ones, and never exempt (R2, R9).
             results.append(rules.rule_secret(action, entry, session.secrets.scan_args(action.args)))
+            # An address the officer wrote out in full on the slip is the officer's word, even if a mail or document also
+            # mentions it (real mail headers do). A domain entry is not: an address found only in content stays refused.
+            named = frozenset(d.lower() for d in session.contract.allowed_recipient_domains if "@" in d)
             results.append(rules.rule_r3(action, entry, recipients, session.untrusted_destinations,
-                                         session.trusted_addresses, session.untrusted_actions))
+                                         session.trusted_addresses | named, session.untrusted_actions))
             results.append(rules.rule_r4(action, entry, approved))
             results.extend(rules.rule_effects(action, entry, session.contract, approved))
             results.append(rules.rule_r5(action, entry, session.contract, session.messages_out))
