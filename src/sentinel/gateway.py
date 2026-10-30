@@ -263,7 +263,7 @@ class SentinelMiddleware(Middleware):
                 session.secrets.values.update({v: ("connector credential", tool, action.action_id) for v in held})
             await self.rt.bus.publish(make_event("credential.withheld", session.session_id, session.column,
                                                  {"tool": tool, "action_id": action.action_id}))
-            raise ToolError("Blocked: this result contained a credential Sentinel holds for the connector, so it was withheld.")
+            raise ToolError("Blocked: this result contained a credential Hexley holds for the connector, so it was withheld.")
         await self.note_result(session, entry, tool, action.action_id, decision, text)
         return result
 
@@ -282,7 +282,7 @@ class SentinelMiddleware(Middleware):
             log.warning("audit append of result failed for %s: %s", action_id, e)
             if protected and entry.output_confidentiality == Confidentiality.RESTRICTED:
                 # A restricted result is not handed to the agent unless the record of it is durable.
-                raise ToolError("Blocked: Sentinel could not record this result in its audit log, so it was withheld.") from e
+                raise ToolError("Blocked: Hexley could not record this result in its audit log, so it was withheld.") from e
             if protected and entry.consequential:
                 # The action already ran and cannot be undone or retried: freeze the session and raise the alarm.
                 self.rt.store.freeze(session.session_id)
@@ -342,7 +342,7 @@ def tool_shadowed(action: AgentAction, servers: int) -> Decision:
     return Decision(
         decision_id=f"dec_{uuid.uuid4().hex[:12]}", action_id=action.action_id, effect=Effect.BLOCK,
         rule_ids=[RuleId.R1], reason_code=ReasonCode.TOOL_SHADOWED,
-        summary_plain=f"Blocked: '{action.tool}' is offered by {servers} connected servers, so Sentinel cannot tell which one "
+        summary_plain=f"Blocked: '{action.tool}' is offered by {servers} connected servers, so Hexley cannot tell which one "
                       f"would run. Neither is used until the officer fixes the connector configuration.",
         evidence=[Evidence(kind="definition", detail=f"tool name offered by {servers} servers", source_ref=action.tool)])
 
@@ -351,7 +351,7 @@ def audit_unavailable(action: AgentAction) -> Decision:
     return Decision(
         decision_id=f"dec_{uuid.uuid4().hex[:12]}", action_id=action.action_id, effect=Effect.BLOCK,
         reason_code=ReasonCode.AUDIT_UNAVAILABLE,
-        summary_plain="Blocked: Sentinel could not record this action in its audit log, so it did not run.",
+        summary_plain="Blocked: Hexley could not record this action in its audit log, so it did not run.",
         evidence=[Evidence(kind="audit", detail="durable audit write failed or missed its deadline")])
 
 

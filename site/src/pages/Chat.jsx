@@ -9,7 +9,7 @@ import { ApprovalCard, Message, SlipCard, SlipCompact, Welcome } from '../compon
 import { DEFAULT_DISCLOSURE, busyLine, chatTitle, composerBlock, pendingApproval, pollDelay, statusChip } from '../lib/chat.js'
 import { loadChats, removeChat, saveChat } from '../lib/chatHistory.js'
 
-// Sentinel Chat as an app screen (UI v2, U3): no marketing bar. A sidebar of this browser's chats, one centred conversation, a
+// Hexley Chat as an app screen (UI v2, U3): no marketing bar. A sidebar of this browser's chats, one centred conversation, a
 // composer at the bottom, and a Details drawer for the slip, the decisions and the audit log. Everything it shows comes from the
 // ChatView the gateway builds; the page decides nothing.
 export default function Chat() {

@@ -21,7 +21,7 @@ export default function Sidebar({ chats, activeId, onNew, onOpen, onRemove, mode
       {open && <div className="cx-scrim" onClick={onClose} aria-hidden="true" />}
       <aside className={`cx-side${open ? ' is-open' : ''}`} aria-label="Chats">
         <div className="cx-side-top">
-          <Link to="/" className="cx-brand" aria-label="Sentinel home">
+          <Link to="/" className="cx-brand" aria-label="Hexley home">
             <span aria-hidden="true" className="cx-brand-mark"><sentinel-mascot state="idle" size="28" still="" /></span>
             <span className="cx-brand-word">SENTINEL</span>
           </Link>

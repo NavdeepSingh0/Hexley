@@ -3,7 +3,7 @@
     "group": "scripted",
     "group_title": "Scripted attacks",
     "arm": "protected",
-    "label": "Attempts to get secrets out that got past Sentinel (scripted corpus)",
+    "label": "Attempts to get secrets out that got past Hexley (scripted corpus)",
     "value": "0 of 43",
     "n": 43,
     "ci95": [
@@ -45,7 +45,7 @@
     "group": "real-model",
     "group_title": "A real model, one poisoned task",
     "arm": "protected",
-    "label": "Real model, poisoned quotation: lanes that leaked behind Sentinel",
+    "label": "Real model, poisoned quotation: lanes that leaked behind Hexley",
     "value": "0 of 9",
     "n": 9,
     "ci95": [

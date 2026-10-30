@@ -1,4 +1,4 @@
-// <sentinel-mascot>: Sentinel's mascot, a rounded screen-cube robot drawn as an animated SVG (docs/contracts/MASCOT.md).
+// <sentinel-mascot>: Hexley's mascot, a rounded screen-cube robot drawn as an animated SVG (docs/contracts/MASCOT.md).
 // One file, no dependencies, no network, works in a plain HTML page, in the console and site bundles, and in an extension.
 // It only ever shows the state it is told (`state` attribute), and what it says is the `message` attribute: it decides nothing.
 //
@@ -180,7 +180,7 @@ const TEMPLATE = (id) => `
   :host([placement="above"]) .bubble { bottom: calc(100% + 8px); left: 0; --origin: bottom left; }
   :host([placement="above"]) .bubble::after { bottom: -6px; left: 22px; border-left: none; border-top: none; }
 </style>
-<svg viewBox="0 0 200 200" role="img" aria-label="Sentinel mascot">
+<svg viewBox="0 0 200 200" role="img" aria-label="Hexley mascot">
   <defs>
     <linearGradient id="g${id}" x1="0" y1="0" x2="0" y2="1"><stop class="sa" offset="0"/><stop class="sb" offset="1"/></linearGradient>
     <linearGradient id="f${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#efe8ff" stop-opacity=".98"/><stop offset=".3" stop-color="#b79cff" stop-opacity=".95"/><stop offset=".7" stop-color="#8f5bff" stop-opacity=".6"/><stop offset="1" stop-color="#8f5bff" stop-opacity="0"/></linearGradient>
@@ -290,7 +290,7 @@ export class SentinelMascot extends Base {
     if (name === 'state') {
       this._target = poseVector(this.state)
       this._enter = this._vnow
-      this._el.svg.setAttribute('aria-label', `Sentinel mascot: ${this.state}`)
+      this._el.svg.setAttribute('aria-label', `Hexley mascot: ${this.state}`)
       if (this._reduced) this._settle()
       this._say(this.getAttribute('message')) // a persistent state keeps its words up; leaving one starts the clock
     } else if (name === 'message') this._say(value)
@@ -314,7 +314,7 @@ export class SentinelMascot extends Base {
     this._el.bubble.style.setProperty('--bg', t.bg)
     this._el.bubble.style.setProperty('--fg', t.fg)
     this._el.bubble.style.setProperty('--line', t.line)
-    this._el.svg.setAttribute('aria-label', `Sentinel mascot: ${this.state}`)
+    this._el.svg.setAttribute('aria-label', `Hexley mascot: ${this.state}`)
   }
 
   _say(raw) {

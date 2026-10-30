@@ -3,7 +3,7 @@ import { isParaphraseGap, laneCountLine, laneLabel, laneVerdict } from '../lib/d
 import { Effects, StepCard, restrictedTokens } from './Stage.jsx'
 
 // Everything a lane did, on demand: its verdict, each step in order, and what reached the outside.
-// "Why?" on a denied Sentinel step goes one level deeper (the verdict drawer), with a way back here.
+// "Why?" on a denied Hexley step goes one level deeper (the verdict drawer), with a way back here.
 export default function StepsDrawer({ view, laneId, onWhy, onDismiss }) {
   const lane = view.lanes.find((l) => l.lane_id === laneId)
   if (!lane) return null

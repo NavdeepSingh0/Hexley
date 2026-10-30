@@ -1,4 +1,4 @@
-/* Sentinel Chat as an app screen (UI v2, phase U3, docs/plans/UI_V2_PLAN.md): a sidebar of chats, one centred conversation, a
+/* Hexley Chat as an app screen (UI v2, phase U3, docs/plans/UI_V2_PLAN.md): a sidebar of chats, one centred conversation, a
    composer at the bottom, a Details drawer. Colours, sizes and radii come from design/tokens.css. On this page colour means a
    decision (green, blue, amber, the inverted block), so nothing here uses violet except the primary buttons. */
 
@@ -182,7 +182,7 @@
   .cx-facts dd { margin-bottom: 6px; }
 }
 @media (prefers-reduced-motion: reduce) { .cx-side, .cx-tools-chev { transition: none; } }
-/* plan Q6: an address Sentinel removed from a reply, said in plain words under the reply */
+/* plan Q6: an address Hexley removed from a reply, said in plain words under the reply */
 .cx-check { margin: 0; padding: 10px 14px; border-radius: 12px; background: var(--panel); border: 1px solid var(--card-border); color: var(--muted); font-size: 14.5px; line-height: 1.5; }
 /* plan Q10: files attached to a message */
 .cx-attach { flex: none; align-self: flex-end; display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: 999px; border: 1px solid var(--card-border); background: transparent; color: var(--ink); cursor: pointer; }

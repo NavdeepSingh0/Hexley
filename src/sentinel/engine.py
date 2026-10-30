@@ -93,7 +93,7 @@ def decide(action: AgentAction, session: Session, registry: Registry, approved: 
                 msg = egress.render(egress.find_template(session.contract, entry.egress_template),
                                     action.args, session.contract)
                 return finish(effect=Effect.ALLOW, reason_code=ReasonCode.ALLOWED,
-                              summary_plain=f"Allowed: Sentinel will send its fixed acknowledgement to the vendor "
+                              summary_plain=f"Allowed: Hexley will send its fixed acknowledgement to the vendor "
                                             f"resolved for this work item ({msg.to}).",
                               evidence=[Evidence(kind="egress", detail=f"fixed message rendered for {msg.to}",
                                                  source_ref=msg.message_sha256)])
@@ -105,4 +105,4 @@ def decide(action: AgentAction, session: Session, registry: Registry, approved: 
     except Exception:  # noqa: BLE001 - invariant 2: any error in the decision path is a BLOCK
         log.exception("decision failed; failing closed")
         return finish(effect=Effect.BLOCK, rule_ids=[RuleId.R1], reason_code=ReasonCode.FAIL_CLOSED,
-                      summary_plain="Blocked: Sentinel could not evaluate this action safely, so it did not run.")
+                      summary_plain="Blocked: Hexley could not evaluate this action safely, so it did not run.")

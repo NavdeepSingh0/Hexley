@@ -12,7 +12,7 @@ const OUTCOMES = [
   ['QUARANTINED', 'The session was frozen and its token revoked. It can do nothing more.'],
 ]
 
-// One action, left to right: the agent asks, Sentinel decides, the tool runs only on a yes. Below, the four ways it can end.
+// One action, left to right: the agent asks, Hexley decides, the tool runs only on a yes. Below, the four ways it can end.
 function Flow() {
   return (
     <section className="section" aria-labelledby="flow-title">
@@ -28,7 +28,7 @@ function Flow() {
           <li className="flow-arrow" aria-hidden="true"><Icon name="arrow" size={22} /></li>
           <li className="flow-node flow-node--gate">
             <span className="flow-icon"><Icon name="shield" size={22} /></span>
-            <strong>Sentinel</strong>
+            <strong>Hexley</strong>
             <span>checks it against the slip, then writes the decision to the signed log.</span>
           </li>
           <li className="flow-arrow" aria-hidden="true"><Icon name="arrow" size={22} /></li>
@@ -99,7 +99,7 @@ function NotCovered() {
 export default function HowItWorks() {
   return (
     <main>
-      <PageHead label="How it works" title="One job, and nothing more." lede="Sentinel sits between an AI agent and its tools. Every action is checked against a permission slip before it happens, by ordinary code and not by another AI." />
+      <PageHead label="How it works" title="One job, and nothing more." lede="Hexley sits between an AI agent and its tools. Every action is checked against a permission slip before it happens, by ordinary code and not by another AI." />
       <Flow />
       <Feature
         id="slip" label="1 · The slip" title="The officer writes the job down first"
@@ -127,9 +127,9 @@ export default function HowItWorks() {
       </Feature>
       <Feature
         id="quarantine" flip label="4 · Quarantine" title="A persistent attacker is frozen"
-        bullets={['The freeze is per session: other sessions and other work are not affected', 'A frozen session cannot be refreshed', 'In the screenshot, a scripted attacker leaks through the first two setups and is frozen by Sentinel']}
+        bullets={['The freeze is per session: other sessions and other work are not affected', 'A frozen session cannot be refreshed', 'In the screenshot, a scripted attacker leaks through the first two setups and is frozen by Hexley']}
         link={{ to: '/docs/concepts#quarantine', label: 'Concepts: quarantine' }}
-        visual={<Shot name="quarantine" alt="Three lanes: Unprotected and Standard access say LEAKED, Sentinel says QUARANTINED after three denied attempts." />}
+        visual={<Shot name="quarantine" alt="Three lanes: Unprotected and Standard access say LEAKED, Hexley says QUARANTINED after three denied attempts." />}
       >
         <p>The third denied action in one session freezes that session and revokes its token.</p>
       </Feature>

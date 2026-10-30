@@ -16,17 +16,17 @@ const lane = (view, column, i) => view.lanes.filter((l) => l.column === column)[
 const ALL = [poisoned, clean, redirect, freeze, hardened, bankWaiting, bankDone, compromisedPdf, poisonedWeb, stranger]
 
 describe('stage lanes: one verdict word and one plain sentence', () => {
-  it('poisoned: LEAKED in both baselines, DENIED in Sentinel', () => {
+  it('poisoned: LEAKED in both baselines, DENIED in Hexley', () => {
     expect(laneVerdict(lane(poisoned, 'unprotected'), 'poisoned')).toEqual({ kind: 'harm', word: 'LEAKED', sentence: 'Restricted data reached the outside.' })
     expect(laneVerdict(lane(poisoned, 'r1_only'), 'poisoned').word).toBe('LEAKED')
     expect(laneVerdict(lane(poisoned, 'sentinel'), 'poisoned')).toEqual({ kind: 'denied', word: 'DENIED', sentence: 'Nothing left the building.' })
   })
-  it('clean: the baselines say SENT (neutral), Sentinel says ALLOWED: a baseline never says allowed', () => {
+  it('clean: the baselines say SENT (neutral), Hexley says ALLOWED: a baseline never says allowed', () => {
     expect(laneVerdict(lane(clean, 'unprotected'), 'clean').word).toBe('SENT')
     expect(laneVerdict(lane(clean, 'r1_only'), 'clean').kind).toBe('neutral')
     expect(laneVerdict(lane(clean, 'sentinel'), 'clean')).toMatchObject({ kind: 'allowed', word: 'ALLOWED' })
   })
-  it('redirect: MISDIRECTED in the baselines, DENIED in Sentinel', () => {
+  it('redirect: MISDIRECTED in the baselines, DENIED in Hexley', () => {
     expect(laneVerdict(lane(redirect, 'unprotected'), 'redirect').word).toBe('MISDIRECTED')
     expect(laneVerdict(lane(redirect, 'sentinel'), 'redirect').word).toBe('DENIED')
   })
@@ -41,8 +41,8 @@ describe('stage lanes: one verdict word and one plain sentence', () => {
     expect(isParaphraseGap(lane(clean, 'sentinel'), 'clean')).toBe(false)
     expect(laneVerdict(hardened.lanes[0], 'hardened').sentence).toMatch(/declared limit/)
     expect(laneVerdict(hardened.lanes[1], 'hardened').word).toBe('QUARANTINED')
-    expect(laneLabel(hardened.lanes[0], 'hardened')).toBe('Sentinel · value matching')
-    expect(laneLabel(hardened.lanes[1], 'hardened')).toBe('Sentinel · hardened mode')
+    expect(laneLabel(hardened.lanes[0], 'hardened')).toBe('Hexley · value matching')
+    expect(laneLabel(hardened.lanes[1], 'hardened')).toBe('Hexley · hardened mode')
   })
   it('bank change: NEEDS APPROVAL while waiting; ALLOWED only after approval; CHANGED in red when nobody was asked', () => {
     expect(laneVerdict(lane(bankWaiting, 'sentinel'), 'bank_change')).toMatchObject({ kind: 'approval', word: 'NEEDS APPROVAL' })
@@ -55,7 +55,7 @@ describe('stage lanes: one verdict word and one plain sentence', () => {
     expect(laneVerdict({ ...lane(clean, 'sentinel'), outcome: 'agent_error', inbox: [] }, 'clean').word).toBe('STOPPED')
     expect(laneVerdict({ ...lane(clean, 'sentinel'), outcome: 'diverged', inbox: [] }, 'clean').sentence).toMatch(/differed from the recording/)
   })
-  it('compromised PDF: Sentinel stopped the unsafe message and then only the clean summary went', () => {
+  it('compromised PDF: Hexley stopped the unsafe message and then only the clean summary went', () => {
     expect(laneVerdict(lane(compromisedPdf, 'sentinel'), 'compromised_pdf').sentence).toMatch(/then only a clean one was sent/)
   })
   it('every lane of every captured run gets a word, a known colour kind, and a sentence unless it merely finished', () => {

@@ -55,7 +55,7 @@ def load_templates(path: Path | None = None) -> dict[str, dict]:
 
 # The name under which a slip with `unseen_context` records that the session has already read untrusted content. It reads
 # as a source in the rule texts ("... untrusted content (from the client's own context, which Sentinel cannot see)").
-UNSEEN_CONTEXT = "the client's own context, which Sentinel cannot see"
+UNSEEN_CONTEXT = "the client's own context, which Hexley cannot see"
 
 
 class SlipError(ValueError):

@@ -43,7 +43,7 @@ export async function api(path, { method = 'GET', body } = {}) {
       body: body ? JSON.stringify(body) : undefined,
     })
   } catch {
-    throw new ApiError(0, 'Cannot reach Sentinel. Is `python -m sentinel up --demo` running?')
+    throw new ApiError(0, 'Cannot reach Hexley. Is `python -m sentinel up --demo` running?')
   }
   if (!r.ok) {
     let detail = r.statusText
@@ -81,7 +81,7 @@ export async function uploadChatDocument(id, file) {
       body: (() => { const f = new FormData(); f.append('file', file); return f })(),
     })
   } catch {
-    throw new ApiError(0, 'Cannot reach Sentinel. Is `python -m sentinel up --demo` running?')
+    throw new ApiError(0, 'Cannot reach Hexley. Is `python -m sentinel up --demo` running?')
   }
   if (!r.ok) {
     let detail = r.statusText

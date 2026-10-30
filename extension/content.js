@@ -1,5 +1,5 @@
 /**
- * content.js — Sentinel Chrome Extension
+ * content.js — Hexley Chrome Extension
  *
  * Injected into claude.ai and chatgpt.com by the manifest.
  * Does ONE job: injects a fixed-position Shadow DOM host containing an
@@ -78,8 +78,8 @@
     iframe.setAttribute('scrolling', 'no')
     iframe.setAttribute('frameborder', '0')
     iframe.setAttribute('allowtransparency', 'true')
-    iframe.setAttribute('title', 'Sentinel status')
-    iframe.setAttribute('aria-label', 'Sentinel status')
+    iframe.setAttribute('title', 'Hexley status')
+    iframe.setAttribute('aria-label', 'Hexley status')
 
     shadow.appendChild(iframe)
     document.documentElement.appendChild(host)

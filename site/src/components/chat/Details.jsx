@@ -43,7 +43,7 @@ export default function Details({ view, onClose }) {
       {view.documents?.length > 0 && (
         <section className="cx-details-sec">
           <p className="s-label">What the model is given</p>
-          <p className="muted cx-details-small">The exact text Sentinel's PDF reader extracts, including text a person cannot see on the page. It is untrusted.</p>
+          <p className="muted cx-details-small">The exact text Hexley's PDF reader extracts, including text a person cannot see on the page. It is untrusted.</p>
           {view.documents.map((d) => (
             <details key={d.name} className="cx-doc-text">
               <summary>{d.name} · {d.pages} p · {d.chars} characters</summary>

@@ -203,7 +203,7 @@ async def test_the_consent_page_is_served_as_utf8_and_reads_correctly(ostack):
         rid = await start(c, ostack, await register(c, ostack), pkce()[1])
         r = await c.get(f"{base(ostack)}/oauth/consent", params={"request": rid})
         assert "utf-8" in r.headers["content-type"].lower()
-        assert "Sentinel · officer approval" in r.text and "Â" not in r.text
+        assert "Hexley · officer approval" in r.text and "Â" not in r.text
 
 
 async def test_the_consent_page_escapes_what_a_client_calls_itself(ostack):

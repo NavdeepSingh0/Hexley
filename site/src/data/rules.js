@@ -2,7 +2,7 @@
 // `outcome` is the decision word the rule produces. Limits are stated here too: the page must not oversell.
 export const RULES = [
   { id: 'R1', title: 'Stay inside the slip', outcome: 'DENIED',
-    text: 'The tool and the destination must be on the permission slip, and the tool must be one Sentinel knows. Anything else is refused, including a tool nobody has classified.' },
+    text: 'The tool and the destination must be on the permission slip, and the tool must be one Hexley knows. Anything else is refused, including a tool nobody has classified.' },
   { id: 'R2', title: 'Restricted data stays in', outcome: 'DENIED',
     text: 'A value the agent read from a restricted source (quantities, codes, dates, addresses, identifiers, copied passages) may not appear in anything leaving the building. A paraphrase of confidential prose can still slip through; we list that as a declared gap.' },
   { id: 'R3', title: 'No addresses from documents', outcome: 'DENIED',

@@ -77,7 +77,7 @@ def check_reply(text: str, session: Any, contract: Any) -> tuple[str, list[Findi
             continue
         findings.append(Finding(url, host, kind, tuple(reasons)))
         pieces.append(text[last:start])
-        pieces.append(f"[{kind} to {host} removed by Sentinel: {reasons[0]}]")
+        pieces.append(f"[{kind} to {host} removed by Hexley: {reasons[0]}]")
         last = end
     if not findings:
         return text, []

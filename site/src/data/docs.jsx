@@ -58,14 +58,14 @@ export const GROUPS = [
 
 export const PAGES = {
   overview: {
-    title: 'Sentinel documentation',
+    title: 'Hexley documentation',
     lede: 'A gateway between an AI agent and its tools. The officer writes a permission slip; every action is checked against it before it happens.',
     source: 'README.md, docs/MVP.md, docs/ARCHITECTURE.md.',
     body: () => (
       <>
         <figure className="dx-figure">
-          <div className="dx-figure-frame"><Shot name="stage" alt="The console: three lanes, Unprotected and Standard access say LEAKED, Sentinel says DENIED." /></div>
-          <figcaption>The console, replaying a real model's actions on a poisoned quotation; Sentinel's decisions are computed live.</figcaption>
+          <div className="dx-figure-frame"><Shot name="stage" alt="The console: three lanes, Unprotected and Standard access say LEAKED, Hexley says DENIED." /></div>
+          <figcaption>The console, replaying a real model's actions on a poisoned quotation; Hexley's decisions are computed live.</figcaption>
         </figure>
         <h2 id="paths">Choose your path</h2>
         <div className="dx-cards">
@@ -73,7 +73,7 @@ export const PAGES = {
             ['run-it', 'play', 'Run it', 'One command starts the gateway, the console, the chat and this website.'],
             ['connect-claude-ai', 'plug', 'Connect an AI app', 'Sign in from Claude.ai, or paste an access token into Claude Code.'],
             ['own-tools', 'list', 'Add your own tools', 'Nothing runs until the officer has classified it.'],
-            ['limits', 'shield', 'Read the limits', 'What Sentinel covers, what it does not, and what the evidence is.'],
+            ['limits', 'shield', 'Read the limits', 'What Hexley covers, what it does not, and what the evidence is.'],
           ].map(([slug, icon, title, text]) => (
             <Link key={slug} to={`/docs/${slug}`} className="dx-card">
               <span className="dx-card-icon"><Icon name={icon} size={22} /></span>
@@ -95,7 +95,7 @@ export const PAGES = {
         <h2 id="pieces">The pieces</h2>
         <ul className="dx-list">
           <li><strong>The gateway</strong> speaks MCP. An agent connects with a session token; every tool call is decided before it is forwarded.</li>
-          <li><strong>The console</strong> shows the same task in three setups (Unprotected, Standard access, Sentinel), the reason for a denial, officer approvals and the signed log.</li>
+          <li><strong>The console</strong> shows the same task in three setups (Unprotected, Standard access, Hexley), the reason for a denial, officer approvals and the signed log.</li>
           <li><strong>The chat</strong> is a host where a model's every tool call goes through the gateway, and what you see is built from the gateway's own events.</li>
           <li><strong>This website</strong> is served by the same program, so one command shows everything.</li>
         </ul>
@@ -105,7 +105,7 @@ export const PAGES = {
 
   'run-it': {
     title: 'Run it',
-    lede: 'Sentinel runs on your computer. The demo uses synthetic data and needs no model key in its scripted and replay modes.',
+    lede: 'Hexley runs on your computer. The demo uses synthetic data and needs no model key in its scripted and replay modes.',
     source: 'README.md (Setup), src/sentinel/cli.py, .env.example.',
     body: () => (
       <>
@@ -141,12 +141,12 @@ export const PAGES = {
 
   concepts: {
     title: 'Concepts',
-    lede: 'Six ideas explain everything Sentinel does.',
+    lede: 'Six ideas explain everything Hexley does.',
     source: 'README.md, docs/THREAT_MODEL.md sections 1 to 4, docs/DECISIONS.md (D-007, D-019, D-022, D-028).',
     body: () => (
       <>
         <h2 id="gateway">The gateway</h2>
-        <p>Sentinel is an MCP gateway: the AI agent talks to Sentinel, and Sentinel talks to the real tools. Every call is checked first. <strong>No language model makes any security decision</strong>; the checks are ordinary code running outside the model.</p>
+        <p>Hexley is an MCP gateway: the AI agent talks to Hexley, and Hexley talks to the real tools. Every call is checked first. <strong>No language model makes any security decision</strong>; the checks are ordinary code running outside the model.</p>
         <h2 id="slip">The permission slip</h2>
         <p>Before the agent reads anything untrusted, the officer confirms a slip: the task, the tools it may use, where data may go, which places count as internal, and how many messages it may send. The agent cannot create or widen it. The session token is bound to the confirmed slip, so a changed slip is a different token.</p>
         <h2 id="decisions">Four decisions</h2>
@@ -163,7 +163,7 @@ export const PAGES = {
         <h2 id="quarantine">Quarantine</h2>
         <p>The third denied action in one session freezes that session and revokes its token. The freeze is per session: other sessions and other work items are not affected, and a frozen session cannot be refreshed.</p>
         <h2 id="hardened">Hardened mode</h2>
-        <p>An optional, narrower set-up for the quotation task. The slip is bound to one work item, the agent gets a single tool that sends a fixed message, and Sentinel chooses the recipient from trusted records. That shrinks the e-mail channel a lot; it does not remove every covert channel (which calls are made, their timing, retries).</p>
+        <p>An optional, narrower set-up for the quotation task. The slip is bound to one work item, the agent gets a single tool that sends a fixed message, and Hexley chooses the recipient from trusted records. That shrinks the e-mail channel a lot; it does not remove every covert channel (which calls are made, their timing, retries).</p>
         <h2 id="audit">The audit log</h2>
         <p>Every decision is written to a signed, hash-chained log <em>before</em> anything is forwarded; a slow or failed write refuses the action. It shows if a record was changed, deleted or reordered. It does not prove that the recorded events were true, and a truncated log is only noticed if the checker holds an earlier chain head. You can verify it in the console and in the chat's Details drawer.</p>
       </>
@@ -192,26 +192,26 @@ export const PAGES = {
 
   'connect-claude-ai': {
     title: 'Connect Claude.ai',
-    lede: 'Add Sentinel as a custom connector and sign in. The officer approves the permission slip with a code shown in the terminal.',
+    lede: 'Add Hexley as a custom connector and sign in. The officer approves the permission slip with a code shown in the terminal.',
     source: 'docs/contracts/API.md (Connect), docs/DECISIONS.md D-036, D-044, docs/PHASE_LOG.md rows B1 and F8.',
     body: () => (
       <>
         <h2 id="before">Before you start</h2>
-        <p>Claude.ai is on the internet, so it needs a public address for the gateway. Start Sentinel with a tunnel:</p>
+        <p>Claude.ai is on the internet, so it needs a public address for the gateway. Start Hexley with a tunnel:</p>
         <CopyField label="Run this" value="python -m sentinel up --tunnel" block />
         <p>It prints a connector address. The address changes every time you start, so a connector added earlier points at a dead address and must be added again.</p>
         <h2 id="add">Add the connector</h2>
         <Steps items={[
           'In Claude.ai open Customize, then Connectors, then Add custom connector.',
-          'Paste the connector address that Sentinel printed (it ends in /mcp).',
+          'Paste the connector address that Hexley printed (it ends in /mcp).',
           'Choose Sign in now. Claude registers itself automatically.',
-          'Sentinel shows a consent page and prints a six-digit officer code in its terminal. Check the permission slip on the page, type the code and approve.',
+          'Hexley shows a consent page and prints a six-digit officer code in its terminal. Check the permission slip on the page, type the code and approve.',
         ]} />
         <h2 id="see">What you will see</h2>
         <p>Claude can now use the slip's tools and nothing else. Ask it to process the quotation and to include the stock figures in the e-mail: the send is denied by R2, Claude tells you so, and nothing is delivered. The same denial appears in the console and in the signed log.</p>
         <h2 id="other-tools">Other connectors in the same chat</h2>
-        <Note tone="limit">Sentinel decides only what goes through Sentinel. If the same Claude conversation also has another connector switched on (Gmail, Drive, a browser), Claude can use that one instead, and Sentinel never sees the call. For a test that shows what Sentinel does, switch the other connectors off, and let Claude read the document through Sentinel (put it in the uploads folder with the chat page's + button) rather than attaching it to the conversation: a file attached to Claude never passes through Sentinel, so it is not marked untrusted and nothing reads or sends it through the gateway.</Note>
-        <p>To sign in with a slip for your own documents instead of the quotation one, start Sentinel with <code>python -m sentinel up --tunnel --oauth-preset own_document</code>. That slip allows the document tools, the customer database, e-mail inside the company domain, and files under /out, with the Rule of Two on.</p>
+        <Note tone="limit">Hexley decides only what goes through Hexley. If the same Claude conversation also has another connector switched on (Gmail, Drive, a browser), Claude can use that one instead, and Hexley never sees the call. For a test that shows what Hexley does, switch the other connectors off, and let Claude read the document through Hexley (put it in the uploads folder with the chat page's + button) rather than attaching it to the conversation: a file attached to Claude never passes through Hexley, so it is not marked untrusted and nothing reads or sends it through the gateway.</Note>
+        <p>To sign in with a slip for your own documents instead of the quotation one, start Hexley with <code>python -m sentinel up --tunnel --oauth-preset own_document</code>. That slip allows the document tools, the customer database, e-mail inside the company domain, and files under /out, with the Rule of Two on.</p>
         <h2 id="evidence">Evidence</h2>
         <ClientEvidence id="claude-web" />
         <Note tone="limit">This was run once, on a free account. It is a demonstration that the route works, not a measurement.</Note>
@@ -241,40 +241,40 @@ export const PAGES = {
 
   'connect-claude-code-hook': {
     title: 'Check every tool in Claude Code',
-    lede: 'A gateway decides only what goes through it. Claude Code can also ask Sentinel before each tool call, whichever server the tool belongs to, so other connectors are covered too.',
+    lede: 'A gateway decides only what goes through it. Claude Code can also ask Hexley before each tool call, whichever server the tool belongs to, so other connectors are covered too.',
     source: 'src/sentinel/check.py, docs/plans/PRODUCT_ROADMAP.md (W1.4), docs/PHASE_LOG.md row F1; Claude Code hooks: code.claude.com/docs/en/hooks.',
     body: () => (
       <>
         <h2 id="why">Why this exists</h2>
-        <p>Add Sentinel to Claude Code as an MCP server and Sentinel decides the tools it hosts. Every other tool Claude Code has (a Gmail or GitHub connector, a shell, file edits) never reaches Sentinel. Claude Code's hook feature closes that: before each tool call it can send the call to a web address and obey the answer, and after the call it can report the result. The model does not choose whether the hook runs.</p>
+        <p>Add Hexley to Claude Code as an MCP server and Hexley decides the tools it hosts. Every other tool Claude Code has (a Gmail or GitHub connector, a shell, file edits) never reaches Hexley. Claude Code's hook feature closes that: before each tool call it can send the call to a web address and obey the answer, and after the call it can report the result. The model does not choose whether the hook runs.</p>
         <h2 id="steps">Set it up</h2>
         <Steps items={[
-          'Start Sentinel and open the link it prints. Classify each tool of the connector once (Your own tools). A tool nobody classified is refused, so a connector Sentinel has never heard of cannot be used by accident.',
+          'Start Hexley and open the link it prints. Classify each tool of the connector once (Your own tools). A tool nobody classified is refused, so a connector Hexley has never heard of cannot be used by accident.',
           'Create a permission slip that allows those tools, and an access token for it (the Connect page, or the slip builder in the API).',
           'Write the hook block into Claude Code\'s settings, and set the token in an environment variable.',
         ]} />
         <CopyField label="Print the settings block" value="python -m sentinel hook-config --api-url http://127.0.0.1:8000 --skip sentinel" block />
-        <p>The block sends both events (before and after each call) to Sentinel over HTTP. The token is read from the environment variable <code>SENTINEL_TOKEN</code> and is never written into the file. <code>--skip sentinel</code> names a server that already goes through Sentinel's gateway, so its calls are not decided twice. The block sets <code>onFailure: block</code>: if Sentinel is down or too slow, the call does not run (this needs Claude Code 2.1.295 or newer; on older versions a failed hook lets the call run).</p>
+        <p>The block sends both events (before and after each call) to Hexley over HTTP. The token is read from the environment variable <code>SENTINEL_TOKEN</code> and is never written into the file. <code>--skip sentinel</code> names a server that already goes through Hexley's gateway, so its calls are not decided twice. The block sets <code>onFailure: block</code>: if Hexley is down or too slow, the call does not run (this needs Claude Code 2.1.295 or newer; on older versions a failed hook lets the call run).</p>
         <h2 id="what">What happens</h2>
-        <Table head={['Claude Code is about to…', 'Sentinel answers']} rows={[
+        <Table head={['Claude Code is about to…', 'Hexley answers']} rows={[
           ['Call a tool of an unclassified connector', 'Deny: it is not on the slip (R1)'],
           ['Send restricted data to a place that is not internal', 'Deny (R2); the call never runs'],
           ['Send after the session read untrusted content', 'Hold for the officer (R7); once approved, an identical retry runs once'],
           ['Write to agent or editor configuration, or read a credential file', 'Deny. That covers the settings file of Claude Code itself when it is written with Write or Edit, or by a shell command in a common form (redirection, tee, sed -i, cp, mv, rm, inline Python)'],
           ['Run a command that deletes or cannot be undone', 'Hold for the officer'],
-          ['Read a file, search, or use another built-in tool Sentinel does not decide on', 'Allow, and list it as seen but not mediated'],
+          ['Read a file, search, or use another built-in tool Hexley does not decide on', 'Allow, and list it as seen but not mediated'],
         ]} />
-        <p>An allowed call gets an empty answer, so Claude Code's own permission prompts still apply. Sentinel only ever denies.</p>
+        <p>An allowed call gets an empty answer, so Claude Code's own permission prompts still apply. Hexley only ever denies.</p>
         <h2 id="coverage">What you can see</h2>
-        <p>Ask the API for a session's coverage (<code>GET /api/v1/sessions/&lt;id&gt;/coverage</code>, officer token). It lists the tools Sentinel saw, which route each came by, which it decided on, and which it refused because nobody classified them. Make the hook's matcher match every tool and the list shows what is not mediated.</p>
+        <p>Ask the API for a session's coverage (<code>GET /api/v1/sessions/&lt;id&gt;/coverage</code>, officer token). It lists the tools Hexley saw, which route each came by, which it decided on, and which it refused because nobody classified them. Make the hook's matcher match every tool and the list shows what is not mediated.</p>
         <h2 id="evidence">Evidence</h2>
         <ClientEvidence id="claude-code-hook" />
-        <Note tone="limit">One headless session per condition, with Claude Code's default model, a demonstration connector and synthetic data. The model ignored the hidden instruction in the injected page by itself, so that run shows nothing about Sentinel stopping an injection. It is not a measurement.</Note>
+        <Note tone="limit">One headless session per condition, with Claude Code's default model, a demonstration connector and synthetic data. The model ignored the hidden instruction in the injected page by itself, so that run shows nothing about Hexley stopping an injection. It is not a measurement.</Note>
         <h2 id="limits">What this does not give you</h2>
         <ul className="dx-list">
-          <li><strong>The client decides whether to ask.</strong> A hook that a user removes from Claude Code's own settings, or a tool the matcher does not name, is not mediated. Organisations can lock hooks in managed settings, which Sentinel does not control. Writes to the settings files through Write, Edit and the common shell forms above are refused (tested), but a program that changes the file in a way the recogniser cannot read is not, so do not treat the hook as tamper-proof.</li>
-          <li><strong>Sentinel learns from results only if the client reports them.</strong> A client that sends the before-call event but not the after-call event has weaker protection: a restricted value Sentinel never saw cannot be recognised later (this is tested and written down).</li>
-          <li><strong>Files attached to a chat app, and chat apps with no hook,</strong> are not covered by this route. For a client whose context Sentinel cannot see, a slip can say so, and the session counts as having read untrusted content from its first call.</li>
+          <li><strong>The client decides whether to ask.</strong> A hook that a user removes from Claude Code's own settings, or a tool the matcher does not name, is not mediated. Organisations can lock hooks in managed settings, which Hexley does not control. Writes to the settings files through Write, Edit and the common shell forms above are refused (tested), but a program that changes the file in a way the recogniser cannot read is not, so do not treat the hook as tamper-proof.</li>
+          <li><strong>Hexley learns from results only if the client reports them.</strong> A client that sends the before-call event but not the after-call event has weaker protection: a restricted value Hexley never saw cannot be recognised later (this is tested and written down).</li>
+          <li><strong>Files attached to a chat app, and chat apps with no hook,</strong> are not covered by this route. For a client whose context Hexley cannot see, a slip can say so, and the session counts as having read untrusted content from its first call.</li>
         </ul>
       </>
     ),
@@ -282,7 +282,7 @@ export const PAGES = {
 
   'own-tools': {
     title: 'Your own tools',
-    lede: 'Sentinel does not guess what a tool does. A tool nobody has classified is invisible to the agent and refused.',
+    lede: 'Hexley does not guess what a tool does. A tool nobody has classified is invisible to the agent and refused.',
     source: 'docs/contracts/API.md (Tools and slips for any task), docs/DECISIONS.md D-037 and D-038.',
     body: () => (
       <>
@@ -341,10 +341,10 @@ export const PAGES = {
       <>
         <h2 id="protected">What is protected</h2>
         <p>An action is allowed only when the tool is on the slip, the destination is inside what the slip allows and did not come only from untrusted content, no restricted value the session has read leaves the building, and, after untrusted reading, a consequential action goes only to an internal destination or waits for the officer.</p>
-        <h2 id="not-governed">What Sentinel does not govern</h2>
+        <h2 id="not-governed">What Hexley does not govern</h2>
         <ul className="dx-list">
           <li>The model's own reply to the user. The gateway sees tool calls, not what the agent says in chat; in a hosted app that reply goes to the app's provider.</li>
-          <li>Other capabilities the agent holds: another connector, a browser, a direct credential, a shell. For a real deployment the agent must hold no credential for what Sentinel is meant to govern.</li>
+          <li>Other capabilities the agent holds: another connector, a browser, a direct credential, a shell. For a real deployment the agent must hold no credential for what Hexley is meant to govern.</li>
           <li>Covert channels: which calls are made, their timing, retries, send versus no-send.</li>
           <li>Whether the content of an allowed action is correct or wise. A slip that is too wide is enforced faithfully.</li>
         </ul>

@@ -1,4 +1,4 @@
-/* Sentinel console (phase F2), on the shared tokens and primitives (design/tokens.css, design/primitives.css): dark by default,
+/* Hexley console (phase F2), on the shared tokens and primitives (design/tokens.css, design/primitives.css): dark by default,
    white on request, system fonts only (works offline). Never hard-code a colour here: every colour is a token.
    The rules of docs/DESIGN_BRIEF.md: one headline, one supporting line and one primary action per screen; space before
    borders; colour only on a decision (red = harm that reached the outside, blue = DENIED, amber = NEEDS APPROVAL, green =

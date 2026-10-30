@@ -82,7 +82,7 @@ export function Message({ m, working }) {
         {m.text ? <p className="cx-text"><Inline text={m.text} /></p> : working && <Dots />}
         {m.checks?.length > 0 && (
           <p className="cx-check" role="note">
-            Sentinel removed {m.checks.length === 1 ? 'an address' : `${m.checks.length} addresses`} from this reply before
+            Hexley removed {m.checks.length === 1 ? 'an address' : `${m.checks.length} addresses`} from this reply before
             showing it: {m.checks.map((c) => `${c.kind} to ${c.host} (${c.reasons[0]})`).join('; ')}.
           </p>
         )}
@@ -144,7 +144,7 @@ export function Welcome({ presets, busy, onPick, errorText }) {
     <div className="cx-welcome">
       <sentinel-mascot state="sleeping" message="" size="128" />
       <h1 className="cx-welcome-title">What should the agent do?</h1>
-      <p className="cx-welcome-lede muted">Pick a task. A model works on it, every tool it calls goes through Sentinel first, and you see each decision as it is made.</p>
+      <p className="cx-welcome-lede muted">Pick a task. A model works on it, every tool it calls goes through Hexley first, and you see each decision as it is made.</p>
       {errorText && <p className="muted cx-welcome-error" role="status">{errorText}</p>}
       <div className="cx-suggest">
         {presets.map((p) => (

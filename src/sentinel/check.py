@@ -105,7 +105,7 @@ async def check_call(rt: Runtime, session: Session, raw_tool: str, tool_input: A
         # Goes through the gateway itself (a server named in `skip`), or a built-in tool Sentinel does not decide on (Read,
         # Glob, Grep...). Recorded, so the coverage report shows it was seen and not mediated.
         session.note_tool(tool, "hook", mediated=False)
-        why = "this tool goes through Sentinel's own gateway" if server is not None else "Sentinel does not decide on this built-in tool"
+        why = "this tool goes through Hexley's own gateway" if server is not None else "Hexley does not decide on this built-in tool"
         return _reply("ALLOW", why, tool=tool, mediated=False)
     try:
         decision, action, entry = await SentinelMiddleware(rt).mediate(session, tool, args, wait=wait, route="hook")
@@ -113,7 +113,7 @@ async def check_call(rt: Runtime, session: Session, raw_tool: str, tool_input: A
         return _reply("BLOCK", str(e), tool=tool)
     except Exception:  # noqa: BLE001 - invariant 2: anything unexpected in the decision path is a BLOCK
         log.exception("hook check failed; failing closed")
-        return _reply("BLOCK", "Blocked: Sentinel could not evaluate this action safely, so it should not run.", tool=tool)
+        return _reply("BLOCK", "Blocked: Hexley could not evaluate this action safely, so it should not run.", tool=tool)
     base = dict(action_id=action.action_id, decision_id=decision.decision_id, rule_ids=[str(r) for r in decision.rule_ids])
     if decision.effect == Effect.ALLOW:
         if tool_use_id:
@@ -123,7 +123,7 @@ async def check_call(rt: Runtime, session: Session, raw_tool: str, tool_input: A
     if decision.effect == Effect.ASK:
         pending = next((a for a in rt.approvals.pending() if a.session_id == session.session_id and a.tool == tool
                         and a.action_hash == rt.approvals.hash_for(session.session_id, tool, args)), None)
-        return _reply("ASK", f"{reason} The officer can approve this exact request in Sentinel; then try it again.", tool=tool,
+        return _reply("ASK", f"{reason} The officer can approve this exact request in Hexley; then try it again.", tool=tool,
                       approval_id=pending.approval_id if pending else None, **base)
     return _reply(str(decision.effect), reason, tool=tool, **base)
 
@@ -154,7 +154,7 @@ def coverage_view(rt: Runtime, session: Session) -> dict:
             # tools Sentinel saw and refused because nobody has classified them: the officer's to-do list
             "unclassified": [t["tool"] for t in tools if t["mediated"] and not rt.registry.is_known(t["tool"])],
             "unseen_context": session.contract.unseen_context,
-            "note": "Only calls that reached Sentinel are listed. A tool the client never reported is not here, and Sentinel "
+            "note": "Only calls that reached Hexley are listed. A tool the client never reported is not here, and Hexley "
                     "cannot know it exists. To see more, make the client's hook match every tool."}
 
 

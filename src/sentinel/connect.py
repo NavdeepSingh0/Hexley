@@ -21,12 +21,12 @@ CLIENTS = [
      {"url": "/proof/claude-code-header-20261029.txt",
       "caption": "A real Claude Code session, 29 Oct 2026, header token: the read and stock checks were allowed, the e-mail with restricted stock figures was denied (R2), nothing was delivered. One session, not a measurement."}),
     # The enforcing route (plan F1): Claude Code's own hook sends every tool call to Sentinel, whichever server it belongs to.
-    ("claude-code-hook", "Claude Code with the Sentinel hook (other connectors included)", "cli", "tested", "header",
+    ("claude-code-hook", "Claude Code with the Hexley hook (other connectors included)", "cli", "tested", "header",
      'python -m sentinel hook-config --api-url http://127.0.0.1:8000 --skip sentinel > .claude/settings.local.json\n'
      '# then set SENTINEL_TOKEN to the token created above, without the word Bearer',
      None,
      {"url": "/proof/claude-code-hook-20261030.txt",
-      "caption": "A real Claude Code session, 30 Oct 2026, through Claude Code's own hook and a connector Sentinel does not host: an over-share to a non-internal address was denied (R2) and never ran, the same request without the hook was delivered. One session per condition, not a measurement."}),
+      "caption": "A real Claude Code session, 30 Oct 2026, through Claude Code's own hook and a connector Hexley does not host: an over-share to a non-internal address was denied (R2) and never ran, the same request without the hook was delivered. One session per condition, not a measurement."}),
     ("vscode", "VS Code (MCP)", "ide", "should_work", "header",
      '{ "servers": { "sentinel": { "type": "http", "url": "{mcp_url}", "headers": { "Authorization": "{header_value}" } } } }',
      None, None),
@@ -37,9 +37,9 @@ CLIENTS = [
      '{ "mcpServers": { "sentinel": { "httpUrl": "{mcp_url}", "headers": { "Authorization": "{header_value}" } } } }', None, None),
     ("codex-cli", "Codex CLI", "cli", "should_work", "header",
      '[mcp_servers.sentinel]\nurl = "{mcp_url}"\nhttp_headers = { Authorization = "{header_value}" }', None, None),
-    ("local-chat", "A local model (Ollama) in Sentinel Chat", "local", "tested", "header", None, None,
+    ("local-chat", "A local model (Ollama) in Hexley Chat", "local", "tested", "header", None, None,
      {"url": "/proof/local-ollama-20261029.txt",
-      "caption": "A real model on this computer (qwen3 through Ollama) used through the real gateway in Sentinel Chat, 29 Oct 2026: nothing the agent read left the machine. Our own host, not a third-party client."}),
+      "caption": "A real model on this computer (qwen3 through Ollama) used through the real gateway in Hexley Chat, 29 Oct 2026: nothing the agent read left the machine. Our own host, not a third-party client."}),
     ("local", "A local model through a third-party MCP client", "local", "planned", "header", None, None, None),
     ("other-agents", "Agents that do not use MCP", "other", "planned", "none", None, None, None),
 ]
@@ -53,7 +53,7 @@ CLIENTS = [
 METHOD_STATUS = {"oauth": "tested", "header": "tested"}
 
 OAUTH_STEPS = ["Open Customize → Connectors → Add custom connector", "Paste the connector URL",
-               "Choose “Sign in now”", "Approve the permission slip with the officer code shown in the Sentinel terminal"]
+               "Choose “Sign in now”", "Approve the permission slip with the officer code shown in the Hexley terminal"]
 HEADER_STEPS = ["Create a slip and token below", "Add a request header named Authorization with the value shown",
                 "The token stops working when its time runs out; create a new one"]
 

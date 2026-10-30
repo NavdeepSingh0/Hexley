@@ -21,7 +21,7 @@ Vercel cannot run this: Sentinel is a long-running Python server with WebSockets
    - `SENTINEL_API_TOKEN`: the token from step 1.
    - `NVIDIA_API_KEY`: your key from build.nvidia.com. Paste it into Render only. Never into chat or git.
    - `GITHUB_TOKEN`, `NOTION_TOKEN`, `SLACK_USER_TOKEN`, `GMAIL_ADDRESS`, `GMAIL_APP_PASSWORD`: test accounts only. A connector whose value is empty is not started, and the log says so.
-5. **Apply.** The first build takes several minutes (it builds the website, then the Python image). Watch the Logs tab. When it says `Sentinel up`, it is running.
+5. **Apply.** The first build takes several minutes (it builds the website, then the Python image). Watch the Logs tab. When it says `Hexley up`, it is running.
 6. **Open it.** The address is `https://sentinel-xxxx.onrender.com` (Render shows it at the top of the page). Add the token to open the console and chat:
    `https://sentinel-xxxx.onrender.com/#token=<your token>`
    The page moves the token out of the address bar as soon as it opens. The public pages need no token.

@@ -262,7 +262,7 @@ dl{{display:grid;grid-template-columns:170px 1fr;gap:6px 14px;margin:12px 0 0}}d
 input{{font:inherit;font-size:28px;letter-spacing:.3em;width:9em;padding:8px 12px;background:#262625;color:#f2f1ed;border:1px solid #3b3b39}}
 button{{font:inherit;font-weight:600;padding:10px 22px;margin-right:10px;border:2px solid #f2f1ed;background:#f2f1ed;color:#1f1f1e;cursor:pointer}}
 button.ghost{{background:none;color:#f2f1ed}}.err{{color:#ff7f73;font-weight:600;margin:0 0 16px}}.muted{{color:#a3a29d;font-size:15px}}
-</style></head><body><main><p class="label">Sentinel · officer approval</p>{body}</main></body></html>"""
+</style></head><body><main><p class="label">Hexley · officer approval</p>{body}</main></body></html>"""
 
 
 def _page(body: str, status: int = 200) -> HTMLResponse:
@@ -275,7 +275,7 @@ def _consent_body(view: dict, error: str = "") -> str:
     e = html.escape
     slip = view["slip"]
     tools = ", ".join(slip["allowed_tools"])
-    return (f"<h1>{e(view['client_name'])} wants to connect to Sentinel</h1>"
+    return (f"<h1>{e(view['client_name'])} wants to connect to Hexley</h1>"
             + (f'<p class="err">{e(error)}</p>' if error else "")
             + f"""<div class="slip"><span class="label">The permission slip you are approving</span>
 <p><b>{e(slip['objective'])}</b></p><dl><dt>Allowed actions</dt><dd>{e(tools)}</dd>

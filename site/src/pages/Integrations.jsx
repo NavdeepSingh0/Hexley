@@ -35,9 +35,9 @@ export default function Integrations() {
   const others = groups.filter((g) => g.status !== 'tested')
   return (
     <main>
-      <PageHead label="Integrations" title="What Sentinel works with." lede="Anything that speaks MCP can be routed through Sentinel. The labels say what we have actually run, and only a Tested label comes with its evidence." />
+      <PageHead label="Integrations" title="What Hexley works with." lede="Anything that speaks MCP can be routed through Hexley. The labels say what we have actually run, and only a Tested label comes with its evidence." />
       {status === 'loading' && <p className="section muted" role="status">Loading...</p>}
-      {status === 'error' && <p className="section muted" role="status">The list of clients could not be loaded from Sentinel. {error}</p>}
+      {status === 'error' && <p className="section muted" role="status">The list of clients could not be loaded from Hexley. {error}</p>}
       {tested.map((c, i) => (
         <Feature
           key={c.id} id={c.id} flip={i % 2 === 1}

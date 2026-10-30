@@ -1,7 +1,7 @@
 /**
- * options.js — Sentinel Chrome Extension
+ * options.js — Hexley Chrome Extension
  *
- * Handles: parsing the full Sentinel link, saving address + token to
+ * Handles: parsing the full Hexley link, saving address + token to
  * chrome.storage.session (and optionally chrome.storage.local),
  * and the "Test connection" flow.
  *
@@ -30,7 +30,7 @@ function hideStatus() {
   statusEl.style.display = 'none'
 }
 
-/** Sentinel's officer API runs on this computer. The token can approve actions, so it is only ever sent to this computer: not to a
+/** Hexley's officer API runs on this computer. The token can approve actions, so it is only ever sent to this computer: not to a
  *  tunnel (which reaches the AI gateway, not the officer API) and not to an address pasted by mistake. */
 function isLocalAddress(base) {
   try {
@@ -41,7 +41,7 @@ function isLocalAddress(base) {
   }
 }
 
-/** Parse address + token out of a full Sentinel link.
+/** Parse address + token out of a full Hexley link.
  *  Accepts: http://127.0.0.1:8000/#token=abc123
  *  Returns: { base, token } or null if unparseable.
  */
@@ -107,7 +107,7 @@ saveBtn.addEventListener('click', async () => {
   const token = (tokenInput.value   || '').trim()
 
   if (!isLocalAddress(base)) {
-    showStatus('Use the address of Sentinel on this computer, like http://127.0.0.1:8000. A tunnel address reaches the AI gateway, not the officer API, and the token is never sent to another machine.', 'error')
+    showStatus('Use the address of Hexley on this computer, like http://127.0.0.1:8000. A tunnel address reaches the AI gateway, not the officer API, and the token is never sent to another machine.', 'error')
     return
   }
 
@@ -160,7 +160,7 @@ saveBtn.addEventListener('click', async () => {
     showStatus(`Connected — mascot state: ${stateWord}`, 'ok')
   } catch (err) {
     if (err instanceof TypeError && err.message.includes('Failed to fetch')) {
-      showStatus('Sentinel not running — start it with: python -m sentinel up --demo', 'error')
+      showStatus('Hexley not running — start it with: python -m sentinel up --demo', 'error')
     } else {
       showStatus(`Connection failed: ${err.message}`, 'error')
     }

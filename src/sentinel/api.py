@@ -557,7 +557,7 @@ def create_api(rt: Runtime, console_dir: Path | None = None, site_dir: Path | No
             async with Client(StreamableHttpTransport(rt.tools_url, headers={TOKEN_HEADER: rt.downstream_token})) as c:
                 return await asyncio.wait_for(c.list_tools(), timeout=10)
         except Exception as e:  # noqa: BLE001 - reported plainly, never leaked as a stack trace
-            raise HTTPException(status_code=503, detail="Sentinel could not read the tool list from the tool server.") from e
+            raise HTTPException(status_code=503, detail="Hexley could not read the tool list from the tool server.") from e
 
     def schema_of(tool) -> dict:
         return getattr(tool, "input_schema", None) or getattr(tool, "inputSchema", None) or {}
@@ -588,7 +588,7 @@ def create_api(rt: Runtime, console_dir: Path | None = None, site_dir: Path | No
         """The officer has read a tool's changed or suspicious definition and approves it as it is now (plan Q5)."""
         st = rt.pins.state(name)
         if st is None:
-            raise HTTPException(status_code=404, detail=f"Sentinel has not seen a tool called '{name}'.")
+            raise HTTPException(status_code=404, detail=f"Hexley has not seen a tool called '{name}'.")
         try:
             await rt.audit.append("tool.approved", payload={"tool": name, "definition_sha256": st.seen_hash, "was": st.status})
         except AuditError as e:
@@ -618,7 +618,7 @@ def create_api(rt: Runtime, console_dir: Path | None = None, site_dir: Path | No
             raise HTTPException(status_code=422, detail=f"'{name}' has no argument called {', '.join(unknown)}.")
         if body.outbound and not body.destination_args:
             raise HTTPException(status_code=422, detail="An outbound tool must say which argument names the destination, "
-                                                        "otherwise Sentinel cannot check where it sends data.")
+                                                        "otherwise Hexley cannot check where it sends data.")
         entry = ToolEntry(name=name, resource_class=body.resource_class or name, **body.model_dump(exclude={"resource_class"}))
         try:
             await rt.audit.append("registry.classified", payload={"tool": name, "labels": entry.model_dump(mode="json", exclude={"name"})})
@@ -664,7 +664,7 @@ def create_api(rt: Runtime, console_dir: Path | None = None, site_dir: Path | No
     # them from the AI client's sign-in redirect, where the console's token may not be present.
     def oauth_provider():
         if rt.oauth is None:
-            raise HTTPException(status_code=404, detail="OAuth is not enabled; start Sentinel with --public-url or --tunnel")
+            raise HTTPException(status_code=404, detail="OAuth is not enabled; start Hexley with --public-url or --tunnel")
         return rt.oauth
 
     @app.get("/api/v1/oauth/requests/{request_id}")

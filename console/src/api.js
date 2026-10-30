@@ -1,4 +1,4 @@
-// The console talks only to the Sentinel API that served it (same origin). The API token arrives once, in the URL
+// The console talks only to the Hexley API that served it (same origin). The API token arrives once, in the URL
 // fragment printed/opened by `python -m sentinel up`; it moves to sessionStorage and is removed from the address bar.
 const KEY = 'sentinel.token'
 let token = null
@@ -33,7 +33,7 @@ export async function api(path, { method = 'GET', body } = {}) {
       body: body ? JSON.stringify(body) : undefined,
     })
   } catch {
-    throw new ApiError(0, 'Cannot reach the Sentinel API')
+    throw new ApiError(0, 'Cannot reach the Hexley API')
   }
   if (!r.ok) {
     let detail = r.statusText

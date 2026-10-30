@@ -4,7 +4,7 @@ import { TOOL_ALLOWS, groupSlips, pickDefaultRecording } from '../lib/derive.js'
 
 const SOURCES = [
   ['scripted', 'Scripted', 'A fixed, fully compromised agent: the same attack every time.'],
-  ['replay', 'Replay', 'A real AI model’s recorded behaviour, replayed. Sentinel still decides live.'],
+  ['replay', 'Replay', 'A real AI model’s recorded behaviour, replayed. Hexley still decides live.'],
   ['live', 'Live', 'A real AI model right now. Needs the model API; behaviour varies.'],
 ]
 
@@ -24,7 +24,7 @@ export function StartScreen({ onCreate, onGuided, error, busy, playlist }) {
 
   return (
     <div className="screen">
-      <p className="s-label">Sentinel console</p>
+      <p className="s-label">Hexley console</p>
       <h1 className="screen-title">Watch an AI agent get attacked</h1>
       <p className="screen-sub">The same hostile input goes to three setups. Only one of them stops it.</p>
       <div className="start-actions">

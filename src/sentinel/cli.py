@@ -138,7 +138,7 @@ async def watch_child(proc: subprocess.Popen, name: str) -> None:
     """If the tool server dies while Sentinel runs, say so and stop, instead of carrying on with tools that do not answer."""
     while proc.poll() is None:
         await asyncio.sleep(1.0)
-    raise SystemExit(f"The {name} stopped (exit code {proc.returncode}). Sentinel is stopping because its tools are gone.")
+    raise SystemExit(f"The {name} stopped (exit code {proc.returncode}). Hexley is stopping because its tools are gone.")
 
 
 def start_tunnel(gateway_port: int, binary: str | None = None, timeout: float = 40.0) -> tuple[subprocess.Popen, str]:
@@ -219,7 +219,7 @@ async def _up(args: argparse.Namespace) -> None:
     console_url = f"http://127.0.0.1:{args.api_port}/console/{fragment}"
     site_url = f"http://127.0.0.1:{args.api_port}/{fragment}"
     site_built = (SITE_DIST / "index.html").is_file()
-    print(f"Sentinel up. API http://{args.host}:{args.api_port}  gateway {rt.gateway_url}  tools pid {tools.pid}", flush=True)
+    print(f"Hexley up. API http://{args.host}:{args.api_port}  gateway {rt.gateway_url}  tools pid {tools.pid}", flush=True)
     if hide:
         print("The officer token is the one set in SENTINEL_API_TOKEN (not printed here). Open the site's address followed by "
               "#token=<that token>.", flush=True)

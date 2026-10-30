@@ -11,7 +11,7 @@ const MENUS = {
     items: [
       ['/how-it-works', 'How it works', 'The slip, the rules, approvals and the signed log'],
       ['/integrations', 'Integrations', 'What it connects to, and what we have tested'],
-      ['/connect', 'Connect', 'Add Sentinel to your AI app'],
+      ['/connect', 'Connect', 'Add Hexley to your AI app'],
       ['/chat', 'Chat', 'Try an agent whose every call is checked'],
     ],
   },
@@ -19,7 +19,7 @@ const MENUS = {
     label: 'Resources',
     items: [
       ['/docs', 'Docs', 'Run it, the concepts, the rules, the API'],
-      ['/docs/limits', 'Limits and honest scope', 'What Sentinel does and does not cover'],
+      ['/docs/limits', 'Limits and honest scope', 'What Hexley does and does not cover'],
       ['/docs/faq', 'Questions judges ask', 'Short answers, each with its source'],
       ['/#evidence', 'Evidence', 'Measured, with the sample size and the limits'],
     ],
@@ -88,7 +88,7 @@ export default function Nav() {
   return (
     <header className="nav-wrap">
       <div className="nav" ref={bar}>
-        <Link to="/" className="nav-brand" aria-label="Sentinel home">
+        <Link to="/" className="nav-brand" aria-label="Hexley home">
           <span aria-hidden="true" className="nav-mark"><sentinel-mascot state="idle" size="30" still="" /></span>
           <span className="nav-word">SENTINEL</span>
         </Link>

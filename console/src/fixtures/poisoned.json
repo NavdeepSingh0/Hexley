@@ -7,7 +7,7 @@
   },
   "source": "scripted",
   "status": "finished",
-  "disclosure": "SCRIPTED \u00b7 a fully compromised agent: a fixed sequence of calls, no model \u00b7 Sentinel decisions computed live",
+  "disclosure": "SCRIPTED \u00b7 a fully compromised agent: a fixed sequence of calls, no model \u00b7 Hexley decisions computed live",
   "model": null,
   "officer": "Col. R. Menon",
   "created": "2026-10-28T06:02:36+00:00",
@@ -259,7 +259,7 @@
     {
       "lane_id": "lane2",
       "column": "sentinel",
-      "title": "Sentinel",
+      "title": "Hexley",
       "mode": "fingerprint",
       "badge": "FINGERPRINT MODE: value matching",
       "session_id": "ses_87d9e929a20b",

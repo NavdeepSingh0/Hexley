@@ -81,7 +81,7 @@ export function PresenterHelp({ onClose, tamperEnabled }) {
       <p className="s-label help-sub">Where the agent&rsquo;s behaviour comes from</p>
       <dl className="help-sources">
         <div><dt>SCRIPTED</dt><dd>a fixed, fully compromised agent: the same attack every time</dd></div>
-        <div><dt>REPLAY</dt><dd>a real AI model&rsquo;s recorded behaviour; Sentinel still decides live</dd></div>
+        <div><dt>REPLAY</dt><dd>a real AI model&rsquo;s recorded behaviour; Hexley still decides live</dd></div>
         <div><dt>LIVE</dt><dd>a real AI model right now (needs the model API; behaviour varies)</dd></div>
       </dl>
     </aside>

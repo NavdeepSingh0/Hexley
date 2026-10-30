@@ -26,7 +26,7 @@ function Hero() {
       <section className="hero2" aria-labelledby="hero-title">
         <div className="hero2-text">
           <h1 id="hero-title" className="hero2-title">The AI can only do the job you gave it.</h1>
-          <p className="hero2-lede">Sentinel checks every action an AI agent takes against a permission slip, and stops the ones the job never needed.</p>
+          <p className="hero2-lede">Hexley checks every action an AI agent takes against a permission slip, and stops the ones the job never needed.</p>
           <div className="hero-actions">
             <a className="s-btn s-btn--primary s-btn--big" href="/console/">See it work</a>
             <Link className="s-btn s-btn--ghost s-btn--big" to="/docs">Read the docs</Link>
@@ -43,11 +43,11 @@ function Screens() {
     <section className="section section--tight" aria-label="The console">
       <Frame>
         <div className="frame-shots">
-          <div className="frame-main"><Shot name="stage" alt="Three lanes side by side: Unprotected and Standard access both say LEAKED, Sentinel says DENIED." /></div>
+          <div className="frame-main"><Shot name="stage" alt="Three lanes side by side: Unprotected and Standard access both say LEAKED, Hexley says DENIED." /></div>
           <div className="frame-side"><Shot name="why" alt="The side drawer explaining a denied step, with the restricted values underlined in the message the agent tried to send." /></div>
         </div>
       </Frame>
-      <p className="frame-caption">The console, replaying a real model's actions on a poisoned quotation (recorded 26 Oct 2026); Sentinel's decisions are computed live.</p>
+      <p className="frame-caption">The console, replaying a real model's actions on a poisoned quotation (recorded 26 Oct 2026); Hexley's decisions are computed live.</p>
     </section>
   )
 }
@@ -59,7 +59,7 @@ function EvidenceCard({ g, primary }) {
     <article className={`s-panel evidence-card ${primary ? 'evidence-card--primary' : 'evidence-card--secondary'}`}>
       <p className="s-label">{g.title}</p>
       <p className="evidence-big">{p.value}</p>
-      <p className="evidence-what">got past Sentinel</p>
+      <p className="evidence-what">got past Hexley</p>
       {u && <p className="evidence-vs"><strong>{u.value}</strong> with no protection</p>}
       <p className="evidence-n">Sample size {p.n}. 95% interval {formatInterval(p.ci95)}.</p>
       <p className="evidence-caveat"><strong>What this is not:</strong> {p.caveat}</p>
@@ -90,7 +90,7 @@ function Pillars() {
       <h2 id="pillars-title" className="section-title section-title--center">Built for the way a careful team works</h2>
       <div className="icon-blocks">
         <IconBlock icon="plug" title="Built on a standard" link={{ to: '/integrations', label: 'See what is tested' }}>
-          <p>Sentinel is an MCP gateway, so anything that speaks MCP can be routed through it.{tested.length > 0 ? ` ${tested.join(' and ')} have been connected for real; the rest are labelled as we have run them.` : ''}</p>
+          <p>Hexley is an MCP gateway, so anything that speaks MCP can be routed through it.{tested.length > 0 ? ` ${tested.join(' and ')} have been connected for real; the rest are labelled as we have run them.` : ''}</p>
         </IconBlock>
         <IconBlock icon="shield" title="Every number has its limits" link={{ to: '/docs/limits', label: 'What this does not prove' }}>
           <p>Each result shows its sample size and a line saying what it is not. The cases were written by us, so a zero means "does what we say", not "no other route exists".</p>
@@ -111,7 +111,7 @@ function Integrations() {
       <p className="s-label">Works with</p>
       <h2 id="int-title" className="section-title">Built on the MCP standard</h2>
       {status === 'loading' && <p className="muted" role="status">Loading...</p>}
-      {status === 'error' && <p className="muted" role="status">The list of clients could not be loaded from Sentinel.</p>}
+      {status === 'error' && <p className="muted" role="status">The list of clients could not be loaded from Hexley.</p>}
       {rows.length > 0 && (
         <ul className="int-list s-panel">
           {rows.map((c) => (

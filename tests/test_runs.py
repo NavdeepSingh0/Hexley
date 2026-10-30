@@ -86,7 +86,7 @@ async def test_the_titles_are_exactly_the_wording_agreed_in_d028(stack):
     async with stack.api() as api:
         v = await finish(api, await start(api, "clean"))
     assert [l["title"] for l in v["lanes"]] == ["No policy enforcement — instrumented baseline",
-                                                "R1-only access control", "Sentinel"]
+                                                "R1-only access control", "Hexley"]
 
 
 async def test_the_clean_task_completes_in_every_column_with_no_false_block(stack):
@@ -217,7 +217,7 @@ async def test_a_fresh_recording_replays_without_divergence(stack):
     async with stack.api() as api:
         v = await finish(api, await start(api, "poisoned", "replay"))
     assert v["disclosure"].startswith("REPLAY") and "attempt 1 of 1" in v["disclosure"]
-    assert "Sentinel decisions computed live" in v["disclosure"] and "time-compressed" in v["disclosure"]
+    assert "Hexley decisions computed live" in v["disclosure"] and "time-compressed" in v["disclosure"]
     assert not any(l["diverged"] for l in v["lanes"])
     assert lane(v, "sentinel")["steps"][-1]["rule_ids"] == ["R2"] and lane(v, "sentinel")["inbox"] == []
     assert len(lane(v, "unprotected")["inbox"]) == 1

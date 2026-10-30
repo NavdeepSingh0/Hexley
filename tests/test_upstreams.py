@@ -157,7 +157,7 @@ async def test_a_result_carrying_a_held_credential_is_withheld_and_never_logged(
     stack, _, _ = f2
     token = await _token(stack, ["alpha__debug_dump"])
     async with stack.client(token) as c:
-        with pytest.raises(Exception, match="credential Sentinel holds"):
+        with pytest.raises(Exception, match="credential Hexley holds"):
             await c.call_tool("alpha__debug_dump", {})
     assert ALPHA_TOKEN not in stack.rt.audit.export_lines()
     assert ALPHA_TOKEN not in json.dumps([e.model_dump(mode="json") for e in stack.rt.bus.recent()])

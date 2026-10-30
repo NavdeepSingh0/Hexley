@@ -8,7 +8,7 @@ const PLANS = [
   {
     id: 'self-host', name: 'Self-host', price: '$0', unit: 'you run it yourself', built: true,
     title: 'What exists today',
-    items: ['The gateway and its rules', 'Permission slips and officer approvals', 'The signed, hash-chained audit log', 'This website, the console and Sentinel Chat', 'Sign-in for Claude.ai and an access token for others'],
+    items: ['The gateway and its rules', 'Permission slips and officer approvals', 'The signed, hash-chained audit log', 'This website, the console and Hexley Chat', 'Sign-in for Claude.ai and an access token for others'],
   },
   {
     id: 'team', name: 'Team', price: '$10', unit: 'per seat per month (illustrative)', built: false,
@@ -25,11 +25,11 @@ const PLANS = [
 export default function Pricing() {
   return (
     <main>
-      <PageHead label="Pricing" title="Pricing, illustrative." lede="Nothing on this page can be bought. It shows the shape of a business we could build around Sentinel." />
+      <PageHead label="Pricing" title="Pricing, illustrative." lede="Nothing on this page can be bought. It shows the shape of a business we could build around Hexley." />
       <section className="section" aria-labelledby="pricing-title">
         <div className="pr-banner" role="note">
           <span className="s-badge">Illustrative, not offered</span>
-          <p id="pricing-title">Sentinel is a hackathon project. These prices are placeholders to show how it could be packaged; we have not tested whether anyone would pay them, and there is no way to sign up.</p>
+          <p id="pricing-title">Hexley is a hackathon project. These prices are placeholders to show how it could be packaged; we have not tested whether anyone would pay them, and there is no way to sign up.</p>
         </div>
         <ul className="pr-plans">
           {PLANS.map((p) => (

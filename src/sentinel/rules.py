@@ -29,7 +29,7 @@ def rule_r1(action: AgentAction, contract: TaskContract, entry: ToolEntry) -> Ru
     if not entry.known:
         return RuleResult(
             RuleId.R1, Effect.BLOCK, ReasonCode.NOT_IN_REGISTRY,
-            f"Blocked: '{action.tool}' is not a registered tool, so Sentinel will not run it. "
+            f"Blocked: '{action.tool}' is not a registered tool, so Hexley will not run it. "
             "Unknown tools are treated as untrusted.",
             [Evidence(kind="registry", detail=f"tool '{action.tool}' is not in the tool registry")])
     if action.tool not in contract.allowed_tools:
@@ -85,7 +85,7 @@ def rule_r1_egress(action: AgentAction, entry: ToolEntry, contract: TaskContract
         return None
     return RuleResult(
         RuleId.R1, Effect.BLOCK, ReasonCode.EGRESS_TEMPLATE_INVALID,
-        f"Blocked: this task only allows Sentinel's fixed acknowledgement ({'; '.join(errors)}). "
+        f"Blocked: this task only allows Hexley's fixed acknowledgement ({'; '.join(errors)}). "
         f"Call {action.tool} with the quotation id only.",
         [Evidence(kind="egress", detail=e, source_ref=entry.egress_template) for e in errors])
 

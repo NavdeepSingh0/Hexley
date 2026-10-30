@@ -226,7 +226,7 @@ async def test_unseen_context_makes_the_session_untrusted_from_the_first_call(st
     assert first["effect"] == "ASK" and "R7" in first["rule_ids"]
     assert to_manager["effect"] == "ALLOW"  # an internal destination needs no extra question (R7)
     assert outside["effect"] == "BLOCK" and "R1" in outside["rule_ids"]  # not on the slip at all
-    assert list(stack.rt.store.get(unseen["session_id"]).tainted_by) == ["the client's own context, which Sentinel cannot see"]
+    assert list(stack.rt.store.get(unseen["session_id"]).tainted_by) == ["the client's own context, which Hexley cannot see"]
     assert not stack.rt.store.get(normal["session_id"]).tainted_by
 
 

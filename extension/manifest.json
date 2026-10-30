@@ -1,13 +1,13 @@
 {
   "manifest_version": 3,
-  "name": "Sentinel",
+  "name": "Hexley",
   "version": "0.1.0",
-  "description": "Shows Sentinel's mascot on claude.ai and chatgpt.com, reacting to real gateway decisions. Lets you approve or deny held actions from the browser.",
+  "description": "Shows Hexley's mascot on claude.ai and chatgpt.com, reacting to real gateway decisions. Lets you approve or deny held actions from the browser.",
 
   "action": {
     "default_popup": "popup.html",
     "default_icon": "icon.svg",
-    "default_title": "Sentinel"
+    "default_title": "Hexley"
   },
 
   "background": {

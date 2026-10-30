@@ -1,5 +1,5 @@
 /**
- * popup.js — Sentinel Chrome Extension
+ * popup.js — Hexley Chrome Extension
  *
  * Shows: connection status, current mascot state, per-site show/hide toggles,
  * links to the console and options page.

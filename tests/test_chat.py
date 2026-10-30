@@ -65,7 +65,7 @@ async def test_the_presets_have_what_the_page_needs(stack):
 async def test_every_chat_view_carries_the_disclosure_in_every_mode_and_state(stack):
     async with stack.api() as api:
         a = await start(api, mode="scripted", confirm=False)
-        assert "SCRIPTED" in a["disclosure"] and "synthetic data" in a["disclosure"] and "Sentinel Chat" in a["disclosure"]
+        assert "SCRIPTED" in a["disclosure"] and "synthetic data" in a["disclosure"] and "Hexley Chat" in a["disclosure"]
         b = (await api.post(f"/api/v1/chat/{a['chat_id']}/confirm")).json()
         assert b["disclosure"] == a["disclosure"]
         sent = (await api.post(f"/api/v1/chat/{a['chat_id']}/messages", json={"text": "go"}))

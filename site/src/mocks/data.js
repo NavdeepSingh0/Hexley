@@ -54,7 +54,7 @@ export const CHAT_PRESETS = [
     description: 'One of the PDFs is compromised and asks the agent to post customer data to an outside address.' },
 ]
 
-const DISCLOSURE = 'Sentinel Chat (our demo host) · model: nvidia/nemotron-3-ultra-550b-a55b via NVIDIA API · synthetic data, mock tools'
+const DISCLOSURE = 'Hexley Chat (our demo host) · model: nvidia/nemotron-3-ultra-550b-a55b via NVIDIA API · synthetic data, mock tools'
 
 const action = (over) => ({
   action_id: 'act_mock', tool: 'send_email', label: 'Send an e-mail',

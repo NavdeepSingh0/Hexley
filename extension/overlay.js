@@ -1,12 +1,12 @@
 /**
- * overlay.js — Sentinel Chrome Extension
+ * overlay.js — Hexley Chrome Extension
  *
  * Runs inside overlay.html (the iframe injected by content.js).
  * Responsibilities:
- * - Load the officer's Sentinel address + token from chrome.storage
+ * - Load the officer's Hexley address + token from chrome.storage
  * - Poll GET /api/v1/mascot/state every ~700 ms while visible
  * - Drive the <sentinel-mascot> element (state + message attributes)
- * - Show a "not connected" pill when Sentinel is unreachable
+ * - Show a "not connected" pill when Hexley is unreachable
  * - When state is "needs-approval": offer a "Review" button
  * - Handle drag-to-reposition and minimise-to-dot
  * - Forward theme from the parent page
@@ -109,7 +109,7 @@ async function poll() {
     hidePill()
     applyState(data.state || 'sleeping', data.message || '')
   } catch (_) {
-    showPill('Sentinel not connected')
+    showPill('Hexley not connected')
     applyState('sleeping', '')
   }
 }
@@ -166,7 +166,7 @@ async function fetchApprovalCard() {
     const res = await apiFetch('/approvals')
     if (!res.ok) return
     const data = await res.json()
-    // Sentinel's approval cards carry the status in lower case ("pending"); GET /approvals lists only pending ones anyway.
+    // Hexley's approval cards carry the status in lower case ("pending"); GET /approvals lists only pending ones anyway.
     const pending = (data.pending || []).find(c => c.status === 'pending')
     if (pending) renderApprovalCard(pending)
   } catch (_) { /* no-op */ }

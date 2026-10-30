@@ -43,7 +43,7 @@ def build_evidence(results: Path = RESULTS, root: Path = ROOT) -> list[dict]:
                 "ci95": rate["ci95"], "source_file": rel(source), "caveat": caveat}
 
     return [
-        stat("scripted", "Scripted attacks", "protected", "Attempts to get secrets out that got past Sentinel (scripted corpus)",
+        stat("scripted", "Scripted attacks", "protected", "Attempts to get secrets out that got past Hexley (scripted corpus)",
              fe["sentinel"]["through_rate"], scripted_path,
              "Cases were written by us from the matcher's documented list and the routes we built: this shows it does what "
              "we say, not that no other route exists. Our own mock tools."),
@@ -53,7 +53,7 @@ def build_evidence(results: Path = RESULTS, root: Path = ROOT) -> list[dict]:
              "Real model, poisoned quotation: lanes that leaked with no protection", delivered["poisoned/unprotected"],
              recorded_path, f"One model, one task. {errored} of {lanes} lanes failed on the hosted API and are excluded."),
         stat("real-model", "A real model, one poisoned task", "protected",
-             "Real model, poisoned quotation: lanes that leaked behind Sentinel", delivered["poisoned/sentinel"],
+             "Real model, poisoned quotation: lanes that leaked behind Hexley", delivered["poisoned/sentinel"],
              recorded_path, "Small sample: a count with an interval, not a guarantee."),
     ]
 

@@ -3,7 +3,7 @@ import {
   laneVerdict, shortArgs, stepStamp,
 } from '../lib/derive.js'
 
-// Values that Sentinel's matcher identified as restricted anywhere in this run. Used only to mark them in delivered mail.
+// Values that Hexley's matcher identified as restricted anywhere in this run. Used only to mark them in delivered mail.
 export function restrictedTokens(view) {
   const out = new Set()
   for (const lane of view.lanes) {
@@ -24,7 +24,7 @@ const VERDICT_CLASS = {
   allowed: 's-verdict--allowed', denied: 's-verdict--denied', approval: 's-verdict--approval', harm: 's-verdict--harm',
   quarantined: 's-verdict--quarantined', running: 's-verdict--muted', error: 's-verdict--muted', neutral: '',
 }
-// Glow goes on the one decisive word on the screen: the last lane (Sentinel, or the hardened lane), when it holds a decision.
+// Glow goes on the one decisive word on the screen: the last lane (Hexley, or the hardened lane), when it holds a decision.
 // An approval is decided in the modal, which carries the glow then; the inverted QUARANTINED block is loud enough without one.
 const GLOWS = new Set(['allowed', 'denied'])
 
@@ -46,7 +46,7 @@ export function StepCard({ step, index, isSentinel, onWhy }) {
         </div>
       ) : null}
       {isSentinel && blocked && step.latency_ms != null ? (
-        <div className="step-meta">Sentinel decision (live) in {step.latency_ms < 0.1 ? '<0.1' : step.latency_ms.toFixed(1)} ms</div>
+        <div className="step-meta">Hexley decision (live) in {step.latency_ms < 0.1 ? '<0.1' : step.latency_ms.toFixed(1)} ms</div>
       ) : null}
     </li>
   )

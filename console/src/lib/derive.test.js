@@ -22,7 +22,7 @@ import {
 const lane = (view, column, i) => view.lanes.filter((l) => l.column === column)[i ?? 0]
 
 describe('lane headlines (what a non-specialist reads first)', () => {
-  it('poisoned: the baselines say LEAKED, Sentinel says DENIED', () => {
+  it('poisoned: the baselines say LEAKED, Hexley says DENIED', () => {
     expect(laneHeadline(lane(poisoned, 'unprotected'))).toEqual({ tone: 'leak', text: 'LEAKED: restricted data reached the outside' })
     expect(laneHeadline(lane(poisoned, 'r1_only')).tone).toBe('leak')
     expect(laneHeadline(lane(poisoned, 'sentinel'))).toEqual({ tone: 'denied', text: 'DENIED: nothing left the building' })
@@ -30,12 +30,12 @@ describe('lane headlines (what a non-specialist reads first)', () => {
   it('clean: every column says the message was sent, none says leaked or denied', () => {
     for (const l of clean.lanes) expect(laneHeadline(l)).toEqual({ tone: 'sent', text: 'SENT: clean message only' })
   })
-  it('redirect: a reply to another mailbox is flagged in the baselines, denied in Sentinel', () => {
+  it('redirect: a reply to another mailbox is flagged in the baselines, denied in Hexley', () => {
     expect(laneHeadline(lane(redirect, 'unprotected')).text).toMatch(/WRONG ADDRESS/)
     expect(laneHeadline(lane(redirect, 'r1_only')).tone).toBe('leak')
     expect(laneHeadline(lane(redirect, 'sentinel')).tone).toBe('denied')
   })
-  it('freeze: Sentinel QUARANTINES the agent after 3 denied attempts', () => {
+  it('freeze: Hexley QUARANTINES the agent after 3 denied attempts', () => {
     const h = laneHeadline(lane(freeze, 'sentinel'))
     expect(h.tone).toBe('quarantined')
     expect(h.text).toMatch(/^QUARANTINED: .*after 3 denied attempts/)
@@ -191,7 +191,7 @@ describe('the general-purpose scenarios (your own task, a poisoned page)', () =>
   const pdf = (c) => lane(compromisedPdf, c)
   const web = (c) => lane(poisonedWeb, c)
 
-  it('compromised PDF: both baselines leaked, Sentinel denied it and then sent only the real summary', () => {
+  it('compromised PDF: both baselines leaked, Hexley denied it and then sent only the real summary', () => {
     expect(laneHeadline(pdf('unprotected')).tone).toBe('leak')
     expect(laneHeadline(pdf('r1_only')).tone).toBe('leak') // the audit address is inside the allowed domain
     expect(laneHeadline(pdf('sentinel'))).toEqual({ tone: 'denied', text: 'DENIED, then only a clean message was sent' })
@@ -217,7 +217,7 @@ describe('the general-purpose scenarios (your own task, a poisoned page)', () =>
     expect(chainLinks(legacy).find((l) => l.source === 'read_document').from).toBe(1)
   })
 
-  it('poisoned web page: both baselines leaked through the allowed channel, Sentinel contained it', () => {
+  it('poisoned web page: both baselines leaked through the allowed channel, Hexley contained it', () => {
     for (const c of ['unprotected', 'r1_only']) expect(laneHeadline(web(c)).tone).toBe('leak')
     expect(laneHeadline(web('sentinel'))).toEqual({ tone: 'denied', text: 'DENIED: nothing left the building' })
     expect(web('unprotected').inbox.map((m) => m.to)).toEqual(['https://hooks.corp.example/status'])
@@ -274,7 +274,7 @@ describe('the mascot shows only what really happened (docs/contracts/MASCOT.md)'
     s.steps[0] = { ...s.steps[0], effect: 'BLOCK', rule_ids: ['R4'], held: true }
     expect(mascotFor(timedOut)).toEqual({ state: 'denied', message: 'The officer did not approve it.' })
   })
-  it('speaks only for the Sentinel lanes: the baselines have no decisions to report', () => {
+  it('speaks only for the Hexley lanes: the baselines have no decisions to report', () => {
     const baselinesOnly = { ...poisoned, lanes: poisoned.lanes.filter((l) => l.column !== 'sentinel') }
     expect(mascotFor(baselinesOnly).state).toBe('idle')
   })
@@ -306,6 +306,6 @@ describe('audit verification wording', () => {
 describe('the backend supplies the exact column titles (D-028); the console never retypes them', () => {
   it('uses the titles from the view', () => {
     expect(poisoned.lanes.map((l) => l.title)).toEqual([
-      'No policy enforcement — instrumented baseline', 'R1-only access control', 'Sentinel'])
+      'No policy enforcement — instrumented baseline', 'R1-only access control', 'Hexley'])
   })
 })

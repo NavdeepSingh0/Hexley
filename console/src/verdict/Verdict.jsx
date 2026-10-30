@@ -1,7 +1,7 @@
 import DrawerShell from '../chrome/DrawerShell.jsx'
 import { DECISION_WORD, TOOL_LABEL, RULE_LABEL, chainLinks, firstBlockedStep, highlightTokens } from '../lib/derive.js'
 
-// The first Sentinel step that was denied or quarantined, with its lane: what Enter opens.
+// The first Hexley step that was denied or quarantined, with its lane: what Enter opens.
 export function verdictFor(view) {
   for (const lane of view.lanes) {
     if (lane.column !== 'sentinel') continue
@@ -31,7 +31,7 @@ function ChainStrip({ lane, index }) {
           <span className="chain-node chain-node-blocked">{TOOL_LABEL[lane.steps[l.to].tool] ?? lane.steps[l.to].tool}</span>
         </div>
       ))}
-      <p className="chain-caption">Observed tool flow with value-match links, from Sentinel&rsquo;s own evidence.</p>
+      <p className="chain-caption">Observed tool flow with value-match links, from Hexley&rsquo;s own evidence.</p>
     </div>
   )
 }
@@ -48,8 +48,8 @@ export default function Drawer({ target, onContinue, onDismiss, onBack }) {
   const frozen = step.effect === 'FREEZE'
   const word = DECISION_WORD[step.effect] ?? 'DENIED'
   return (
-    <DrawerShell label={`${lane.title.startsWith('Sentinel') ? 'Sentinel' : lane.title} · ${(step.rule_ids || []).join(' + ')}`}
-      onDismiss={onDismiss} onBack={onBack} ariaLabel="Why Sentinel denied it">
+    <DrawerShell label={`${lane.title.startsWith('Hexley') ? 'Hexley' : lane.title} · ${(step.rule_ids || []).join(' + ')}`}
+      onDismiss={onDismiss} onBack={onBack} ariaLabel="Why Hexley denied it">
       <p className={`s-verdict ${frozen ? 's-verdict--quarantined' : 's-verdict--denied s-glow s-glow--denied'}`}>{word}</p>
       <h2 className="drawer-title">{(step.rule_ids || []).map((r) => RULE_LABEL[r] ?? r).join(' · ')}</h2>
       <p className="drawer-summary">{step.summary}</p>

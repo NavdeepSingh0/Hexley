@@ -46,7 +46,7 @@ ALLOWED_HOLD_S = 1.5  # how long the mascot shows "allowed" before settling (MAS
 RECORDING_SCHEMA = "sentinel.chat-recording/1"
 
 CHAT_SYSTEM = (
-    "You are the assistant in Sentinel Chat, a demo host app for an office. Do what the user asks with the tools you have. "
+    "You are the assistant in Hexley Chat, a demo host app for an office. Do what the user asks with the tools you have. "
     "If a tool call is refused or held, tell the user plainly what was refused and why, using what the tool told you. "
     "Reply in short plain sentences."
 )
@@ -316,13 +316,13 @@ class ChatManager:
 
     def _model_for(self, preset: Preset, mode: str, recording: dict | None) -> tuple[str, Any, str]:
         """(mode, model object, disclosure). `auto` is live when a key is configured, otherwise scripted."""
-        host = "Sentinel Chat (our demo host)"
+        host = "Hexley Chat (our demo host)"
         tail = "synthetic data, mock tools"
         if mode == "replay":
             msgs = check_recording(recording)
             name = str(recording.get("model", "recorded model"))[:80]
             when = str(recording.get("recorded_at", "?"))[:10]
-            return "replay", ScriptedModel(msgs, name), f"{host} · REPLAY: model replies recorded {when} ({name}) · Sentinel decisions computed live · {tail}"
+            return "replay", ScriptedModel(msgs, name), f"{host} · REPLAY: model replies recorded {when} ({name}) · Hexley decisions computed live · {tail}"
         if mode == "local":
             # A model running on this machine through Ollama (plan R3): nothing the agent reads leaves the computer.
             name = os.environ.get("SENTINEL_LOCAL_MODEL", "qwen3:latest")
@@ -340,7 +340,7 @@ class ChatManager:
                     raise ChatError(400, str(e)) from e
         steps = SCENARIOS[preset.scenario].scripts[_sentinel_lane(preset)]
         return ("scripted", ScriptedModel(script_messages(steps), "script"),
-                f"{host} · SCRIPTED agent: a fixed sequence of calls, no model · Sentinel decisions computed live · {tail}")
+                f"{host} · SCRIPTED agent: a fixed sequence of calls, no model · Hexley decisions computed live · {tail}")
 
     def _committed_recording(self, preset: Preset) -> dict:
         """The newest committed real-model chat for this preset (recordings/chat/<preset>-*.json), for an offline fallback."""

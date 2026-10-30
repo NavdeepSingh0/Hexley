@@ -65,7 +65,7 @@ export const MODES = [
 ]
 
 // The disclosure shown before the server has sent one (it is never absent).
-export const DEFAULT_DISCLOSURE = 'Sentinel Chat is our own demo host app. Every record and mailbox is synthetic and the tools are mocks.'
+export const DEFAULT_DISCLOSURE = 'Hexley Chat is our own demo host app. Every record and mailbox is synthetic and the tools are mocks.'
 
 // ---- the chat page the way a frontier chat shows it (UI v2, U3) -------------------------------------------------------------
 

@@ -1,5 +1,5 @@
 /**
- * background.js — Sentinel Chrome Extension Service Worker
+ * background.js — Hexley Chrome Extension Service Worker
  *
  * Kept deliberately minimal. MV3 service workers sleep between events,
  * so ALL polling happens inside overlay.html, not here.
@@ -7,7 +7,7 @@
  * Responsibilities:
  * - Open the options page on first install so the officer can paste their token
  *
- * There is no tunnel support on purpose: the officer API is not behind Sentinel's tunnel (which reaches only the AI gateway),
+ * There is no tunnel support on purpose: the officer API is not behind Hexley's tunnel (which reaches only the AI gateway),
  * and the officer token is only ever sent to this computer.
  */
 

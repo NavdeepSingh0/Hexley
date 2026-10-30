@@ -36,7 +36,7 @@ SLIP = {"allowed_recipient_domains": ["shakti.example", "corp.example"]}
 def test_an_address_carrying_this_tasks_data_is_removed(reply, host):
     shown, found = check_reply(reply, _session(), SLIP)
     assert found and found[0].host == host and "carries data" in found[0].reasons[0]
-    assert host not in shown.replace(f"to {host} removed", "") and "removed by Sentinel" in shown
+    assert host not in shown.replace(f"to {host} removed", "") and "removed by Hexley" in shown
 
 
 def test_an_image_outside_the_slip_is_removed_even_without_data():
@@ -92,7 +92,7 @@ async def test_the_chat_removes_the_leaking_image_and_says_so(stack):
                 break
             await asyncio.sleep(0.05)
     reply = v["messages"][-1]
-    assert "collector.example/ok.png" not in reply["text"] and "removed by Sentinel" in reply["text"]
+    assert "collector.example/ok.png" not in reply["text"] and "removed by Hexley" in reply["text"]
     assert reply["checks"] and reply["checks"][0]["host"] == "collector.example" and reply["checks"][0]["kind"] == "image"
     events = [e for e in stack.rt.bus.recent() if e.type == "reply.checked" and e.payload["chat_id"] == cid]
     assert events

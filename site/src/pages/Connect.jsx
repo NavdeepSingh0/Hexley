@@ -114,13 +114,13 @@ function OAuthPanel({ client, connect }) {
   return (
     <div className="cs-slip">
       <p className="s-label">Not reachable from the internet yet</p>
-      <p>Sentinel is running on this computer only, and {client.name} needs a public address to sign in. Start Sentinel with a tunnel:</p>
+      <p>Hexley is running on this computer only, and {client.name} needs a public address to sign in. Start Hexley with a tunnel:</p>
       <CopyField label="Run this" value="python -m sentinel up --tunnel" block />
     </div>
   )
 }
 
-// Step 3. What the reader should see, and where Sentinel keeps the decision. Only what the code and the kept evidence show:
+// Step 3. What the reader should see, and where Hexley keeps the decision. Only what the code and the kept evidence show:
 // the app's own conversation, the signed log and the console's Verify. The console does not list an outside app's calls.
 function CheckStep({ client }) {
   return (
@@ -132,7 +132,7 @@ function CheckStep({ client }) {
       <CopyField label="A request to try" value={TEST_PROMPT} block />
       <ul className="cs-points">
         <li><Icon name="check" size={18} className="cs-tick" /><span><strong>In the app:</strong> the e-mail is not sent. The app tells you the tool refused, because restricted data may not leave this task (rule R2).</span></li>
-        <li><Icon name="check" size={18} className="cs-tick" /><span><strong>In Sentinel:</strong> the decision is written to the signed audit log. Open the <a href="/console/">console</a> and use Verify to check that the log has not been changed.</span></li>
+        <li><Icon name="check" size={18} className="cs-tick" /><span><strong>In Hexley:</strong> the decision is written to the signed audit log. Open the <a href="/console/">console</a> and use Verify to check that the log has not been changed.</span></li>
       </ul>
       <p className="muted">No outside app at hand? <Link to="/chat">The chat page</Link> runs the same gateway with an agent of ours.</p>
     </>
@@ -161,11 +161,11 @@ export default function Connect() {
 
   return (
     <main>
-      <PageHead label="Connect" title="Connect your AI app." lede="Pick the app you use. Sentinel then shows exactly what to do, and nothing else." />
+      <PageHead label="Connect" title="Connect your AI app." lede="Pick the app you use. Hexley then shows exactly what to do, and nothing else." />
       <div className="cs">
       <section className="cs-panel" aria-live="polite">
         {status === 'loading' && <p className="muted" role="status">Loading...</p>}
-        {status === 'error' && <p className="muted" role="status">Sentinel could not be reached. {error}</p>}
+        {status === 'error' && <p className="muted" role="status">Hexley could not be reached. {error}</p>}
         {status === 'ready' && chosen && (
           <ol className="cs-list">
             <Step n={1} id="cs-choose" title="Choose your app">

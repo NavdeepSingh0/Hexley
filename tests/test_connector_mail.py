@@ -154,7 +154,7 @@ async def test_results_naming_the_accounts_address_are_not_withheld(mail):
 async def test_a_result_printing_the_app_password_is_withheld(mail):
     stack, _ = mail
     async with stack.client(_token(await _slip(stack, tools=["gmail__debug_config"], allowed_destinations=[], internal_destinations=[]))) as c:
-        with pytest.raises(Exception, match="credential Sentinel holds"):
+        with pytest.raises(Exception, match="credential Hexley holds"):
             await c.call_tool("gmail__debug_config", {})
     assert APP_PASSWORD not in stack.rt.audit.export_lines()
 
