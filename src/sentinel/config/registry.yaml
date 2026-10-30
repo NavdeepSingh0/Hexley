@@ -190,6 +190,7 @@ tools:
     consequential: false
     output_integrity: untrusted
     output_confidentiality: internal
+    free_text_args: [query]           # a search, not a statement
 
   github__get_file_contents:
     capability: read
@@ -288,6 +289,7 @@ tools:
     consequential: false
     output_integrity: untrusted
     output_confidentiality: restricted
+    free_text_args: [query]           # a search, not a statement
     fingerprint_fields: [all]
 
   notion__API-retrieve-a-page:
@@ -416,6 +418,7 @@ tools:
     consequential: false
     output_integrity: untrusted
     output_confidentiality: restricted
+    free_text_args: [query]           # a search, not a statement
     fingerprint_fields: [all]
 
   gmail.get_thread:

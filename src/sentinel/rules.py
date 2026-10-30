@@ -245,7 +245,7 @@ def rule_effects(action: AgentAction, entry: ToolEntry, contract: TaskContract, 
                                   [Evidence(kind="effect", detail=f"argument '{name}' is a credential file")]))
     for name in ("sql", "query", "statement"):
         sql = action.args.get(name) if isinstance(action.args, dict) else None
-        if not isinstance(sql, str):
+        if not isinstance(sql, str) or name in entry.free_text_args:
             continue
         fx = effects.sql_effect(sql)
         if fx.kind == "unknown" or (fx.kind in ("write", "ddl") and entry.capability == Capability.READ):

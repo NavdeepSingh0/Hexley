@@ -117,6 +117,9 @@ class ToolEntry(_Model):
     # Arguments Sentinel cannot check, so a call using one is refused (R1): Gmail's `draftId` sends a stored draft whatever the
     # other arguments say, and its base64 `attachments` cannot be read for restricted values. Plan F3.
     unchecked_args: list[str] = Field(default_factory=list)
+    # Arguments that are plain search text, not a statement. Any argument called query, sql or statement is read as SQL unless the
+    # officer's classification says otherwise, so a database tool is checked by default (Gmail's `query` is a mail search).
+    free_text_args: list[str] = Field(default_factory=list)
     egress_template: str | None = None  # a tool that sends only through this fixed template (hardened mode)
     local: bool = False  # implemented inside the gateway, not forwarded to the tool server
 

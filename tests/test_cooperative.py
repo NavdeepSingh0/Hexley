@@ -221,6 +221,28 @@ async def test_the_enforced_hook_route_gives_the_same_answer_for_the_same_call(s
         assert (await _ask(c, "send_message", _send(to=[ATTACKER])))["decision"] == "BLOCK"
 
 
+async def test_a_mail_search_is_not_read_as_sql_and_a_database_query_still_is(stack):
+    """Found by the first live run: Gmail's `query` was refused as an SQL statement Hexley could not recognise."""
+    async with stack.client(_token(await _slip(stack))) as c:
+        assert (await _ask(c, "search_threads", {"query": 'subject:"quote 1042" from:a@b.example'}))["proceed"] is True
+    slip = await _slip(stack, allowed_tools=["query_db"], unseen_context=False, strict_flows=False,
+                       allowed_destinations=[], internal_destinations=[])
+    async with stack.client(_token(slip)) as c:
+        with pytest.raises(Exception, match="Blocked"):
+            await c.call_tool("query_db", {"query": "DROP TABLE customers"})
+
+
+@pytest.mark.parametrize("fixture, prefix", [("claude_gmail_tools_20261030.json", "gmail."), ("github_tools_v2.0.3.json", "github__"),
+                                             ("notion_tools_v2.6.1.json", "notion__")])
+def test_every_preset_tool_with_a_query_argument_says_what_that_argument_is(fixture, prefix):
+    doc = json.loads((Path(__file__).parent / "fixtures" / fixture).read_text(encoding="utf-8"))
+    tools = (doc["tools"] if isinstance(doc, dict) else {t["name"]: {"properties": list(t["input_schema"].get("properties", {}))} for t in doc})
+    reg = load_registry()
+    for name, tool in tools.items():
+        if reg.is_known(prefix + name) and "query" in tool["properties"]:
+            assert reg.get(prefix + name).free_text_args == ["query"], name
+
+
 # ---- names ------------------------------------------------------------------------------------------------------------
 @pytest.mark.parametrize("connector, tool, expected", [
     ("Gmail", "send_message", "gmail.send_message"), ("gmail", "send_message", "gmail.send_message"),
