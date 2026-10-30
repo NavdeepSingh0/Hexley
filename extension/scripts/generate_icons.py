@@ -110,3 +110,4 @@ for size in [16, 48, 128]:
     with open(path, 'wb') as f:
         f.write(data)
     print(f'Written {path} ({size}x{size})')
+

@@ -18,3 +18,4 @@ fi
 
 cp "$SRC" "$DST"
 echo "Copied sentinel-mascot.js → extension/sentinel-mascot.js"
+

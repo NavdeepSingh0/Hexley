@@ -276,3 +276,4 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Start polling
   if (!document.hidden) startPolling()
 })
+

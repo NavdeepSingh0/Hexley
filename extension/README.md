@@ -116,3 +116,4 @@ Then reload the extension on `chrome://extensions`.
 | "Sentinel not connected" | Make sure `sentinel up --demo` is running |
 | Mascot not visible on claude.ai | Check that the site toggle is on in the popup |
 | 409 on approve/deny | The approval expired or was already resolved — check the console |
+
