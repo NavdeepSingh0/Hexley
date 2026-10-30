@@ -25,7 +25,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.websockets import WebSocketClose
 
 from .approvals import ApprovalError
-from .chat import ChatError, ChatManager
+from .chat import ChatError, ChatManager, latest_mascot
 from .audit import AuditError
 from .confirm import ConfirmError, confirm_draft
 from .connect import connect_view, issue_header_token
@@ -368,6 +368,11 @@ def create_api(rt: Runtime, console_dir: Path | None = None, site_dir: Path | No
             pass
         finally:
             unsubscribe()
+
+    # The mascot for the browser extension (docs/plans/EXTENSION_PLAN.md): the latest session Sentinel decided, from real events.
+    @app.get("/api/v1/mascot/state", dependencies=[Depends(require_token)])
+    async def mascot_now():
+        return latest_mascot(rt.bus.recent())
 
     # ---- connecting a real client (docs/contracts/API.md; core plan phase B1) --------------------------------------
     # Public on purpose (D-041): it holds no secret (statuses, steps, the address an AI client is meant to paste), so the

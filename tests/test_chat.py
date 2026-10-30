@@ -10,7 +10,7 @@ import pytest
 
 from sentinel import chat as chatmod
 from sentinel.agent import runner
-from sentinel.chat import ChatError, ScriptedModel, action_view, args_preview, mascot_state, script_messages
+from sentinel.chat import ChatError, ScriptedModel, action_view, args_preview, latest_mascot, mascot_state, script_messages
 from sentinel.models import EventEnvelope
 from sentinel.runs import SCENARIOS
 
@@ -401,6 +401,27 @@ def test_a_resolved_approval_returns_to_checking_and_quarantine_is_final():
     assert mascot_state(held, T0 + timedelta(seconds=9))["state"] == "checking"
     frozen = seq(("session.started", {}), decision("FREEZE", ["R6"]), ("action.requested", {}), decision("ALLOW", []))
     assert mascot_state(frozen, T0 + timedelta(hours=1))["state"] == "quarantined"
+
+
+def test_the_extension_mascot_follows_the_latest_sentinel_session_and_ignores_the_comparison_lanes():
+    assert latest_mascot([]) == {"state": "sleeping", "message": "", "session_id": None}
+    old = seq(("session.started", {}), decision("BLOCK", ["R2"]))
+    new = [ev("session.started", {}, T0 + timedelta(seconds=5), session="ses_new")]
+    lane = [EventEnvelope(type="decision", session_id="ses_lane", column="unprotected", ts=T0 + timedelta(seconds=6),
+                          payload={"effect": "BLOCK", "rule_ids": ["R1"]})]
+    assert latest_mascot(old, T0 + timedelta(seconds=9)) == {"state": "denied", "message": "That would send restricted data out.", "session_id": "ses_x"}
+    assert latest_mascot(old + new + lane, T0 + timedelta(seconds=9)) == {"state": "idle", "message": "", "session_id": "ses_new"}
+
+
+async def test_the_extension_mascot_endpoint_needs_the_token_and_shows_a_real_denial(stack):
+    async with stack.api() as api:
+        v = await start(api, mode="scripted")
+        await api.post(f"/api/v1/chat/{v['chat_id']}/messages", json={"text": "Process the quotation"})
+        await wait_for(api, v["chat_id"], lambda x: x["status"] == "ready" and len(x["messages"]) == 2)
+        now = (await api.get("/api/v1/mascot/state")).json()
+        assert now["state"] == "denied" and now["message"] == "That would send restricted data out."
+        api.headers.pop("Authorization")
+        assert (await api.get("/api/v1/mascot/state")).status_code == 401
 
 
 def test_action_chips_use_the_decision_words_and_short_previews():

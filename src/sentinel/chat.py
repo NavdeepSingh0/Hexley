@@ -267,6 +267,16 @@ def mascot_state(events: list[EventEnvelope], now: datetime | None = None) -> di
     return {"state": state, "message": message}
 
 
+def latest_mascot(events: list[EventEnvelope], now: datetime | None = None) -> dict:
+    """The mascot for pages outside our own (the browser extension, docs/plans/EXTENSION_PLAN.md): the most recent session
+    that Sentinel itself decided, as `mascot_state` sees it. The comparison lanes of a run are left out. None: asleep."""
+    own = [e for e in events if e.session_id and e.column in (None, Column.SENTINEL)]
+    if not own:
+        return {"state": "sleeping", "message": "", "session_id": None}
+    sid = own[-1].session_id
+    return {**mascot_state([e for e in own if e.session_id == sid], now), "session_id": sid}
+
+
 # ---- chat state -----------------------------------------------------------------------------------------------------
 @dataclass
 class Chat:
