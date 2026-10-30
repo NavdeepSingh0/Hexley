@@ -15,6 +15,7 @@ prints a value.
 
 from __future__ import annotations
 
+import json
 import logging
 import os
 import re
@@ -177,16 +178,34 @@ def child_env(upstream: Upstream, creds: Credentials, environ: dict[str, str] | 
     return {**base, **{k: creds.fill(v) for k, v in upstream.env.items()}}
 
 
+def direct_command(command: str, args: list[str], root: str | None) -> tuple[str, list[str]]:
+    """`npx -y pkg@1.2.3 ...` as the package's own program, when an image installed exactly that version under `root`. The npx
+    wrapper stays in memory beside each server (measured: 142 and 129 MB, more than the servers themselves), which a small
+    host cannot afford. Any doubt, and the original command is used."""
+    package = next((a for a in args if not a.startswith("-")), None)
+    if command != "npx" or not root or not package or "@" not in package[1:]:
+        return command, args
+    name, _, version = package.rpartition("@")
+    program = Path(root) / "node_modules" / ".bin" / name.rsplit("/", 1)[-1]
+    try:
+        installed = json.loads((Path(root) / "node_modules" / name / "package.json").read_text(encoding="utf-8"))["version"]
+    except (OSError, ValueError, KeyError):
+        return command, args
+    if installed != version or not program.exists():
+        return command, args
+    return str(program), args[args.index(package) + 1:]
+
+
 def client_factory(upstream: Upstream, creds: Credentials):
     """A factory for the gateway's client to this upstream. A stdio server is started once and kept alive (one transport
     instance, reused); an HTTP server gets Sentinel's header on every request. Agent headers are never forwarded."""
     if upstream.transport == "stdio":
-        command = upstream.command or ""
+        command, args = direct_command(upstream.command or "", upstream.args, os.environ.get("SENTINEL_CONNECTORS_DIR"))
         if command == "python":
             command = sys.executable  # the same interpreter as Sentinel, so a server in this repo finds its packages
         else:
             command = shutil.which(command) or command  # npx is npx.cmd on Windows; a process start needs the full name
-        transport = StdioTransport(command=command, args=[creds.fill(a) for a in upstream.args],
+        transport = StdioTransport(command=command, args=[creds.fill(a) for a in args],
                                    env=child_env(upstream, creds), keep_alive=True)
         return lambda: ProxyClient(transport, forward_incoming_headers=False, mode=upstream.protocol)
     url = creds.fill(upstream.url or "")

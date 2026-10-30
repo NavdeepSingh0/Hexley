@@ -36,9 +36,9 @@ upstreams:
       Authorization: Bearer ${SLACK_USER_TOKEN}
     enabled: false
 
-  # Gmail over IMAP and SMTP with an app password, through a community server (mcp-mail-server, MIT, read before choosing:
-  # D-054). MAIL_ALLOWED_ROOTS is deliberately not set, which keeps its file access off. Not enabled until Navdeep has
-  # agreed to run it and its real tool list has been checked against the preset.
+  # Gmail over IMAP and SMTP with an app password, through a community server (mcp-mail-server, MIT, read before choosing,
+  # run with Navdeep's agreement: D-054). MAIL_ALLOWED_ROOTS is deliberately not set, which keeps its file access off.
+  # Render's free plan blocks outbound SMTP, so on it this connector reads mail and cannot send.
   - name: gmail
     transport: stdio
     description: Gmail (community IMAP/SMTP server, app password)
@@ -54,4 +54,3 @@ upstreams:
       EMAIL_USER: ${GMAIL_ADDRESS}
       EMAIL_PASS: ${GMAIL_APP_PASSWORD}
     public_vars: [GMAIL_ADDRESS]
-    enabled: false

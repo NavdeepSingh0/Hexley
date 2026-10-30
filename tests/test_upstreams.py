@@ -20,7 +20,7 @@ from sentinel.contracts import SlipError, normalise_destination_entry
 from sentinel.models import ToolEntry
 from sentinel.stack import free_port, running_stack, serve
 from sentinel.upstreams import (Credentials, RedactCredentials, Upstream, UpstreamConfigError, UpstreamSet, child_env,
-                                load_upstreams, read_env_file, split_name)
+                                direct_command, load_upstreams, read_env_file, split_name)
 from tests.fakes.fake_upstream import build as build_fake
 
 FAKE = Path(__file__).parent / "fakes" / "fake_upstream.py"
@@ -223,6 +223,32 @@ def test_a_child_environment_is_the_minimum_plus_its_own_settings():
                     environ={"PATH": "/bin", "SystemRoot": "C:\\Windows", "NVIDIA_API_KEY": "k", "SENTINEL_API_TOKEN": "t"})
     assert env == {"PATH": "/bin", "SYSTEMROOT": "C:\\Windows", "GITHUB_PERSONAL_ACCESS_TOKEN": "ghp_x",
                    "GITHUB_TOOLSETS": "repos,issues"}
+
+
+def _installed(root: Path, name: str, version: str, program: str) -> None:
+    pkg = root / "node_modules" / name
+    pkg.mkdir(parents=True)
+    (pkg / "package.json").write_text(json.dumps({"name": name, "version": version}), encoding="utf-8")
+    (root / "node_modules" / ".bin").mkdir(exist_ok=True)
+    (root / "node_modules" / ".bin" / program).write_text("#!", encoding="utf-8")
+
+
+def test_a_pinned_package_installed_in_the_image_runs_directly_and_only_at_that_version(tmp_path):
+    _installed(tmp_path, "@notionhq/notion-mcp-server", "2.6.1", "notion-mcp-server")
+    args = ["-y", "@notionhq/notion-mcp-server@2.6.1"]
+    assert direct_command("npx", args, str(tmp_path)) == (str(tmp_path / "node_modules" / ".bin" / "notion-mcp-server"), [])
+    other = ["-y", "@notionhq/notion-mcp-server@2.6.2"]
+    assert direct_command("npx", other, str(tmp_path)) == ("npx", other)  # a different version is never substituted
+    assert direct_command("npx", args, None) == ("npx", args)  # on a laptop
+    assert direct_command("npx", ["-y", "not-installed@1.0.0"], str(tmp_path)) == ("npx", ["-y", "not-installed@1.0.0"])
+    assert direct_command("npx", ["-y", "@notionhq/notion-mcp-server"], str(tmp_path)) == ("npx", ["-y", "@notionhq/notion-mcp-server"])
+    assert direct_command("docker", ["run"], str(tmp_path)) == ("docker", ["run"])
+
+
+def test_the_image_installs_exactly_the_versions_the_configuration_pins():
+    dockerfile = (Path(__file__).parent.parent / "Dockerfile").read_text(encoding="utf-8")
+    pinned = [a for u in load_upstreams() if u.command == "npx" for a in u.args if not a.startswith("-")]
+    assert pinned and all(p in dockerfile for p in pinned)
 
 
 def test_a_held_credential_is_scrubbed_from_any_log_record():

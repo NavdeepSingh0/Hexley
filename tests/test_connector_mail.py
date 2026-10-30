@@ -1,7 +1,7 @@
 """Plan F2d: the mail connector's preset and its attack, offline.
 
-Offline means the server is `tests/fakes/fake_mail.py`, whose tool names and arguments come from the README of
-mcp-mail-server 2.1.2. The package itself has not been run here, so the preset is not yet held to a captured tool list.
+Offline means the server is `tests/fakes/fake_mail.py`, with the tool names and arguments of mcp-mail-server 2.1.2. Its tool
+list was captured with dummy settings (tests/fixtures/mail_tools_v2.1.2.json); it has not yet touched a real mailbox.
 """
 
 from __future__ import annotations
@@ -161,17 +161,22 @@ async def test_a_result_printing_the_app_password_is_withheld(mail):
 
 # ---- the preset -------------------------------------------------------------------------------------------------------
 _REG = load_registry()
-# From the README of mcp-mail-server 2.1.2 ("The server exposes 14 tools").
-README_TOOLS = {"check_connection", "list_mailboxes", "search_messages", "find_unreplied_messages", "get_message", "get_messages",
-                "move_message", "move_messages", "delete_message", "delete_messages", "send_email", "reply_to_email",
-                "continue_email_thread", "save_attachment"}
+# Captured from the real package with dummy settings.
+REAL = {t["name"]: t for t in json.loads((Path(__file__).parent / "fixtures" / "mail_tools_v2.1.2.json").read_text(encoding="utf-8"))}
 LEFT_OUT = {"reply_to_email", "continue_email_thread", "move_message", "move_messages", "delete_message", "delete_messages",
             "save_attachment"}
 
 
-def test_the_preset_covers_only_tools_the_server_documents_and_leaves_out_the_unsafe_ones():
+def test_the_preset_covers_only_real_tools_and_leaves_out_the_unsafe_ones():
     preset = {n.removeprefix("gmail__") for n in _REG.names() if n.startswith("gmail__")}
-    assert preset == README_TOOLS - LEFT_OUT
+    assert preset == set(REAL) - LEFT_OUT
+
+
+def test_the_reply_tools_really_have_no_recipient_and_send_email_really_has_one():
+    for name in ("reply_to_email", "continue_email_thread"):
+        assert "to" not in REAL[name]["input_schema"]["properties"]
+    props = REAL["send_email"]["input_schema"]["properties"]
+    assert {"to", "cc", "bcc"} <= set(props) and "to" in REAL["send_email"]["input_schema"]["required"]
 
 
 def test_every_mailbox_read_is_untrusted_and_restricted():
@@ -181,7 +186,7 @@ def test_every_mailbox_read_is_untrusted_and_restricted():
         assert entry.output_confidentiality == "restricted" and entry.fingerprint_fields == ["all"]
 
 
-def test_the_shipped_mail_connector_stays_off_until_it_is_agreed_and_keeps_its_file_access_off():
+def test_the_shipped_mail_connector_is_pinned_and_keeps_its_file_access_off():
     gmail = next(u for u in load_upstreams() if u.name == "gmail")
-    assert gmail.enabled is False and "MAIL_ALLOWED_ROOTS" not in gmail.env
+    assert "mcp-mail-server@2.1.2" in gmail.args and "MAIL_ALLOWED_ROOTS" not in gmail.env
     assert gmail.public_vars == ["GMAIL_ADDRESS"] and "GMAIL_APP_PASSWORD" in gmail.variables()

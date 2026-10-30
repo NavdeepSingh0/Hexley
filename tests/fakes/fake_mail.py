@@ -1,5 +1,5 @@
-"""A stand-in for mcp-mail-server 2.1.2. Its tool names and arguments come from the package's README, not from a captured tool
-list: the package has not been run here. A poisoned mail sits in the inbox, and every send goes to a sink file.
+"""A stand-in for mcp-mail-server 2.1.2, with its tool names and arguments (tests/fixtures/mail_tools_v2.1.2.json). Its result
+shapes are assumed until a real mailbox is read. A poisoned mail sits in the inbox, and every send goes to a sink file.
 """
 
 from __future__ import annotations

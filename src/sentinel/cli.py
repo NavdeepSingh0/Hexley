@@ -24,6 +24,7 @@ import uvicorn
 
 from .api import SITE_DIST, create_api
 from .gateway import build_gateway
+from .oneport import OnePort
 from .runtime import build_runtime, rotate_audit_log
 from .upstreams import DEFAULT_CONFIG as DEFAULT_UPSTREAMS, DEFAULT_ENV_FILE, UpstreamSet, install_log_redaction
 
@@ -75,6 +76,32 @@ def port_in_use(port: int, host: str = "127.0.0.1") -> bool:
     return False
 
 
+def tool_server_env(environ, connectors: UpstreamSet) -> dict[str, str]:
+    """What the built-in tool server starts with. On a hosting platform the connectors' credentials are in this process's
+    environment, and each must reach only its own connector (D-052)."""
+    return {k: v for k, v in environ.items() if k not in connectors.creds.values}
+
+
+async def warm_connectors(gateway, connectors: UpstreamSet, delay: float = 1.0) -> None:
+    """Start the connectors in the background once the port is open, so the first AI client does not wait for them (a hosting
+    platform's health check needs the port first). A connector that fails stays failed for now and is tried again when listed."""
+    if not connectors.upstreams:
+        return
+    await asyncio.sleep(delay)
+    started = time.monotonic()
+    try:
+        tools = await gateway.list_tools(run_middleware=False)
+        print(f"Connectors ready in {time.monotonic() - started:.1f} s, {len(tools)} tools listed.", flush=True)
+    except Exception as e:  # noqa: BLE001 - a slow or broken connector must not stop the service; details are scrubbed by the log filter
+        print(f"Starting the connectors failed: {type(e).__name__}. They are tried again when a client lists tools.", flush=True)
+
+
+def ports_in_use(args: argparse.Namespace) -> dict[str, tuple[int, str]]:
+    """The ports `up` will listen on. With --one-port the gateway shares the API's."""
+    ports = {"API and console": (args.api_port, "--api-port"), "tool server": (args.tools_port, "--tools-port")}
+    return ports if args.one_port else {**ports, "gateway": (args.gateway_port, "--gateway-port")}
+
+
 def check_ports(ports: dict[str, tuple[int, str]]) -> None:
     """Refuse to start when a port is taken (by another program, or by a leftover Sentinel), before anything is started.
     `ports` maps a name to (port, the flag that changes it). Without this the tool server fails to bind in the background
@@ -91,8 +118,9 @@ def check_ports(ports: dict[str, tuple[int, str]]) -> None:
         raise SystemExit("Nothing was started.\n  - " + "\n  - ".join(problems))
 
 
-async def wait_until_listening(port: int, proc: subprocess.Popen, name: str, timeout: float = 25.0) -> None:
-    """Wait for the child `proc` to be listening on `port`; stop with a clear message if it exits or never does."""
+async def wait_until_listening(port: int, proc: subprocess.Popen, name: str, timeout: float = 180.0) -> None:
+    """Wait for the child `proc` to be listening on `port`; stop with a clear message if it exits or never does. The wait is long
+    because on a small host (0.1 CPU, measured) importing the libraries alone takes more than a minute."""
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
         if proc.poll() is not None:
@@ -142,8 +170,7 @@ def print_officer_code(req) -> None:
 
 
 async def _up(args: argparse.Namespace) -> None:
-    check_ports({"API and console": (args.api_port, "--api-port"), "gateway": (args.gateway_port, "--gateway-port"),
-                 "tool server": (args.tools_port, "--tools-port")})
+    check_ports(ports_in_use(args))
     problem = exposure_problem(args.host, os.environ.get("SENTINEL_API_TOKEN"))
     if problem:
         raise SystemExit("Nothing was started.\n  - " + problem)
@@ -160,7 +187,7 @@ async def _up(args: argparse.Namespace) -> None:
     connectors = UpstreamSet.load(Path(args.upstreams), Path(args.connectors_env))
     install_log_redaction(connectors.creds.secret_values())
     rt = build_runtime(tools_url=f"http://127.0.0.1:{args.tools_port}/mcp",
-                       gateway_url=f"http://127.0.0.1:{args.gateway_port}/mcp",
+                       gateway_url=f"http://127.0.0.1:{args.api_port if args.one_port else args.gateway_port}/mcp",
                        downstream_token=downstream, api_token=api_token,
                        audit_dir=data_dir, allow_tamper=args.demo, upstreams=connectors)
     tunnel = None
@@ -175,7 +202,8 @@ async def _up(args: argparse.Namespace) -> None:
                                          preset=args.oauth_preset, slip_ttl=args.oauth_ttl, on_request=print_officer_code)
     api_app = create_api(rt)
     rt.runs.pace = args.pace  # type: ignore[union-attr]
-    env = {**os.environ, "SENTINEL_DOWNSTREAM_TOKEN": downstream, "SENTINEL_TOOLS_PORT": str(args.tools_port),
+    env = {**tool_server_env(os.environ, connectors), "SENTINEL_DOWNSTREAM_TOKEN": downstream,
+           "SENTINEL_TOOLS_PORT": str(args.tools_port),
            "SENTINEL_UPLOADS_DIR": str(rt.uploads_dir)}  # documents uploaded into a chat (plan Q10)
     tools = subprocess.Popen([sys.executable, "-m", "sentinel.tools.server"], env=env)
     try:
@@ -211,8 +239,13 @@ async def _up(args: argparse.Namespace) -> None:
         # Open it ourselves so this terminal, which shows the token, never has to be on the projector.
         asyncio.get_running_loop().call_later(1.5, webbrowser.open, site_url if site_built else console_url)
     try:
-        await asyncio.gather(_serve(build_gateway(rt).http_app(), args.gateway_port),
-                             _serve(api_app, args.api_port, args.host), watch_child(tools, "tool server"))
+        gateway = build_gateway(rt)
+        gateway_app = gateway.http_app()
+        servers = ([_serve(OnePort(api_app, gateway_app), args.api_port, args.host)] if args.one_port else
+                   [_serve(gateway_app, args.gateway_port), _serve(api_app, args.api_port, args.host)])
+        warm = asyncio.create_task(warm_connectors(gateway, connectors))  # kept in a name so it is not collected
+        await asyncio.gather(*servers, watch_child(tools, "tool server"))
+        warm.cancel()
     finally:
         tools.terminate()
         if tunnel is not None:
@@ -233,7 +266,10 @@ def main(argv: list[str] | None = None) -> None:
                     help="enable the tamper endpoint and start a fresh audit log (the old one is kept aside)")
     up.add_argument("--pace", type=float, default=1.2, help="seconds between scripted or replayed steps")
     up.add_argument("--no-browser", action="store_true", help="do not open the console in a browser")
-    up.add_argument("--public-url", help="public https address of the gateway (turns on OAuth sign-in for AI clients)")
+    up.add_argument("--one-port", action="store_true", default=bool(os.environ.get("SENTINEL_ONE_PORT")),
+                    help="serve the gateway on the API's port, for a host that exposes only one (also $SENTINEL_ONE_PORT)")
+    up.add_argument("--public-url", default=os.environ.get("SENTINEL_PUBLIC_URL") or None,
+                    help="public https address of the gateway (turns on OAuth sign-in for AI clients; also $SENTINEL_PUBLIC_URL)")
     up.add_argument("--tunnel", action="store_true", help="open a free cloudflared tunnel to the gateway and use its address")
     up.add_argument("--cloudflared", help="path to cloudflared (default: PATH, then the winget install location)")
     up.add_argument("--consent-url", help="where the officer's consent page lives (default: the gateway's own address)")

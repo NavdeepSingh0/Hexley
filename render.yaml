@@ -19,3 +19,17 @@ services:
       # The most requests the hosted model may be sent by this deployment in total (retries count). Restarting resets it.
       - key: SENTINEL_LIVE_MODEL_CAP
         value: "300"
+      # The public address. It turns on sign-in for AI clients; the connector address is this followed by /mcp.
+      - key: SENTINEL_PUBLIC_URL
+        value: https://hexley.site
+      # Connector credentials (D-052). A connector whose variable is empty is not started. Never in git.
+      - key: GITHUB_TOKEN
+        sync: false
+      - key: NOTION_TOKEN
+        sync: false
+      - key: SLACK_USER_TOKEN
+        sync: false
+      - key: GMAIL_ADDRESS
+        sync: false
+      - key: GMAIL_APP_PASSWORD
+        sync: false
