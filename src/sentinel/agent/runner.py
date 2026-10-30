@@ -45,6 +45,21 @@ def load_env(root: Path | None = None) -> None:
 RETRY_BASE_S = 1.0  # backoff is RETRY_BASE_S * 2, 4, 8 ... seconds; tests set it to 0
 MAX_KEYS = 9  # NVIDIA_API_KEY, NVIDIA_API_KEY_2 ... NVIDIA_API_KEY_9
 
+# A deployment that is open to the public can cap how many requests the hosted model may be sent, so a leaked link cannot spend the
+# whole quota. SENTINEL_LIVE_MODEL_CAP is read on every request; unset means no cap (a laptop). Retries count, as the provider counts them.
+_LIVE_REQUESTS = 0
+
+
+def _count_live_request() -> None:
+    global _LIVE_REQUESTS
+    cap = os.environ.get("SENTINEL_LIVE_MODEL_CAP", "").strip()
+    if cap.isdigit():
+        if _LIVE_REQUESTS >= int(cap):
+            raise RuntimeError("The live-model limit set for this deployment has been reached. Use the scripted or replay mode, "
+                               "or ask the operator to restart it.")
+        _LIVE_REQUESTS += 1
+
+
 # Called while the endpoint waits (a rate limit, a resting key, a backoff): (attempt number, seconds it will wait).
 WaitCallback = Callable[[int, float], Awaitable[None]]
 
@@ -121,6 +136,8 @@ class ModelEndpoint:
             key, wait = await self._take_key()
             await pause(attempt, wait)
             headers = {"Authorization": f"Bearer {key.secret}"} if key.secret else {}
+            if self.provider == "nvidia":
+                _count_live_request()
             try:
                 r = await client.post(f"{self._url}/chat/completions", headers=headers, json=payload)
             except httpx.TransportError as e:  # a read timeout or dropped connection on the hosted API: the turn never happened

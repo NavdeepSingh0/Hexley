@@ -1,0 +1,21 @@
+# Render Blueprint (plan D1; docs/DEPLOY.md). In Render: New, then Blueprint, then choose this repository.
+# The values marked `sync: false` are asked for in Render's dashboard and are never stored in git.
+services:
+  - type: web
+    name: sentinel
+    runtime: docker
+    plan: free
+    region: singapore
+    healthCheckPath: /health
+    autoDeploy: false
+    envVars:
+      # A token you choose: at least 24 characters, letters, digits, - and _ only. Anyone who has it can use the console and chat.
+      - key: SENTINEL_API_TOKEN
+        sync: false
+      # The hosted model's key (build.nvidia.com). More keys can be added in the dashboard later as NVIDIA_API_KEY_2, _3 ...: a
+      # rate limit on one key then moves the chat to the next.
+      - key: NVIDIA_API_KEY
+        sync: false
+      # The most requests the hosted model may be sent by this deployment in total (retries count). Restarting resets it.
+      - key: SENTINEL_LIVE_MODEL_CAP
+        value: "300"

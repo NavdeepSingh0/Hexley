@@ -1,0 +1,21 @@
+# Nothing secret, nothing built, nothing the running program does not need.
+.git
+.github
+.env
+.env.*
+.venv
+__pycache__
+*.pyc
+.pytest_cache
+node_modules
+site/dist
+console/dist
+data
+docs
+eval
+extension
+scripts
+spikes
+tests
+*.md
+!README.md

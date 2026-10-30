@@ -27,9 +27,32 @@ from .gateway import build_gateway
 from .runtime import build_runtime, rotate_audit_log
 
 
-async def _serve(app, port: int) -> None:
-    server = uvicorn.Server(uvicorn.Config(app, host="127.0.0.1", port=port, log_level="warning"))
+async def _serve(app, port: int, host: str = "127.0.0.1") -> None:
+    server = uvicorn.Server(uvicorn.Config(app, host=host, port=port, log_level="warning"))
     await server.serve()
+
+
+LOOPBACK = ("127.0.0.1", "localhost", "::1")
+TOKEN_SHAPE = re.compile(r"[A-Za-z0-9_\-]{24,}")
+
+
+def api_port_default() -> int:
+    """Hosting platforms hand the program its port in PORT; on a laptop it is 8000."""
+    raw = os.environ.get("PORT", "").strip()
+    return int(raw) if raw.isdigit() and 0 < int(raw) < 65536 else 8000
+
+
+def exposure_problem(host: str, token: str | None) -> str | None:
+    """Binding the officer API beyond this computer is only allowed with a token the operator chose: a random token printed to
+    a log is not a credential anyone can use, and a short one can be guessed. The gateway and the tool server never leave
+    this computer whatever the host says."""
+    if host in LOOPBACK:
+        return None
+    if not token or not TOKEN_SHAPE.fullmatch(token):
+        return (f"--host {host} makes the officer API reachable from other computers, so SENTINEL_API_TOKEN must be set to a "
+                "token of your own: at least 24 characters, letters, digits, '-' and '_' only "
+                "(python -c \"import secrets; print(secrets.token_urlsafe(24))\" makes one).")
+    return None
 
 
 CLOUDFLARED_DEFAULT = r"C:\Program Files (x86)\cloudflared\cloudflared.exe"
@@ -120,6 +143,9 @@ def print_officer_code(req) -> None:
 async def _up(args: argparse.Namespace) -> None:
     check_ports({"API and console": (args.api_port, "--api-port"), "gateway": (args.gateway_port, "--gateway-port"),
                  "tool server": (args.tools_port, "--tools-port")})
+    problem = exposure_problem(args.host, os.environ.get("SENTINEL_API_TOKEN"))
+    if problem:
+        raise SystemExit("Nothing was started.\n  - " + problem)
     downstream = secrets.token_urlsafe(32)
     api_token = os.environ.get("SENTINEL_API_TOKEN") or secrets.token_urlsafe(24)
     data_dir = Path(args.data_dir)
@@ -155,15 +181,21 @@ async def _up(args: argparse.Namespace) -> None:
         if tunnel is not None:
             tunnel.terminate()
         raise
-    console_url = f"http://127.0.0.1:{args.api_port}/console/#token={api_token}"
-    site_url = f"http://127.0.0.1:{args.api_port}/#token={api_token}"
+    # On a hosting platform the log is not private: the token is the one the operator set, so the links are printed without it.
+    hide = bool(os.environ.get("SENTINEL_QUIET_LINKS"))
+    fragment = "" if hide else f"#token={api_token}"
+    console_url = f"http://127.0.0.1:{args.api_port}/console/{fragment}"
+    site_url = f"http://127.0.0.1:{args.api_port}/{fragment}"
     site_built = (SITE_DIST / "index.html").is_file()
-    print(f"Sentinel up. API http://127.0.0.1:{args.api_port}  gateway {rt.gateway_url}  tools pid {tools.pid}")
+    print(f"Sentinel up. API http://{args.host}:{args.api_port}  gateway {rt.gateway_url}  tools pid {tools.pid}", flush=True)
+    if hide:
+        print("The officer token is the one set in SENTINEL_API_TOKEN (not printed here). Open the site's address followed by "
+              "#token=<that token>.", flush=True)
     if site_built:
         print(f"Website and console (the token is in the link, not on screen once it opens): {site_url}")
     else:
         print("The website is not built (npm --prefix site ci && npm --prefix site run build); opening the console only.")
-    print(f"Console (the token is in the link, not on screen once it opens): {console_url}")
+    print(f"Console (the token is in the link, not on screen once it opens): {console_url}", flush=True)
     if public_url:
         print(f"Connector URL for an AI client: {public_url.rstrip('/')}/mcp   (Sign in, then enter the officer code printed here)")
     if not args.no_browser:
@@ -171,7 +203,7 @@ async def _up(args: argparse.Namespace) -> None:
         asyncio.get_running_loop().call_later(1.5, webbrowser.open, site_url if site_built else console_url)
     try:
         await asyncio.gather(_serve(build_gateway(rt).http_app(), args.gateway_port),
-                             _serve(api_app, args.api_port), watch_child(tools, "tool server"))
+                             _serve(api_app, args.api_port, args.host), watch_child(tools, "tool server"))
     finally:
         tools.terminate()
         if tunnel is not None:
@@ -182,7 +214,9 @@ def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(prog="sentinel")
     sub = parser.add_subparsers(dest="command", required=True)
     up = sub.add_parser("up", help="start the tool server, gateway and API")
-    up.add_argument("--api-port", type=int, default=8000)
+    up.add_argument("--api-port", type=int, default=api_port_default(), help="default: $PORT when a hosting platform sets it, else 8000")
+    up.add_argument("--host", default=os.environ.get("SENTINEL_HOST", "127.0.0.1"),
+                    help="address the officer API (website, console, chat) listens on; anything but this computer needs SENTINEL_API_TOKEN")
     up.add_argument("--gateway-port", type=int, default=8100)
     up.add_argument("--tools-port", type=int, default=8200)
     up.add_argument("--data-dir", default="data/runtime", help="audit log and its signing key (git-ignored)")
