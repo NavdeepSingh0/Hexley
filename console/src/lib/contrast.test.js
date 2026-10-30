@@ -4,8 +4,10 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 
-const css = readFileSync(new URL('../../../design/tokens.css', import.meta.url), 'utf8')
-const primitives = readFileSync(new URL('../../../design/primitives.css', import.meta.url), 'utf8')
+// A Windows clone checks these out with CRLF, and block() below looks for an exact newline.
+const read = (path) => readFileSync(new URL(path, import.meta.url), 'utf8').replace(/\r\n/g, '\n')
+const css = read('../../../design/tokens.css')
+const primitives = read('../../../design/primitives.css')
 
 function block(source, selector) {
   const start = source.indexOf(selector)

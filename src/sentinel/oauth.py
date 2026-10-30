@@ -302,15 +302,23 @@ LOGIN_DAYS = 30
 
 # ---- the consent page (served by the gateway, so it works over the public tunnel too) --------------------------------
 _PAGE = """<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Hexley: approve the permission slip</title><style>
-:root{{color-scheme:dark}}body{{margin:0;background:#1f1f1e;color:#f2f1ed;font:18px/1.45 "Helvetica Neue",Helvetica,Arial,sans-serif}}
-main{{max-width:760px;margin:0 auto;padding:40px 16px}}.label{{text-transform:uppercase;letter-spacing:.18em;font-size:13px;color:#a3a29d}}
-h1{{font-size:34px;letter-spacing:-.01em;margin:8px 0 20px}}.slip{{border:2px solid #f2f1ed;padding:16px 20px;margin:0 0 24px}}
-dl{{display:grid;grid-template-columns:170px 1fr;gap:6px 14px;margin:12px 0 0}}dt{{color:#a3a29d}}dd{{margin:0;font-weight:600}}
-input{{font:inherit;font-size:20px;width:100%;max-width:26em;box-sizing:border-box;padding:10px 12px;background:#262625;color:#f2f1ed;border:1px solid #3b3b39}}
-button{{font:inherit;font-weight:600;padding:10px 22px;margin-right:10px;border:2px solid #f2f1ed;background:#f2f1ed;color:#1f1f1e;cursor:pointer}}
-button.ghost{{background:none;color:#f2f1ed}}a.google{{display:inline-block;font-weight:600;padding:12px 24px;background:#f2f1ed;color:#1f1f1e;text-decoration:none}}.err{{color:#ff7f73;font-weight:600;margin:0 0 16px}}details{{margin-top:12px}}summary{{cursor:pointer;color:#a3a29d;font-size:15px}}.muted{{color:#a3a29d;font-size:15px}}
-</style></head><body><main><p class="label">Hexley</p>{body}</main></body></html>"""
+<title>Allow access to Hexley</title><style>
+:root{{color-scheme:light dark;--bg:#f4f4f7;--card:#fff;--ink:#1c1b22;--soft:#62606e;--line:#e2e1e8;--accent:#6a3de8;--on:#fff}}
+@media (prefers-color-scheme:dark){{:root{{--bg:#0d0d12;--card:#17171f;--ink:#f2f1f6;--soft:#a3a1b0;--line:#2c2b36;--accent:#9a7bff;--on:#14121f}}}}
+*{{box-sizing:border-box}}body{{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px 16px;background:var(--bg);color:var(--ink);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}}
+main{{width:100%;max-width:440px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:32px}}
+.brand{{display:flex;align-items:center;justify-content:center;gap:9px;margin-bottom:20px}}.brand svg{{width:30px;height:30px}}.label{{margin:0;font-weight:600;font-size:15px}}
+h1{{font-size:21px;line-height:1.3;font-weight:600;text-align:center;margin:0 0 18px}}
+.who{{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid var(--line);border-radius:10px;padding:9px 12px;margin:0 0 20px;font-size:14px;overflow-wrap:anywhere}}.who form{{flex:none}}
+.lead{{margin:0 0 8px;font-weight:600}}ul.perms{{list-style:none;margin:0 0 16px;padding:0;border-top:1px solid var(--line)}}
+ul.perms li{{padding:10px 0 10px 26px;border-bottom:1px solid var(--line);position:relative}}ul.perms li::before{{content:"\\2713";position:absolute;left:3px;color:var(--accent);font-weight:700}}
+details{{margin:0 0 20px;font-size:14px}}summary{{cursor:pointer;color:var(--soft)}}details p{{margin:8px 0 0;color:var(--soft);overflow-wrap:anywhere}}details b{{color:var(--ink);font-weight:600}}
+.actions{{display:flex;gap:10px;margin:0 0 16px}}.actions button,.actions a{{flex:1;text-align:center;text-decoration:none}}
+button,a.go{{font:inherit;font-weight:600;padding:10px 16px;border-radius:9px;border:1px solid var(--accent);background:var(--accent);color:var(--on);cursor:pointer}}
+button.ghost{{background:none;border-color:var(--line);color:var(--ink)}}button.link{{background:none;border:0;padding:0;color:var(--accent);font-size:13px;font-weight:500}}
+input.proof{{font:inherit;width:100%;padding:10px 12px;margin-top:6px;background:none;color:var(--ink);border:1px solid var(--line);border-radius:9px}}
+.err{{color:#d92d3f;font-weight:600;margin:0 0 16px}}.small{{margin:0;font-size:13px;color:var(--soft);text-align:center}}
+</style></head><body><main><div class="brand"><svg viewBox="0 0 32 32" aria-hidden="true"><rect x="2" y="2" width="28" height="28" rx="8" fill="#6a3de8"/><rect x="6" y="6" width="20" height="17" rx="5" fill="#0b0b12"/><rect x="11" y="10" width="3" height="9" rx="1.5" fill="#fff"/><rect x="18" y="10" width="3" height="9" rx="1.5" fill="#fff"/></svg><p class="label">Hexley</p></div>{body}</main></body></html>"""
 
 
 def _page(body: str, status: int = 200) -> HTMLResponse:
@@ -326,13 +334,13 @@ def _lasts(seconds: int) -> str:
     return f"{seconds // 60} minutes"
 
 
-def _proof_field(officer: bool, google: GoogleLogin | None = None, email: str | None = None) -> str:
+def _proof_field(officer: bool, google: GoogleLogin | None = None) -> str:
     if google is not None:
-        return f"<p>Signed in as <b>{html.escape(email or '')}</b>.</p>" if email else ""
+        return ""
     if officer:
-        return "<p>You are logged in as the officer on this browser.</p>"
-    return ("<p>Officer token, needed once on this browser. A code from the server's log works too.</p>"
-            '<p><input name="officer_code" type="password" autocomplete="current-password" autofocus></p>')
+        return '<p class="who">You are logged in as the officer on this browser.</p>'
+    return ('<p class="lead"><label>Officer token, needed once on this browser. A code from the server\'s log works too.'
+            '<input class="proof" name="officer_code" type="password" autocomplete="current-password" autofocus></label></p>')
 
 
 def _sign_out(officer: bool) -> str:
@@ -341,31 +349,56 @@ def _sign_out(officer: bool) -> str:
     return ('<form method="post" action="/oauth/sign-out"><button class="ghost" name="back" value="1">Log out on this browser</button></form>')
 
 
+def _words(items: list[str]) -> str:
+    return items[0] if len(items) == 1 else f"{', '.join(items[:-1])} and {items[-1]}"
+
+
+def _places(destinations: list[str]) -> str:
+    """Where it may send, as a person says it. The exact channel and page ids are one click away, under the details."""
+    kinds = [("channel:", "Slack channel"), ("page:", "Notion page"), ("repo:", "GitHub repository")]
+    named = [(sum(d.startswith(prefix) for d in destinations), label) for prefix, label in kinds]
+    rest = [d for d in destinations if not d.startswith(tuple(p for p, _ in kinds))]
+    places = [f"{n} {label}" + ("" if n == 1 else "s") for n, label in named if n]
+    if rest:
+        places.insert(0, f"{len(rest)} e-mail address" + ("" if len(rest) == 1 else "es") if all("@" in d for d in rest) else _words(rest))
+    return _words(places)
+
+
+def _permissions(slip: dict) -> list[str]:
+    connectors = sorted({t.split(".", 1)[0].capitalize() for t in slip["allowed_tools"] if "." in t})
+    used = f"Use your {_words(connectors)} connectors, with Hexley checking each call" if connectors else slip["objective"]
+    where = slip["allowed_destinations"]
+    limit = slip["max_messages"]
+    return [used, f"Send only to {_places(where)} chosen for this task" if where else "Send nothing outside",
+            f"Send at most {limit} message" + ("" if limit == 1 else "s"), f"Keep this access for {_lasts(slip['ttl_seconds'])}"]
+
+
 def _consent_body(view: dict, error: str = "", officer: bool = False, google: GoogleLogin | None = None, email: str | None = None) -> str:
+    """The page every connector has: who is asking, which account, what it may do, Cancel or Allow. No code to type (D-060)."""
     e = html.escape
-    allow = "Allow" if google is not None else "Approve"
+    client, request_id, slip = e(view["client_name"]), e(view["request_id"]), view["slip"]
+    hidden = f'<input type="hidden" name="request" value="{request_id}">'
     if google is not None and not email:
         start = f'/oauth/google/start?{urlencode({"request": view["request_id"]})}'
-        action = (f'<p><a class="google" href="{e(start)}">Continue with Google</a></p>'
-                  f'<form method="post" action="/oauth/consent"><input type="hidden" name="request" value="{e(view["request_id"])}">'
-                  '<button class="ghost" name="decision" value="deny">Deny</button></form>')
+        who = ""
+        action = (f'<form method="post" action="/oauth/consent" class="actions">{hidden}<button class="ghost" name="decision" value="deny">Cancel</button>'
+                  f'<a class="go" href="{e(start)}">Continue with Google</a></form>')
     else:
-        action = (f'<form method="post" action="/oauth/consent"><input type="hidden" name="request" value="{e(view["request_id"])}">'
-                  f'{_proof_field(officer, google, email)}'
-                  f'<button name="decision" value="approve">{allow}</button><button class="ghost" name="decision" value="deny">Deny</button></form>')
-    slip = view["slip"]
-    tools = ", ".join(slip["allowed_tools"])
-    connectors = sorted({t.split(".", 1)[0].capitalize() for t in slip["allowed_tools"] if "." in t})
-    title = f"{e(view['client_name'])} wants to use {e(', '.join(connectors))} through Hexley" if connectors else f"{e(view['client_name'])} wants to connect to Hexley"
-    return (f"<h1>{title}</h1>"
+        allow = "Allow" if google is not None else "Approve"
+        who = (f'<div class="who"><span>Signed in as <b>{e(email)}</b></span><form method="post" action="/oauth/sign-out">{hidden}'
+               '<button class="link">Use another account</button></form></div>') if google is not None else ""
+        action = (f'<form method="post" action="/oauth/consent">{hidden}{_proof_field(officer, google)}<div class="actions">'
+                  f'<button class="ghost" name="decision" value="deny">Cancel</button><button name="decision" value="approve">{allow}</button></div></form>')
+    perms = "".join(f"<li>{e(p)}</li>" for p in _permissions(slip))
+    places = e(", ".join(slip["allowed_destinations"]) or "nowhere")
+    return (f"<h1>{client} wants to connect to Hexley</h1>"
             + (f'<p class="err">{e(error)}</p>' if error else "")
-            + f"""<div class="slip"><span class="label">What it may do</span>
-<p><b>{e(slip['objective'])}</b></p><dl><dt>May send to</dt><dd>{e(', '.join(slip['allowed_destinations']) or 'nobody')}</dd>
-<dt>Message limit</dt><dd>{slip['max_messages']}</dd><dt>Lasts</dt><dd>{_lasts(slip['ttl_seconds'])}</dd></dl>
-<details><summary>Every action it may take</summary><p class="muted">{e(tools)}</p></details></div>
+            + f"""{who}<p class="lead">This will let {client}:</p><ul class="perms">{perms}</ul>
+<details><summary>See the exact permissions</summary><p><b>Task:</b> {e(slip['objective'])}</p><p><b>May send to:</b> {places}</p>
+<p><b>Actions:</b> {e(", ".join(slip["allowed_tools"]))}</p></details>
 {action}
-<p class="muted">Only approve if you started this connection. The AI can do what the slip lists and nothing else.</p>
-{_sign_out(officer)}""")
+<p class="small">Only allow this if you started it from {client}. Hexley never holds your connectors' passwords.</p>
+{_sign_out(officer and google is None)}""")
 
 
 def register_consent_routes(server, provider: SentinelOAuthProvider) -> None:
@@ -440,6 +473,11 @@ def register_consent_routes(server, provider: SentinelOAuthProvider) -> None:
     async def sign_out(request: Request) -> Response:
         if not provider.same_origin(request.headers.get("origin"), request.headers.get("sec-fetch-site")):
             return _page('<h1>Not available</h1><p class="err">This request came from another site.</p>', 403)
-        response = _page("<h1>Logged out</h1><p>This browser will be asked for the officer token next time.</p>")
+        form = {k: v[0] for k, v in parse_qs((await request.body()).decode("utf-8", "replace")).items()}
+        if provider.google is not None and form.get("request"):  # "Use another account": back to Google's picker for the same connection
+            response = RedirectResponse(f"/oauth/google/start?{urlencode({'request': form['request']})}", status_code=303,
+                                        headers={"Cache-Control": "no-store", "Referrer-Policy": "no-referrer"})
+        else:
+            response = _page("<h1>Logged out</h1><p>This browser will be asked for the officer token next time.</p>")
         response.delete_cookie(LOGIN_COOKIE, path="/oauth/")
         return response

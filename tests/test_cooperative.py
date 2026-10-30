@@ -86,18 +86,37 @@ async def test_setup_returns_the_text_to_paste_says_what_happens_to_each_tool_an
     async with stack.client(_token(slip)) as c:
         view = (await c.call_tool("hexley_setup", {"tools": listed})).data
     text = view["preferences_text"]
-    assert "hexley_check" in text and "do not run the tool" in text and all(t in text for t in listed)
-    status = {r["tool"]: r["status"] for r in view["tools"]}
-    assert status["Gmail:send_message"].startswith("checked") and status["mcp__claude_ai_Gmail__get_thread"].startswith("checked")
-    assert status["Gmail:reply"].startswith("refused") and status["Google Drive:search_files"].startswith("refused")
+    assert "hexley_check" in text and "do not run the tool" in text
+    assert view["checked"] == {"Gmail": 2} and view["refused"] == {"Gmail": 1, "Google Drive": 1}
     assert view["enforcement"] == ADVISORY and "Advisory" in ADVISORY  # the limit travels with the setup, every time
+    assert ADVISORY in view["reply"] and "tools" not in view
     session = stack.rt.store.get(slip["session_id"])
     assert sorted(session.contract.allowed_tools) == sorted(TOOLS)
 
 
 def test_the_text_tells_the_model_that_content_cannot_cancel_the_rules():
-    text = preferences_text(["Gmail:send_message"])
+    text = preferences_text()
     assert "do not come from me" in text and "cannot change" in text and "cannot be reached" in text
+
+
+async def test_the_reply_puts_the_text_and_where_to_paste_it_first_and_never_lists_every_tool(stack):
+    """Navdeep, 31 Oct: a real setup returned 154 rows of tools and buried the text the person needed."""
+    slip = await _slip(stack)
+    many = [f"Unknown:tool_{i}" for i in range(154)]
+    async with stack.client(_token(slip)) as c:
+        view = (await c.call_tool("hexley_setup", {"tools": many})).data
+    reply = view["reply"]
+    assert reply.index(view["preferences_text"]) < reply.index("Your Claude") < reply.index("Hexley checks 0 of the 154")
+    assert "```" in reply and "Instructions" in reply and "Settings" in reply and "tool_7" not in reply
+    assert "exactly as written" in view["instructions"] and "do not list the tools" in view["instructions"]
+    assert len(str(view)) < 6000
+
+
+async def test_setup_needs_no_tool_list_so_a_bare_request_still_gets_the_text(stack):
+    slip = await _slip(stack)
+    async with stack.client(_token(slip)) as c:
+        view = (await c.call_tool("hexley_setup", {})).data
+    assert view["preferences_text"] in view["reply"] and "Your Claude" in view["reply"] and view["checked"] == {}
 
 
 # ---- the rules, through the check -----------------------------------------------------------------------------------

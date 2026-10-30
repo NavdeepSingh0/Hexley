@@ -118,7 +118,14 @@ function OAuthPanel({ client, connect }) {
           <>
             <p>Then ask Claude this, once. You do not need to know your tool names: Claude lists them.</p>
             <CopyField label="Ask Claude" value={client.snippet} block />
-            <p>Paste the text it returns into your personal preferences in Claude.ai. From then on Claude asks Hexley before each connector tool.</p>
+            <p>Claude replies with a short text to copy. Paste it here:</p>
+            <ol className="cs-paste">
+              <li>Click your initials at the bottom left of Claude.ai.</li>
+              <li>Choose <strong>Settings</strong>, then <strong>Your Claude</strong> (called Account in the older layout).</li>
+              <li>Paste the text under <strong>Instructions</strong> (called Instructions for Claude in the older layout), and save.</li>
+              <li>Start a new chat.</li>
+            </ol>
+            <p>From then on Claude asks Hexley before each connector tool. To turn it off, delete the text from there.</p>
             <p className="muted">This route is advisory. Nothing forces Claude to ask, and a hidden instruction may tell it not to. For enforcement use a client with a hook.</p>
           </>
         )}

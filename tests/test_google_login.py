@@ -72,7 +72,7 @@ async def test_connect_sign_in_with_google_allow_then_the_next_connection_is_one
     async with httpx.AsyncClient(timeout=30) as c:
         rid = await _request(c, stack)
         page = (await c.get(f"{base(stack)}/oauth/consent", params={"request": rid})).text
-        assert "Continue with Google" in page and "officer_code" not in page and "code" not in page.lower().split("the permission slip")[0]
+        assert "Continue with Google" in page and "officer_code" not in page and "code" not in page.lower()
         back = await _sign_in(c, stack, rid)
         assert back.status_code == 303 and rid in back.headers["location"]
         cookie = back.headers["set-cookie"]
@@ -105,7 +105,23 @@ async def test_the_allow_page_says_what_it_gives_in_plain_words_and_folds_the_li
             page = (await c.get(f"{base(stack)}/oauth/consent", params={"request": await _request(c, stack)})).text
     finally:
         stack.rt.oauth.preset = "quotation_processing"
-    assert "wants to use Gmail, Notion, Slack through Hexley" in page and "<details>" in page and ">Allow<" in page and "officer approval" not in page
+    assert "wants to connect to Hexley" in page and "Gmail, Notion and Slack connectors" in page and "<details>" in page and "officer approval" not in page
+    assert page.index(">Cancel<") < page.index(">Allow<") and "Keep this access for" in page and "Use another account" in page
+
+
+async def test_use_another_account_goes_back_to_googles_picker_for_the_same_connection(stack, google):
+    async with httpx.AsyncClient(timeout=30, cookies={LOGIN_COOKIE: stack.rt.oauth.google.login_value(BOSS)}) as c:
+        rid = await _request(c, stack)
+        r = await c.post(f"{base(stack)}/oauth/sign-out", data={"request": rid})
+        assert r.status_code == 303 and rid in r.headers["location"] and LOGIN_COOKIE in r.headers["set-cookie"]
+    async with httpx.AsyncClient(timeout=30) as signed_out:  # the browser dropped the cookie it was told to; this client's jar would not
+        assert (await signed_out.get(f"{base(stack)}{r.headers['location']}")).headers["location"].startswith("https://accounts.google.com/")
+
+
+async def test_raw_channel_and_page_ids_stay_under_the_details_on_the_allow_page(stack, google):
+    from sentinel.oauth import _places
+    assert _places(["a@b.example", "channel:C123", "channel:C456", "page:abc"]) == "1 e-mail address, 2 Slack channels and 1 Notion page"
+    assert _places(["corp.example"]) == "corp.example"
 
 
 async def test_google_is_sent_the_code_the_secret_and_the_proof_of_the_browser(stack, google):

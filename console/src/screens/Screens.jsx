@@ -8,7 +8,7 @@ const SOURCES = [
   ['live', 'Live', 'A real AI model right now. Needs the model API; behaviour varies.'],
 ]
 
-export function StartScreen({ onCreate, onGuided, error, busy, playlist }) {
+export function StartScreen({ onCreate, onGuided, error, busy, playlist, visitor }) {
   const [scenarios, setScenarios] = useState([])
   const [recordings, setRecordings] = useState([])
   const [source, setSource] = useState('scripted')
@@ -27,6 +27,7 @@ export function StartScreen({ onCreate, onGuided, error, busy, playlist }) {
       <p className="s-label">Hexley console</p>
       <h1 className="screen-title">Watch an AI agent get attacked</h1>
       <p className="screen-sub">The same hostile input goes to three setups. Only one of them stops it.</p>
+      {visitor ? <p className="source-hint">You are trying this as a visitor: you play the officer, on synthetic data and mock tools. If someone else is mid-run, try again in a minute.</p> : null}
       <div className="start-actions">
         <button className="s-btn s-btn--primary s-btn--big" disabled={busy} onClick={onGuided}>
           Run the guided demo <span className="s-kbd">Enter</span>
@@ -37,7 +38,7 @@ export function StartScreen({ onCreate, onGuided, error, busy, playlist }) {
       <div className="source-row">
         <p className="s-label">Or pick one yourself</p>
         <div className="source-picker" role="radiogroup" aria-label="Where the agent’s behaviour comes from">
-          {SOURCES.map(([id, name]) => (
+          {SOURCES.filter(([id]) => !visitor || id !== 'live').map(([id, name]) => (
             <button key={id} role="radio" aria-checked={source === id} className={`s-btn s-btn--small source${source === id ? ' source-on' : ''}`}
               onClick={() => setSource(id)}>{name}</button>
           ))}

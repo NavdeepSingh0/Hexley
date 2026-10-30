@@ -19,6 +19,9 @@ services:
       # The most requests the hosted model may be sent by this deployment in total (retries count). Restarting resets it.
       - key: SENTINEL_LIVE_MODEL_CAP
         value: "300"
+      # A visitor with no token may try the synthetic demo and chat (D-062). Set to 0 to require the officer's token.
+      - key: SENTINEL_PUBLIC_DEMO
+        value: "1"
       # The public address. It turns on sign-in for AI clients; the connector address is this followed by /mcp.
       - key: SENTINEL_PUBLIC_URL
         value: https://hexley.site

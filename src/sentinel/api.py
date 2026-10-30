@@ -25,6 +25,7 @@ from pypdf import PdfReader
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.websockets import WebSocketClose
 
+from .agent.runner import visitor_model_share_left
 from .approvals import ApprovalError
 from .chat import ChatError, ChatManager, latest_mascot
 from .check import CheckError, check_call, coverage_view, report_result, session_from_authorization
@@ -44,6 +45,7 @@ from .runtime import Runtime
 from .tools.server import TOKEN_HEADER
 
 CONSOLE_ORIGIN = "http://localhost:5173"
+OFFICER, VISITOR = "officer", "visitor"
 
 
 class TaskRequest(BaseModel):
@@ -168,6 +170,32 @@ def create_api(rt: Runtime, console_dir: Path | None = None, site_dir: Path | No
         if not authorization.startswith("Bearer ") or not authorised(authorization.removeprefix("Bearer ")):
             raise HTTPException(status_code=401, detail="missing or invalid API token")
 
+    def who(authorization: str = Header(default="")) -> str:
+        """A public deployment lets someone with no token try the demo and the chat, on synthetic data and mock tools (D-062).
+        A wrong token is still refused, so an officer with a stale link is told so instead of quietly becoming a visitor."""
+        if rt.public_demo and authorization.strip() in ("", "Bearer"):
+            return VISITOR
+        require_token(authorization)
+        return OFFICER
+
+    def visitor_sessions() -> set[str | None]:
+        return ({lane.session_id for run in runs.runs.values() if run.visitor for lane in run.lanes}
+                | {chat.session_id for chat in chats.chats.values() if chat.visitor})
+
+    def own_run(run_id: str, caller: str) -> None:
+        run = runs.runs.get(run_id)
+        if caller == VISITOR and (run is None or not run.visitor):
+            raise HTTPException(status_code=404, detail="unknown run")
+
+    def own_chat(chat_id: str, caller: str) -> None:
+        chat = chats.chats.get(chat_id)
+        if caller == VISITOR and (chat is None or not chat.visitor):
+            raise HTTPException(status_code=404, detail="unknown chat")
+
+    def chat_for(chat_id: str, caller: str) -> dict:
+        view = chats.view(chat_id)
+        return {**view, "can_upload": False} if caller == VISITOR else view
+
     @app.get("/health")
     async def health():
         return {"status": "ok"}
@@ -227,48 +255,61 @@ def create_api(rt: Runtime, console_dir: Path | None = None, site_dir: Path | No
                 raise HTTPException(status_code=e.status, detail=e.detail) from e
         return wrapper
 
-    @app.get("/scenarios", dependencies=[Depends(require_token)])
+    @app.get("/scenarios", dependencies=[Depends(who)])
     async def list_scenarios():
         return {"scenarios": [{"id": s.id, "title": s.title, "description": s.description,
                                "lanes": [{"column": l.column.value, "template": l.template} for l in s.lanes]}
                               for s in SCENARIOS.values()]}
 
-    @app.get("/recordings", dependencies=[Depends(require_token)])
+    @app.get("/recordings", dependencies=[Depends(who)])
     async def get_recordings():
         return {"recordings": list_recordings(rt.recordings_dir)}
 
-    @app.post("/runs", status_code=201, dependencies=[Depends(require_token)])
+    @app.post("/runs", status_code=201)
     @run_errors
-    async def create_run(req: RunRequest):
+    async def create_run(req: RunRequest, caller: str = Depends(who)):
         """Draft one slip per lane. Nothing runs until the officer confirms (POST /runs/{id}/confirm)."""
+        if caller == VISITOR and req.source == "live":
+            raise HTTPException(status_code=403, detail="A live model here is for the officer. Use Scripted or Replay, or try the live model on the chat page.")
         run = await runs.create(req.scenario, req.source, req.officer, model=req.model, recording_id=req.recording_id)
+        if caller == VISITOR:
+            run.visitor = True
+            runs.forget_old_visitor_runs()
         return await runs.view(run.run_id)
 
-    @app.post("/runs/{run_id}/confirm", dependencies=[Depends(require_token)])
+    @app.post("/runs/{run_id}/confirm")
     @run_errors
-    async def confirm_run(run_id: str):
+    async def confirm_run(run_id: str, caller: str = Depends(who)):
+        own_run(run_id, caller)
+        await runs.make_room(officer=caller == OFFICER)
+        if caller == VISITOR and runs.active is not None:
+            raise HTTPException(status_code=409, detail="Someone else is running the demo right now. Try again in a minute.")
         run = await runs.confirm(run_id)
         return await runs.view(run.run_id)
 
-    @app.get("/runs", dependencies=[Depends(require_token)])
-    async def list_runs():
-        """Lets the console re-attach to the active run after a page reload."""
-        return runs.list_runs()
+    @app.get("/runs")
+    async def list_runs(caller: str = Depends(who)):
+        """Lets the console re-attach to the active run after a page reload. A visitor is never attached to someone else's."""
+        return runs.list_runs() if caller == OFFICER else {"active": None, "runs": []}
 
-    @app.get("/runs/{run_id}", dependencies=[Depends(require_token)])
+    @app.get("/runs/{run_id}")
     @run_errors
-    async def get_run(run_id: str):
+    async def get_run(run_id: str, caller: str = Depends(who)):
+        own_run(run_id, caller)
         return await runs.view(run_id)
 
-    @app.post("/runs/{run_id}/cancel", dependencies=[Depends(require_token)])
+    @app.post("/runs/{run_id}/cancel")
     @run_errors
-    async def cancel_run(run_id: str):
+    async def cancel_run(run_id: str, caller: str = Depends(who)):
+        own_run(run_id, caller)
         await runs.cancel(run_id)
         return await runs.view(run_id)
 
     @app.get("/approvals", dependencies=[Depends(require_token)])
     async def list_approvals():
-        return {"pending": [a.card() for a in rt.approvals.pending()]}
+        """What waits for the officer. A visitor's own demo decides its own approvals, so they do not interrupt the officer."""
+        hidden = visitor_sessions()
+        return {"pending": [a.card() for a in rt.approvals.pending() if a.session_id not in hidden]}
 
     @app.get("/approvals/{approval_id}", dependencies=[Depends(require_token)])
     async def get_approval(approval_id: str):
@@ -277,12 +318,12 @@ def create_api(rt: Runtime, console_dir: Path | None = None, site_dir: Path | No
             raise HTTPException(status_code=404, detail="unknown approval")
         return a.card()
 
-    @app.post("/approvals/{approval_id}", dependencies=[Depends(require_token)])
-    async def resolve_approval(approval_id: str, req: ApprovalDecision):
+    @app.post("/approvals/{approval_id}")
+    async def resolve_approval(approval_id: str, req: ApprovalDecision, caller: str = Depends(who)):
         """The officer approves or denies one exact pending action. An approval is recorded durably BEFORE it
-        takes effect; a denial never waits on the log."""
+        takes effect; a denial never waits on the log. A visitor may decide only in their own demo: never a real connector's call."""
         a = rt.approvals.get(approval_id)
-        if a is None:
+        if a is None or (caller == VISITOR and a.session_id not in visitor_sessions()):
             raise HTTPException(status_code=404, detail="unknown approval")
         approve = req.decision == "approve"
         if approve:
@@ -303,14 +344,15 @@ def create_api(rt: Runtime, console_dir: Path | None = None, site_dir: Path | No
                 pass
         return a.card()
 
-    @app.get("/audit/verify", dependencies=[Depends(require_token)])
-    async def audit_verify(expected_head: str | None = None):
+    @app.get("/audit/verify")
+    async def audit_verify(expected_head: str | None = None, caller: str = Depends(who)):
         """Re-read the log from disk and check every hash and signature. Truncation is only caught if the
-        caller supplies the chain head it saw earlier."""
+        caller supplies the chain head it saw earlier. A visitor can check the log but is not offered the tamper demo."""
         res = rt.audit.verify(expected_head)
+        tamper = rt.allow_tamper and caller == OFFICER
         return {"ok": res.ok, "checked": res.checked, "head": res.head, "first_bad_seq": res.first_bad_seq,
-                "reason": res.reason, "tamper_enabled": rt.allow_tamper,
-                "restorable": bool(rt.allow_tamper and rt.audit.altered)}
+                "reason": res.reason, "tamper_enabled": tamper,
+                "restorable": bool(tamper and rt.audit.altered)}
 
     @app.get("/audit/export", dependencies=[Depends(require_token)])
     async def audit_export():
@@ -510,42 +552,53 @@ def create_api(rt: Runtime, console_dir: Path | None = None, site_dir: Path | No
         chat.documents = [d for d in chat.documents if d["name"] != name] + [doc]
         return doc
 
-    @app.get("/api/v1/chat/presets", dependencies=[Depends(require_token)])
-    async def chat_presets():
-        return chats.presets()
+    @app.get("/api/v1/chat/presets")
+    async def chat_presets(caller: str = Depends(who)):
+        # A visitor cannot upload, so the preset that exists to read your own PDF is not offered.
+        return [p for p in chats.presets() if caller == OFFICER or p["id"] != "own-doc"]
 
-    @app.post("/api/v1/chat", status_code=201, dependencies=[Depends(require_token)])
-    async def chat_create(req: ChatRequest):
+    @app.post("/api/v1/chat", status_code=201)
+    async def chat_create(req: ChatRequest, caller: str = Depends(who)):
+        if caller == VISITOR and (req.recording is not None or req.mode == "local" or req.preset == "own-doc"):
+            raise HTTPException(status_code=403, detail="That option is for the officer.")
         try:
             chat = await chats.create(req.preset, req.mode, req.recording, req.officer)
-            return chats.view(chat.chat_id)
+            chat.visitor = caller == VISITOR
+            return chat_for(chat.chat_id, caller)
         except ChatError as e:
             raise chat_error(e) from e
 
-    @app.post("/api/v1/chat/{chat_id}/confirm", dependencies=[Depends(require_token)])
-    async def chat_confirm(chat_id: str):
+    @app.post("/api/v1/chat/{chat_id}/confirm")
+    async def chat_confirm(chat_id: str, caller: str = Depends(who)):
+        own_chat(chat_id, caller)
         try:
             await chats.confirm(chat_id)
-            return chats.view(chat_id)
+            return chat_for(chat_id, caller)
         except ChatError as e:
             raise chat_error(e) from e
 
-    @app.post("/api/v1/chat/{chat_id}/messages", status_code=202, dependencies=[Depends(require_token)])
-    async def chat_send(chat_id: str, req: ChatMessageRequest):
+    @app.post("/api/v1/chat/{chat_id}/messages", status_code=202)
+    async def chat_send(chat_id: str, req: ChatMessageRequest, caller: str = Depends(who)):
+        own_chat(chat_id, caller)
+        chat = chats.chats.get(chat_id)
+        if caller == VISITOR and chat is not None and chat.mode == "live" and not visitor_model_share_left():
+            raise HTTPException(status_code=429, detail="The live model's share for visitors is used up for now. Start a new chat in Scripted or Recorded mode: the decisions are the same code.")
         try:
             return {"message_id": await chats.send(chat_id, req.text, req.attachments)}
         except ChatError as e:
             raise chat_error(e) from e
 
-    @app.get("/api/v1/chat/{chat_id}", dependencies=[Depends(require_token)])
-    async def chat_view(chat_id: str):
+    @app.get("/api/v1/chat/{chat_id}")
+    async def chat_view(chat_id: str, caller: str = Depends(who)):
+        own_chat(chat_id, caller)
         try:
-            return chats.view(chat_id)
+            return chat_for(chat_id, caller)
         except ChatError as e:
             raise chat_error(e) from e
 
-    @app.get("/api/v1/chat/{chat_id}/recording", dependencies=[Depends(require_token)])
-    async def chat_recording(chat_id: str):
+    @app.get("/api/v1/chat/{chat_id}/recording")
+    async def chat_recording(chat_id: str, caller: str = Depends(who)):
+        own_chat(chat_id, caller)
         try:
             return chats.recording(chat_id)
         except ChatError as e:

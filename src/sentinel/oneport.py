@@ -17,7 +17,11 @@ import time
 # Requests per minute from one address. Starting a sign-in is rare for a person, and each one costs the server memory.
 SIGN_IN_LIMIT = 30
 GATEWAY_LIMIT = 300
+# What one visitor with no token may start (D-062). A message is the one that spends the model; a real chat turn takes about 35 s anyway.
+DEMO_LIMIT = 40
+MESSAGE_LIMIT = 6
 _SIGN_IN = ("/register", "/authorize", "/token", "/oauth/")
+_DEMO = ("/api/v1/chat", "/runs", "/approvals")
 _MAX_ADDRESSES = 5000
 # Inside a container the proxy on the same computer arrives from Docker's bridge, not loopback: found on the live server, where every
 # visitor counted as one address. The port is published on loopback only, so nothing else can arrive from these.
@@ -61,6 +65,22 @@ def client_address(scope) -> str:
     return peer
 
 
+def _visitor_limit(scope) -> tuple[str, int] | None:
+    """Which limit applies to a request from someone with no token. The officer is not limited: a made-up token is refused by the API."""
+    path = scope.get("path", "")
+    if scope.get("method") != "POST" or not path.startswith(_DEMO):
+        return None
+    for name, value in scope.get("headers") or []:
+        if name == b"authorization" and value.strip() not in (b"", b"Bearer"):
+            return None
+    return ("message", MESSAGE_LIMIT) if path.endswith("/messages") else ("demo", DEMO_LIMIT)
+
+
+async def _too_many(send) -> None:
+    await send({"type": "http.response.start", "status": 429, "headers": [(b"content-type", b"application/json"), (b"retry-after", b"60")]})
+    await send({"type": "http.response.body", "body": b'{"detail":"Too many requests from this address. Try again in a minute."}'})
+
+
 class OnePort:
     def __init__(self, api, gateway, limit: RateLimit | None = None):
         self.api, self.gateway = api, gateway
@@ -79,10 +99,12 @@ class OnePort:
             sign_in = path.startswith(_SIGN_IN)
             kind, allowed = ("sign-in", SIGN_IN_LIMIT) if sign_in else ("gateway", GATEWAY_LIMIT)
             if not self.limit.allow(client_address(scope), kind, allowed):
-                await send({"type": "http.response.start", "status": 429,
-                            "headers": [(b"content-type", b"text/plain; charset=utf-8"), (b"retry-after", b"60")]})
-                await send({"type": "http.response.body", "body": b"Too many requests from this address. Try again in a minute."})
+                await _too_many(send)
                 return
             await self.gateway(scope, receive, send)
         else:
+            visitor = _visitor_limit(scope) if scope["type"] == "http" else None
+            if visitor and not self.limit.allow(client_address(scope), *visitor):
+                await _too_many(send)
+                return
             await self.api(scope, receive, send)

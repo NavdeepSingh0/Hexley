@@ -35,7 +35,8 @@ USER sentinel
 
 # The officer API listens on every address (the platform's proxy needs that) and on the port the platform gives in $PORT. It refuses
 # to start unless SENTINEL_API_TOKEN is a token you chose. The gateway shares that port (the host exposes only one, D-055) and still
-# demands a session token on every call. The tool server stays on 127.0.0.1 inside the container.
-ENV SENTINEL_HOST=0.0.0.0 SENTINEL_QUIET_LINKS=1 SENTINEL_ONE_PORT=1
+# demands a session token on every call. The tool server stays on 127.0.0.1 inside the container. A visitor with no token may try the
+# synthetic demo and chat, and nothing else (D-062).
+ENV SENTINEL_HOST=0.0.0.0 SENTINEL_QUIET_LINKS=1 SENTINEL_ONE_PORT=1 SENTINEL_PUBLIC_DEMO=1
 EXPOSE 10000
 CMD [".venv/bin/python", "-m", "sentinel", "up", "--demo", "--no-browser", "--data-dir", "/tmp/sentinel"]

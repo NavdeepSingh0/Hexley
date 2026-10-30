@@ -48,6 +48,12 @@ MAX_KEYS = 9  # NVIDIA_API_KEY, NVIDIA_API_KEY_2 ... NVIDIA_API_KEY_9
 # A deployment that is open to the public can cap how many requests the hosted model may be sent, so a leaked link cannot spend the
 # whole quota. SENTINEL_LIVE_MODEL_CAP is read on every request; unset means no cap (a laptop). Retries count, as the provider counts them.
 _LIVE_REQUESTS = 0
+VISITOR_MODEL_SHARE = 200  # of the cap, so a public site cannot use up what the officer needs on stage (SENTINEL_VISITOR_MODEL_CAP)
+
+
+def visitor_model_share_left() -> bool:
+    share = os.environ.get("SENTINEL_VISITOR_MODEL_CAP", "").strip()
+    return _LIVE_REQUESTS < (int(share) if share.isdigit() else VISITOR_MODEL_SHARE)
 
 
 def _count_live_request() -> None:

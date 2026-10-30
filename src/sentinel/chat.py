@@ -298,6 +298,7 @@ class Chat:
     turn: asyncio.Task | None = field(default=None, repr=False)
     created: str = ""
     documents: list[dict] = field(default_factory=list)  # PDFs uploaded into this chat, with the text the model will be given
+    visitor: bool = False  # started by someone with no token (D-062): no uploads, and it cannot spend the officer's share of the model
 
 
 class ChatManager:

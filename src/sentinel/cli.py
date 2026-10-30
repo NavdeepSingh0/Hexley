@@ -195,6 +195,7 @@ async def _up(args: argparse.Namespace) -> None:
                        gateway_url=f"http://127.0.0.1:{args.api_port if args.one_port else args.gateway_port}/mcp",
                        downstream_token=downstream, api_token=api_token,
                        audit_dir=data_dir, allow_tamper=args.demo, upstreams=connectors)
+    rt.public_demo = os.environ.get("SENTINEL_PUBLIC_DEMO") == "1"
     tunnel = None
     public_url = args.public_url
     if args.tunnel and not public_url:

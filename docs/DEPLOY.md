@@ -8,6 +8,7 @@
 | The website, console, chat (scripted, replay and the live model), docs and the gateway at `/mcp` on one public address | Storage that survives a restart: chats, sessions, sign-ins, tool pins, the audit log and its signing key start fresh on every restart or deploy, so an AI client must reconnect with one click and a hook's token must be issued again |
 | Connecting with Google: any Google account, then one Allow page. The slip lasts 7 days | Separate slips per person: everyone who signs in shares one slip and one list of destinations |
 | A limit per address: 30 sign-in and 300 gateway requests a minute (D-061), and a cap of 300 model requests in total | Protection against many addresses, or a promise that the live model answers: it can be slow or rate-limited |
+| Visitors with no token can run the console demo (scripted and replay) and the chat, on synthetic data and mock tools (D-062). The officer's link still gives the tamper demo, uploads, slips, tokens and real connector approvals | More than one console run at a time: a visitor may be asked to try again, and the officer's run ends a visitor's. A visitor's reload loses their run |
 
 ## Deploying a change
 From the `sentinel` folder, in PowerShell, with the SSH key at `%USERPROFILE%\.ssh\hexley.pem`:
@@ -25,6 +26,7 @@ It builds the image here, because the server is too small to build it, copies it
 4. Create a Google OAuth client of the Web application type, with the redirect address `https://<domain>/oauth/google/callback`, and publish the app. Put its values on the server with `scripts/deploy/set_google.sh`, which asks for them on the server. Never paste them into chat or git.
 5. Put the model keys on the server with `scripts/deploy/set_model_keys.sh`, in the same way.
 6. Set `SENTINEL_OAUTH_DESTINATIONS` and `SENTINEL_OAUTH_INTERNAL` in that file to the test addresses, channels and pages the slip may reach.
+7. The image sets `SENTINEL_PUBLIC_DEMO=1`, so a visitor with no token can try the console demo and the chat (D-062). To close them, set it to `0` in that file: both then ask for the officer token. `SENTINEL_VISITOR_MODEL_CAP` sets the visitors' share of the live model (default 200 of the 300).
 
 ## Check it works
 - `https://<address>/health` shows `{"status":"ok"}`.

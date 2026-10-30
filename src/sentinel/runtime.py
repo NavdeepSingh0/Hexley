@@ -58,6 +58,7 @@ class Runtime:
     api_token: str  # static bearer token for the console and REST API (demo-grade)
     audit: AuditLog
     allow_tamper: bool = False  # demo switch for POST /audit/tamper; off unless explicitly enabled
+    public_demo: bool = False  # a visitor with no token may try the synthetic demo and chat (SENTINEL_PUBLIC_DEMO, D-062)
     approval_wait: float = 90.0  # seconds a held call waits for the officer; silence is a denial
     approvals: ApprovalStore = field(default_factory=ApprovalStore)
     trusted_addresses: frozenset[str] = frozenset(v["email"] for v in fixtures.VENDOR_MASTER.values())

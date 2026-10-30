@@ -121,6 +121,7 @@ export default function App() {
   const [outside, setOutside] = useState(null)
   const checkOutside = useCallback(() => pendingApprovals().then((list) => setOutside(list[0] ?? null)).catch(() => {}), [])
   useEffect(() => {
+    if (!auth.hasToken) return undefined // that list is the officer's; a visitor decides only inside their own demo
     checkOutside()
     const timer = setInterval(checkOutside, 2500)
     return () => clearInterval(timer)
@@ -178,14 +179,14 @@ export default function App() {
       {helpOpen ? <PresenterHelp onClose={() => setHelpOpen(false)} tamperEnabled={Boolean(verify?.tamper_enabled)} /> : null}
       <main className="main">
         {screen === 'start' && !receipts ? (
-          <StartScreen onCreate={create} onGuided={createFromPlaylist} error={error} busy={busy} playlist={PLAYLIST} />
+          <StartScreen onCreate={create} onGuided={createFromPlaylist} error={error} busy={busy} playlist={PLAYLIST} visitor={!auth.hasToken} />
         ) : null}
         {screen === 'start' && receipts ? (
           <div className="screen">
             <p className="s-label">The guided demo is over</p>
             <h1 className="screen-title">The receipts</h1>
             <p className="screen-sub">Every decision was written to a signed, hash-chained log before anything was forwarded.
-              Verify it, change one record, and verify again.</p>
+              {verify?.tamper_enabled ? ' Verify it, change one record, and verify again.' : ' Verify it.'}</p>
             <AuditPanel verify={verify} onVerify={doVerify} onTamper={doTamper} onRestore={doRestore} busy={busy} />
           </div>
         ) : null}

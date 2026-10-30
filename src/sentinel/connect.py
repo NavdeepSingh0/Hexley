@@ -17,9 +17,8 @@ from .runtime import Runtime
 CLIENTS = [
     # The snippet is what the person asks Claude once connected: the person need not know the tool names, and Claude does (F3c).
     ("claude-web", "Claude.ai with its own connectors (asks first, not enforced)", "web", "tested", "oauth",
-     "Run the Hexley tool hexley_setup. For its tools argument, list the name of every connector tool you currently have in this chat, "
-     "except Hexley's own, written as Connector:tool_name. Then show me the preferences text it returns, the status of each tool, and "
-     "its enforcement note, exactly as returned.",
+     "Run the Hexley tool hexley_setup, listing every connector tool you have in this chat, except Hexley's own, as Connector:tool_name. "
+     "Then send me its reply field exactly as written.",
      "/img/real-claude-blocked-by-sentinel.png",
      {"url": "/proof/claude-ai-connectors-20261031.txt",
       "caption": "Claude.ai on 31 Oct 2026, one account, one run per test: a send to an outsider asked first, was refused and did not go; an honest send asked first and went. Advisory: nothing forces the model to ask. The image is an older run, from before the rename, of a send refused for restricted data."}),

@@ -298,6 +298,8 @@ class Run:
     status: str = "awaiting_confirmation"  # awaiting_confirmation | running | finished | cancelled
     created: str = ""
     disclosure: str = ""
+    visitor: bool = False  # started by someone with no token (D-062): only other visitors' calls can touch it, and the officer can end it
+    confirmed_at: float = 0.0
 
 
 def build_steps(events: list[EventEnvelope]) -> list[dict]:
@@ -347,6 +349,10 @@ def list_recordings(directory: Path) -> list[dict]:
                         "lanes": [{"column": l["column"], "outcome": l["outcome"]["lane_outcome"],
                                    "oracle_leak": l["outcome"]["oracle_leak"]} for l in r["lanes"]]})
     return out
+
+
+VISITOR_RUN_SECONDS = 120
+MAX_VISITOR_RUNS = 50
 
 
 class RunManager:
@@ -422,6 +428,7 @@ class RunManager:
         if self.active is not None:
             raise RunError(409, "another run is active; wait for it to finish or cancel it")
         self.active = run.run_id
+        run.confirmed_at = time.monotonic()
         try:
             for lane in run.lanes:
                 try:
@@ -444,6 +451,18 @@ class RunManager:
             lane.task_handle = asyncio.create_task(self._run_lane(run, lane))
         asyncio.create_task(self._watch(run))
         return run
+
+    async def make_room(self, officer: bool) -> None:
+        """Only one run goes at a time, and a visitor must never hold up the officer's demo. The officer ends a visitor's run at once;
+        another visitor can end one that has been left waiting, for example on an approval nobody answers."""
+        run = self.runs.get(self.active or "")
+        if run is not None and run.visitor and (officer or time.monotonic() - run.confirmed_at > VISITOR_RUN_SECONDS):
+            await self.cancel(run.run_id)
+
+    def forget_old_visitor_runs(self) -> None:
+        visitors = [r for r in self.runs.values() if r.visitor and r.run_id != self.active]
+        for run in visitors[:max(0, len(visitors) - MAX_VISITOR_RUNS)]:
+            self.runs.pop(run.run_id)
 
     async def cancel(self, run_id: str) -> Run:
         run = self._get(run_id)
