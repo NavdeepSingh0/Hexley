@@ -70,6 +70,8 @@
 
 **Did anything get through?** In the live runs, a copy of text into the internal `/out` folder was allowed, by design (the officer named it internal), and it held no restricted data. An injected instruction can still make an agent write harmless text into an internal place; that is a stated limit.
 
+**How do you cover Claude.ai and ChatGPT, where there is no hook?** Honestly, weaker. In Claude Code the hook is enforced: Claude cannot skip it. On Claude.ai a connector runs on the vendor's servers and nothing asks us, so the person pastes a text into their preferences that tells Claude to ask Hexley first. That is advisory: nothing forces it, and the model is what an attacker steers. We measured it on Claude Code, not on Claude.ai, n=5 per condition on two models: with the text it asked first in 5 of 5 on each, also when a mail said to skip the check; without the text 0 of 5; when Hexley said no, the send did not run in 10 of 10 (about 72 to 100%). **We do not claim this stopped an attack:** both models ignored that injection with no Hexley at all. *Proof: `eval/compliance/`, `docs/PHASE_LOG.md` row F3b, D-057.*
+
 **Does it make agents dumber or slower?** It limits actions, not thinking: 0 of 28 valid actions were blocked in our clean tasks (interval 0 to 12%). Some valid sends wait for the officer after untrusted content (3 of 12 in our corpus); we report that cost.
 
 ## 6. Limits and risks (say these yourselves)
