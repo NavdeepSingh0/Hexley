@@ -152,6 +152,8 @@ class SentinelOAuthProvider(OAuthProvider):
             "officer_code": req.officer_code, "expires_in": self.request_ttl}))
         if self.on_request:
             self.on_request(req)
+        if self.google is not None:
+            return f"{self.consent_base}/oauth/google/start?{urlencode({'request': req.request_id})}"  # no page before the login
         return f"{self.consent_base}/oauth/consent?request={req.request_id}"
 
     def _get_pending(self, request_id: str) -> PendingRequest:
@@ -303,14 +305,21 @@ h1{{font-size:34px;letter-spacing:-.01em;margin:8px 0 20px}}.slip{{border:2px so
 dl{{display:grid;grid-template-columns:170px 1fr;gap:6px 14px;margin:12px 0 0}}dt{{color:#a3a29d}}dd{{margin:0;font-weight:600}}
 input{{font:inherit;font-size:20px;width:100%;max-width:26em;box-sizing:border-box;padding:10px 12px;background:#262625;color:#f2f1ed;border:1px solid #3b3b39}}
 button{{font:inherit;font-weight:600;padding:10px 22px;margin-right:10px;border:2px solid #f2f1ed;background:#f2f1ed;color:#1f1f1e;cursor:pointer}}
-button.ghost{{background:none;color:#f2f1ed}}a.google{{display:inline-block;font-weight:600;padding:12px 24px;background:#f2f1ed;color:#1f1f1e;text-decoration:none}}.err{{color:#ff7f73;font-weight:600;margin:0 0 16px}}.muted{{color:#a3a29d;font-size:15px}}
-</style></head><body><main><p class="label">Hexley · officer approval</p>{body}</main></body></html>"""
+button.ghost{{background:none;color:#f2f1ed}}a.google{{display:inline-block;font-weight:600;padding:12px 24px;background:#f2f1ed;color:#1f1f1e;text-decoration:none}}.err{{color:#ff7f73;font-weight:600;margin:0 0 16px}}details{{margin-top:12px}}summary{{cursor:pointer;color:#a3a29d;font-size:15px}}.muted{{color:#a3a29d;font-size:15px}}
+</style></head><body><main><p class="label">Hexley</p>{body}</main></body></html>"""
 
 
 def _page(body: str, status: int = 200) -> HTMLResponse:
     return HTMLResponse(_PAGE.format(body=body), status_code=status, headers={
         "Cache-Control": "no-store", "X-Frame-Options": "DENY", "Referrer-Policy": "no-referrer",
         "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; frame-ancestors 'none'"})
+
+
+def _lasts(seconds: int) -> str:
+    if seconds >= 86400:
+        days = seconds // 86400
+        return f"{days} day" + ("s" if days != 1 else "")
+    return f"{seconds // 60} minutes"
 
 
 def _proof_field(officer: bool, google: GoogleLogin | None = None, email: str | None = None) -> str:
@@ -342,12 +351,14 @@ def _consent_body(view: dict, error: str = "", officer: bool = False, google: Go
                   f'<button name="decision" value="approve">{allow}</button><button class="ghost" name="decision" value="deny">Deny</button></form>')
     slip = view["slip"]
     tools = ", ".join(slip["allowed_tools"])
-    return (f"<h1>{e(view['client_name'])} wants to connect to Hexley</h1>"
+    connectors = sorted({t.split(".", 1)[0].capitalize() for t in slip["allowed_tools"] if "." in t})
+    title = f"{e(view['client_name'])} wants to use {e(', '.join(connectors))} through Hexley" if connectors else f"{e(view['client_name'])} wants to connect to Hexley"
+    return (f"<h1>{title}</h1>"
             + (f'<p class="err">{e(error)}</p>' if error else "")
-            + f"""<div class="slip"><span class="label">The permission slip you are approving</span>
-<p><b>{e(slip['objective'])}</b></p><dl><dt>Allowed actions</dt><dd>{e(tools)}</dd>
-<dt>May write to</dt><dd>{e(', '.join(slip['allowed_destinations']) or 'nobody')}</dd>
-<dt>Message limit</dt><dd>{slip['max_messages']}</dd><dt>Lasts</dt><dd>{slip['ttl_seconds'] // 60} minutes</dd></dl></div>
+            + f"""<div class="slip"><span class="label">What it may do</span>
+<p><b>{e(slip['objective'])}</b></p><dl><dt>May send to</dt><dd>{e(', '.join(slip['allowed_destinations']) or 'nobody')}</dd>
+<dt>Message limit</dt><dd>{slip['max_messages']}</dd><dt>Lasts</dt><dd>{_lasts(slip['ttl_seconds'])}</dd></dl>
+<details><summary>Every action it may take</summary><p class="muted">{e(tools)}</p></details></div>
 {action}
 <p class="muted">Only approve if you started this connection. The AI can do what the slip lists and nothing else.</p>
 {_sign_out(officer)}""")
@@ -392,8 +403,11 @@ def register_consent_routes(server, provider: SentinelOAuthProvider) -> None:
         if provider.google is None:
             return _page('<h1>Not available</h1><p class="err">Google sign-in is not configured here.</p>', 404)
         try:
-            provider.view(request.query_params.get("request", ""))  # a live request only: this page cannot be used to fish for logins
-            target, state = provider.google.start(request.query_params["request"])
+            request_id = request.query_params.get("request", "")
+            provider.view(request_id)  # a live request only: this page cannot be used to fish for logins
+            if provider.is_officer(request.cookies.get(LOGIN_COOKIE)):  # already logged in on this browser: straight to Allow
+                return RedirectResponse(f"/oauth/consent?{urlencode({'request': request_id})}", status_code=303, headers={"Cache-Control": "no-store"})
+            target, state = provider.google.start(request_id)
         except (OAuthError, GoogleLoginError) as e:
             return _page(f'<h1>Sign-in not available</h1><p class="err">{html.escape(getattr(e, "detail", str(e)))}</p>', 410)
         response = RedirectResponse(target, status_code=303, headers={"Cache-Control": "no-store", "Referrer-Policy": "no-referrer"})

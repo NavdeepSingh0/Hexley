@@ -246,7 +246,8 @@ async def _up(args: argparse.Namespace) -> None:
         for name, why in connectors.skipped.items():
             print(f"  not started: {name} ({why})", flush=True)
     if public_url:
-        print(f"Connector URL for an AI client: {public_url.rstrip('/')}/mcp   (Sign in, then enter the officer code printed here)")
+        how = "Continue with Google, then Allow" if rt.oauth.google is not None else "Sign in, then enter the officer code printed here"
+        print(f"Connector URL for an AI client: {public_url.rstrip('/')}/mcp   ({how})")
     if not args.no_browser:
         # Open it ourselves so this terminal, which shows the token, never has to be on the projector.
         asyncio.get_running_loop().call_later(1.5, webbrowser.open, site_url if site_built else console_url)
@@ -292,7 +293,8 @@ def main(argv: list[str] | None = None) -> None:
                          "$SENTINEL_OAUTH_DESTINATIONS, comma separated)")
     up.add_argument("--oauth-internal", action="append", default=_env_list("SENTINEL_OAUTH_INTERNAL"), metavar="ENTRY",
                     help="those destinations that are inside the organisation (repeatable; also $SENTINEL_OAUTH_INTERNAL)")
-    up.add_argument("--oauth-ttl", type=int, default=3600, help="seconds an OAuth-approved slip lasts")
+    up.add_argument("--oauth-ttl", type=int, default=int(os.environ.get("SENTINEL_OAUTH_TTL") or 3600),
+                    help="seconds an OAuth-approved slip lasts (also $SENTINEL_OAUTH_TTL)")
     for p in (up, cn := sub.add_parser("connectors", help="say which connectors are configured and whether they answer")):
         p.add_argument("--upstreams", default=str(DEFAULT_UPSTREAMS), help="connector configuration (names, never values)")
         p.add_argument("--connectors-env", default=str(DEFAULT_ENV_FILE),

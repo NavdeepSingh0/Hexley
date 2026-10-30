@@ -14,13 +14,13 @@ claude_connectors:
                   notion.notion-create-comment, notion.notion-create-pages, notion.notion-update-page]
   resource_classes: [mail_message, mail_draft, email_external, slack_message, slack_channel, slack_draft, notion_page, notion_account]
   allowed_recipient_domains: []
-  max_records: 50
-  max_messages: 5
+  max_records: 500
+  max_messages: 100
   max_records_out: 0
-  ttl_seconds: 3600
+  ttl_seconds: 3600   # a deployment sets its own (SENTINEL_OAUTH_TTL)
   unseen_context: true
   strict_flows: true
-  freeze_after: 5
+  freeze_after: 10
 
 vendor_maintenance:
   objective: >-

@@ -16,7 +16,7 @@ from sentinel.google_login import GoogleLogin, GoogleLoginError, google_from_env
 from sentinel.oauth import LOGIN_COOKIE
 from sentinel.stack import running_stack
 from sentinel.upstreams import UpstreamSet
-from tests.test_oauth import base, code_from, officer_code, pkce, register, start
+from tests.test_oauth import REDIRECT, base, code_from, officer_code, pkce, register, start
 
 CLIENT = "client-id.apps.googleusercontent.example"
 BOSS = "officer@team.example"
@@ -82,6 +82,30 @@ async def test_connect_sign_in_with_google_allow_then_the_next_connection_is_one
         assert code_from(await c.post(f"{base(stack)}/oauth/consent", data={"request": rid, "decision": "approve"}))
         rid2 = await _request(c, stack)
         assert code_from(await c.post(f"{base(stack)}/oauth/consent", data={"request": rid2, "decision": "approve"}))  # one click
+
+
+async def test_connecting_goes_straight_to_google_and_a_logged_in_browser_straight_to_allow(stack, google):
+    async with httpx.AsyncClient(timeout=30) as c:
+        client = await register(c, stack)
+        r = await c.get(f"{base(stack)}/authorize", params={"response_type": "code", "client_id": client, "redirect_uri": REDIRECT,
+                                                            "code_challenge": pkce()[1], "code_challenge_method": "S256", "state": "s"})
+        assert "/oauth/google/start" in r.headers["location"]  # no Hexley page before the login
+        first = await c.get(r.headers["location"])
+        assert first.headers["location"].startswith("https://accounts.google.com/")
+    async with httpx.AsyncClient(timeout=30, cookies={LOGIN_COOKIE: stack.rt.oauth.google.login_value(BOSS)}) as c:
+        rid = await _request(c, stack)
+        r = await c.get(f"{base(stack)}/oauth/google/start", params={"request": rid})
+        assert r.status_code == 303 and r.headers["location"].startswith("/oauth/consent") and "accounts.google.com" not in r.headers["location"]
+
+
+async def test_the_allow_page_says_what_it_gives_in_plain_words_and_folds_the_list(stack, google):
+    stack.rt.oauth.preset = "claude_connectors"
+    try:
+        async with httpx.AsyncClient(timeout=30, cookies={LOGIN_COOKIE: stack.rt.oauth.google.login_value(BOSS)}) as c:
+            page = (await c.get(f"{base(stack)}/oauth/consent", params={"request": await _request(c, stack)})).text
+    finally:
+        stack.rt.oauth.preset = "quotation_processing"
+    assert "wants to use Gmail, Notion, Slack through Hexley" in page and "<details>" in page and ">Allow<" in page and "officer approval" not in page
 
 
 async def test_google_is_sent_the_code_the_secret_and_the_proof_of_the_browser(stack, google):

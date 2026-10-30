@@ -54,7 +54,7 @@ async def start(c: httpx.AsyncClient, stack, client_id: str, challenge: str, sta
         "code_challenge_method": "S256", "state": state})
     assert r.status_code in (302, 307), r.text
     loc = r.headers["location"]
-    assert "/oauth/consent" in loc
+    assert "/oauth/consent" in loc or "/oauth/google/start" in loc
     return parse_qs(urlparse(loc).query)["request"][0]
 
 
@@ -203,7 +203,7 @@ async def test_the_consent_page_is_served_as_utf8_and_reads_correctly(ostack):
         rid = await start(c, ostack, await register(c, ostack), pkce()[1])
         r = await c.get(f"{base(ostack)}/oauth/consent", params={"request": rid})
         assert "utf-8" in r.headers["content-type"].lower()
-        assert "Hexley · officer approval" in r.text and "Â" not in r.text
+        assert '<p class="label">Hexley</p>' in r.text and "Â" not in r.text and "charset=utf-8" in r.headers["content-type"]
 
 
 async def test_the_consent_page_escapes_what_a_client_calls_itself(ostack):
