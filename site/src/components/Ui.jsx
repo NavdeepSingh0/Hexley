@@ -91,13 +91,13 @@ export function TranscriptProof({ url, caption }) {
       if (!r.ok) throw new Error(String(r.status))
       setText(await r.text())
     } catch {
-      setError('The captured session could not be loaded.')
+      setError('The record could not be loaded.')
     }
   }
   return (
     <figure className="client-fig client-transcript">
       <details onToggle={load}>
-        <summary>Read the captured session</summary>
+        <summary>Read the record</summary>
         {text !== null && <pre className="transcript" tabIndex={0}>{text}</pre>}
         {error && <p className="conn-error" role="alert">{error}</p>}
       </details>

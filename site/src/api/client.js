@@ -43,7 +43,7 @@ export async function api(path, { method = 'GET', body } = {}) {
       body: body ? JSON.stringify(body) : undefined,
     })
   } catch {
-    throw new ApiError(0, 'Cannot reach Hexley. Is `python -m sentinel up --demo` running?')
+    throw new ApiError(0, 'Cannot reach Hexley. Check your connection and try again.')
   }
   if (!r.ok) {
     let detail = r.statusText
@@ -51,7 +51,7 @@ export async function api(path, { method = 'GET', body } = {}) {
       const j = await r.json()
       detail = typeof j.detail === 'string' ? j.detail : JSON.stringify(j.detail)
     } catch { /* keep statusText */ }
-    if (r.status === 401) detail = 'The access token is missing or wrong. Re-open the link printed by `python -m sentinel up`.'
+    if (r.status === 401) detail = "The access token is missing or wrong. Re-open the officer's link."
     throw new ApiError(r.status, detail)
   }
   return r.json()
@@ -81,7 +81,7 @@ export async function uploadChatDocument(id, file) {
       body: (() => { const f = new FormData(); f.append('file', file); return f })(),
     })
   } catch {
-    throw new ApiError(0, 'Cannot reach Hexley. Is `python -m sentinel up --demo` running?')
+    throw new ApiError(0, 'Cannot reach Hexley. Check your connection and try again.')
   }
   if (!r.ok) {
     let detail = r.statusText

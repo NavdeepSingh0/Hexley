@@ -74,7 +74,7 @@ function TokenPanel({ client, mcpUrl }) {
   }
   const t = state.token
   const left = t ? countdown(t.expires_at, now) : ''
-  const snippet = fillSnippet(client.snippet, { mcp_url: mcpUrl, header_value: t?.header_value })
+  const snippet = fillSnippet(client.snippet, { mcp_url: mcpUrl, header_value: t?.header_value, api_url: window.location.origin })
 
   return (
     <>
@@ -85,7 +85,7 @@ function TokenPanel({ client, mcpUrl }) {
             {state.status === 'working' ? 'Creating...' : 'Create an access token'}
           </button>
           {!hasToken() && state.status === 'idle' && (
-            <p className="muted">Creating a token is an officer action. Open this page from the link that <code>python -m sentinel up</code> prints; that link carries the officer token.</p>
+            <p className="muted">Creating a token is an officer action. Open this page from the officer's link, which carries the officer token.</p>
           )}
           {state.status === 'error' && <p className="conn-error" role="alert">{state.error}</p>}
         </div>
@@ -110,7 +110,21 @@ function TokenPanel({ client, mcpUrl }) {
 }
 
 function OAuthPanel({ client, connect }) {
-  if (connect.public_url) return <CopyField label="Connector address" value={connect.mcp_url} />
+  if (connect.public_url) {
+    return (
+      <>
+        <CopyField label="Connector address" value={connect.mcp_url} />
+        {client.snippet && (
+          <>
+            <p>Then ask Claude this, once. You do not need to know your tool names: Claude lists them.</p>
+            <CopyField label="Ask Claude" value={client.snippet} block />
+            <p>Paste the text it returns into your personal preferences in Claude.ai. From then on Claude asks Hexley before each connector tool.</p>
+            <p className="muted">This route is advisory. Nothing forces Claude to ask, and a hidden instruction may tell it not to. For enforcement use a client with a hook.</p>
+          </>
+        )}
+      </>
+    )
+  }
   return (
     <div className="cs-slip">
       <p className="s-label">Not reachable from the internet yet</p>
@@ -120,9 +134,36 @@ function OAuthPanel({ client, connect }) {
   )
 }
 
+// A hook this client runs itself: its settings, and where the rest of the steps are.
+function HookPanel({ client }) {
+  return (
+    <>
+      <p>The connector and its credentials stay in the app. Hexley only judges each call, so nothing is added to Hexley here.</p>
+      <CopyField label="Add this to the app's hooks.json" value={client.snippet} block />
+      <p><Link to="/docs/connect-antigravity">The guide</Link> has the hook program and how the officer creates the slip and its token.</p>
+    </>
+  )
+}
+
 // Step 3. What the reader should see, and where Hexley keeps the decision. Only what the code and the kept evidence show:
 // the app's own conversation, the signed log and the console's Verify. The console does not list an outside app's calls.
 function CheckStep({ client }) {
+  if (client.id === 'claude-web') {
+    return (
+      <>
+        <p>Ask Claude to do something the permission slip does not allow:</p>
+        <CopyField label="A request to try" value="Use Gmail to send a one-line test mail to someone@example.com." block />
+        <ul className="cs-points">
+          <li><Icon name="check" size={18} className="cs-tick" /><span><strong>In the app:</strong> Claude asks Hexley first, Hexley refuses because that address is not on the slip (rule R1), and no mail goes.</span></li>
+          <li><Icon name="check" size={18} className="cs-tick" /><span><strong>In Gmail:</strong> your Sent folder has no such mail.</span></li>
+          <li><Icon name="check" size={18} className="cs-tick" /><span><strong>If Hexley needs the officer:</strong> the request waits in the <a href="/console/">console</a> for a yes or no.</span></li>
+        </ul>
+      </>
+    )
+  }
+  if (client.id === 'antigravity') {
+    return <p>Ask it to comment on a repository the slip does not name. Hexley blocks the call (rule R1), and GitHub shows no comment.</p>
+  }
   return (
     <>
       {client.id === 'claude-code' && (
@@ -177,6 +218,7 @@ export default function Connect() {
                 {method && <ul className="cs-points">{method.steps.map((s) => <li key={s}><Icon name="check" size={18} className="cs-tick" /><span>{s}</span></li>)}</ul>}
                 {chosen.method === 'oauth' && <OAuthPanel client={chosen} connect={data} />}
                 {chosen.method === 'header' && <TokenPanel client={chosen} mcpUrl={data.mcp_url} />}
+                {chosen.method === 'hook' && <HookPanel client={chosen} />}
               </div>
             </Step>
             <Step n={3} id="cs-check" title="Check that it worked">

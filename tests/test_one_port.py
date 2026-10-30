@@ -20,7 +20,7 @@ from sentinel.api import create_api
 from sentinel.cli import ports_in_use, tool_server_env
 from sentinel.gateway import build_gateway
 from sentinel.oauth import SentinelOAuthProvider
-from sentinel.oneport import OnePort
+from sentinel.oneport import SIGN_IN_LIMIT, OnePort, RateLimit, client_address
 from sentinel.runtime import build_runtime
 from sentinel.stack import free_port, serve
 from sentinel.tools.server import build_tools_server
@@ -122,6 +122,46 @@ def test_no_api_route_is_hidden_by_a_gateway_route(hosted):
 def test_paths_are_matched_whole(hosted, path, gateway):
     _, _, app, _ = hosted
     assert app.is_gateway(path) is gateway
+
+
+def test_one_address_is_slowed_and_others_are_not_and_the_limit_forgets_each_minute():
+    now = [0.0]
+    limit = RateLimit(clock=lambda: now[0])
+    assert all(limit.allow("1.2.3.4", "sign-in", 3) for _ in range(3))
+    assert not limit.allow("1.2.3.4", "sign-in", 3)
+    assert limit.allow("5.6.7.8", "sign-in", 3) and limit.allow("1.2.3.4", "gateway", 3)
+    now[0] = 61.0
+    assert limit.allow("1.2.3.4", "sign-in", 3)
+
+
+def test_only_the_proxys_own_entry_names_the_caller_so_a_claimed_address_cannot_dodge_the_limit():
+    proxied = {"client": ("127.0.0.1", 1), "headers": [(b"x-forwarded-for", b"9.9.9.9, 203.0.113.7")]}
+    assert client_address(proxied) == "203.0.113.7"
+    assert client_address({"client": ("203.0.113.9", 1), "headers": [(b"x-forwarded-for", b"9.9.9.9")]}) == "203.0.113.9"
+    assert client_address({"client": ("127.0.0.1", 1), "headers": []}) == "127.0.0.1"
+
+
+def test_a_proxy_reaching_the_container_through_dockers_bridge_still_names_the_real_caller():
+    """Found on the live server: Caddy arrives from the bridge, so believing only loopback made every visitor one address."""
+    for a, b in (("198.51.100.1", "198.51.100.2"),):
+        first = {"client": ("172.17.0.1", 1), "headers": [(b"x-forwarded-for", a.encode())]}
+        second = {"client": ("172.17.0.1", 1), "headers": [(b"x-forwarded-for", b.encode())]}
+        assert client_address(first) == a and client_address(second) == b
+    assert client_address({"client": ("not-an-address", 1), "headers": [(b"x-forwarded-for", b"9.9.9.9")]}) == "not-an-address"
+
+
+async def test_too_many_sign_ins_from_one_address_get_429_and_the_website_is_unaffected(hosted):
+    _, base, app, _ = hosted
+    saved, app.limit = app.limit, RateLimit()
+    try:
+        async with httpx.AsyncClient(base_url=base, timeout=30, headers={"X-Forwarded-For": "203.0.113.50"}) as c:
+            codes = [(await c.get("/register")).status_code for _ in range(SIGN_IN_LIMIT + 1)]
+            assert codes[-1] == 429 and 429 not in codes[:-1]
+            assert (await c.get("/health")).status_code == 200
+        async with httpx.AsyncClient(base_url=base, timeout=30, headers={"X-Forwarded-For": "203.0.113.51"}) as other:
+            assert (await other.get("/register")).status_code != 429
+    finally:
+        app.limit = saved
 
 
 def test_the_built_in_tool_server_does_not_inherit_a_connectors_credential():

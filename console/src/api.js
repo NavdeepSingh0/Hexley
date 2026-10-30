@@ -41,7 +41,7 @@ export async function api(path, { method = 'GET', body } = {}) {
       const j = await r.json()
       detail = typeof j.detail === 'string' ? j.detail : JSON.stringify(j.detail)
     } catch { /* keep statusText */ }
-    if (r.status === 401) detail = 'The access token is missing or wrong. Re-open the link printed by `python -m sentinel up`.'
+    if (r.status === 401) detail = "The access token is missing or wrong. Re-open the officer's link."
     throw new ApiError(r.status, detail)
   }
   return r.json()

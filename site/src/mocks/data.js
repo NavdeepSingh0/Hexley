@@ -14,7 +14,7 @@ export const CONNECT = {
   methods: [
     {
       id: 'oauth', status: 'tested',
-      steps: ['Open Customize → Connectors → Add custom connector', 'Paste the URL', 'Choose “Sign in now”', 'Approve the permission slip with the officer code'],
+      steps: ['Open Customize → Connectors → Add custom connector', 'Paste the URL', 'Choose “Sign in now”', 'Continue with Google, then Allow'],
     },
     {
       id: 'header', status: 'should_work',

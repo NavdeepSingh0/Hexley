@@ -381,7 +381,9 @@ export function laneCountLine(lane) {
   const n = `${c.calls} ${c.calls === 1 ? 'action' : 'actions'}`
   if (lane.column === 'r1_only' && c.allowed === c.calls) return `${n} · every one was allowed`
   const parts = [n]
-  if (c.denied) parts.push(`${c.denied} denied`)
+  // The attempt that froze the agent was refused too, so this agrees with "frozen after 3 denied attempts" on the same card.
+  const refused = c.denied + c.quarantined
+  if (refused) parts.push(`${refused} denied`)
   if (c.quarantined) parts.push('agent quarantined')
   return parts.join(' · ')
 }

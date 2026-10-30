@@ -153,7 +153,7 @@ export default function Chat() {
   const working = status === 'thinking' || status === 'model_busy'
   const lastIndex = messageCount - 1
   const title = view ? chatTitle(preset, view) : 'New chat'
-  const unreachable = presets.status === 'error' ? (hasToken() ? presets.error : 'Chat is an officer action. Open this page from the link that `python -m sentinel up` prints; it carries the officer token.') : ''
+  const unreachable = presets.status === 'error' ? (hasToken() ? presets.error : "Chat is an officer action. Open this page from the officer's link, which carries the officer token.") : ''
 
   return (
     <div className="cx-app">

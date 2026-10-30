@@ -95,8 +95,8 @@ function Pillars() {
         <IconBlock icon="shield" title="Every number has its limits" link={{ to: '/docs/limits', label: 'What this does not prove' }}>
           <p>Each result shows its sample size and a line saying what it is not. The cases were written by us, so a zero means "does what we say", not "no other route exists".</p>
         </IconBlock>
-        <IconBlock icon="laptop" title="Runs on your machine" link={{ to: '/docs', label: 'Run it' }}>
-          <p>One command starts the gateway, the console and this website. Everything shown is synthetic and the tools are mocks.</p>
+        <IconBlock icon="laptop" title="Hosted, or on your machine" link={{ to: '/docs/run-it', label: 'Run your own' }}>
+          <p>Connect to this site, or start your own copy with one command. The demo scenarios are synthetic. The connector tests used real connectors on test accounts.</p>
         </IconBlock>
       </div>
     </section>

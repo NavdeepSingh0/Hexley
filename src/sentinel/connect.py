@@ -15,18 +15,31 @@ from .runtime import Runtime
 # `screenshot` is an image of a real session; `transcript` is {"url", "caption"} for a captured text record. Only a tested
 # client may carry either (docs/PHASE_LOG.md, F8).
 CLIENTS = [
-    ("claude-web", "Claude.ai (web)", "web", "tested", "oauth", None, "/img/real-claude-blocked-by-sentinel.png", None),
+    # The snippet is what the person asks Claude once connected: the person need not know the tool names, and Claude does (F3c).
+    ("claude-web", "Claude.ai with its own connectors (asks first, not enforced)", "web", "tested", "oauth",
+     "Run the Hexley tool hexley_setup. For its tools argument, list the name of every connector tool you currently have in this chat, "
+     "except Hexley's own, written as Connector:tool_name. Then show me the preferences text it returns, the status of each tool, and "
+     "its enforcement note, exactly as returned.",
+     "/img/real-claude-blocked-by-sentinel.png",
+     {"url": "/proof/claude-ai-connectors-20261031.txt",
+      "caption": "Claude.ai on 31 Oct 2026, one account, one run per test: a send to an outsider asked first, was refused and did not go; an honest send asked first and went. Advisory: nothing forces the model to ask. The image is an older run, from before the rename, of a send refused for restricted data."}),
     ("claude-code", "Claude Code", "cli", "tested", "header",
      'claude mcp add --transport http sentinel {mcp_url} --header "Authorization: {header_value}"', None,
      {"url": "/proof/claude-code-header-20261029.txt",
       "caption": "A real Claude Code session, 29 Oct 2026, header token: the read and stock checks were allowed, the e-mail with restricted stock figures was denied (R2), nothing was delivered. One session, not a measurement."}),
     # The enforcing route (plan F1): Claude Code's own hook sends every tool call to Sentinel, whichever server it belongs to.
     ("claude-code-hook", "Claude Code with the Hexley hook (other connectors included)", "cli", "tested", "header",
-     'python -m sentinel hook-config --api-url http://127.0.0.1:8000 --skip sentinel > .claude/settings.local.json\n'
+     'python -m sentinel hook-config --api-url {api_url} --skip sentinel > .claude/settings.local.json\n'
      '# then set SENTINEL_TOKEN to the token created above, without the word Bearer',
      None,
-     {"url": "/proof/claude-code-hook-20261030.txt",
-      "caption": "A real Claude Code session, 30 Oct 2026, through Claude Code's own hook and a connector Hexley does not host: an over-share to a non-internal address was denied (R2) and never ran, the same request without the hook was delivered. One session per condition, not a measurement."}),
+     {"url": "/proof/claude-code-connectors-20261031.txt",
+      "caption": "Claude Code with Claude's real Gmail, Slack and Notion connectors on test accounts, 31 Oct 2026: honest actions went through and sends off the slip were blocked before reaching the connector. The AI was told to carry out the planted steps, as a stand-in for a fooled model. One run per condition, not a measurement."}),
+    # The token is for a slip naming the GitHub tools and repositories, which the officer creates through the API (docs: Connect Antigravity).
+    ("antigravity", "Antigravity with GitHub, through its own hook", "ide", "tested", "hook",
+     '{ "hexley": { "PreToolUse": [ { "matcher": "*", "hooks": [ { "command": "python /path/to/antigravity_hook.py", "timeout": 30 } ] } ] } }',
+     None,
+     {"url": "/proof/antigravity-github-20261031.txt",
+      "caption": "Real Antigravity and GitHub's own MCP server on test repositories, 31 Oct 2026: an honest comment went through; a poisoned issue's comment on the private repository was blocked, twice. The AI was told to carry the steps out, as a stand-in for a fooled model. Its terminal is not judged."}),
     ("vscode", "VS Code (MCP)", "ide", "should_work", "header",
      '{ "servers": { "sentinel": { "type": "http", "url": "{mcp_url}", "headers": { "Authorization": "{header_value}" } } } }',
      None, None),

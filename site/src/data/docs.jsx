@@ -15,7 +15,7 @@ npm --prefix site ci
 npm --prefix site run build
 python -m uv run python -m sentinel up --demo`
 
-const CLASSIFY = `curl -X POST http://127.0.0.1:8000/api/v1/tools/update_vendor_bank/classify \\
+const CLASSIFY = `curl -X POST https://hexley.site/api/v1/tools/update_vendor_bank/classify \\
   -H "Authorization: Bearer <officer token>" -H "Content-Type: application/json" \\
   -d '{"capability": "write", "outbound": false, "consequential": true,
        "output_integrity": "trusted", "output_confidentiality": "restricted",
@@ -51,7 +51,7 @@ const AUDIENCE = 'Everything on this page is written from the repository: the fi
 export const GROUPS = [
   { label: 'Get started', pages: [['overview', 'Overview'], ['run-it', 'Run it']] },
   { label: 'Concepts', pages: [['concepts', 'Concepts'], ['rules', 'The rules']] },
-  { label: 'Guides', pages: [['connect-claude-ai', 'Connect Claude.ai'], ['connect-claude-code', 'Connect Claude Code'], ['connect-claude-code-hook', 'Check every tool in Claude Code'], ['own-tools', 'Your own tools']] },
+  { label: 'Guides', pages: [['connect-claude-ai', 'Connect Claude.ai'], ['connect-claude-code', 'Connect Claude Code'], ['connect-claude-code-hook', 'Check every tool in Claude Code'], ['connect-antigravity', 'GitHub through Antigravity'], ['own-tools', 'Your own tools']] },
   { label: 'Reference', pages: [['api', 'API in brief']] },
   { label: 'Honesty', pages: [['limits', 'Limits and honest scope'], ['faq', 'Questions judges ask']] },
 ]
@@ -105,7 +105,7 @@ export const PAGES = {
 
   'run-it': {
     title: 'Run it',
-    lede: 'Hexley runs on your computer. The demo uses synthetic data and needs no model key in its scripted and replay modes.',
+    lede: 'Hexley is hosted at hexley.site, so you need none of this to connect an AI app. This page is for running your own copy. The demo uses synthetic data and needs no model key in its scripted and replay modes.',
     source: 'README.md (Setup), src/sentinel/cli.py, .env.example.',
     body: () => (
       <>
@@ -147,6 +147,7 @@ export const PAGES = {
       <>
         <h2 id="gateway">The gateway</h2>
         <p>Hexley is an MCP gateway: the AI agent talks to Hexley, and Hexley talks to the real tools. Every call is checked first. <strong>No language model makes any security decision</strong>; the checks are ordinary code running outside the model.</p>
+        <p>For connectors an app already has, such as Claude's Gmail, Hexley does not host anything and holds no credential. It only judges whether the tool may run: enforced through a hook where the app has one, and advisory where it does not.</p>
         <h2 id="slip">The permission slip</h2>
         <p>Before the agent reads anything untrusted, the officer confirms a slip: the task, the tools it may use, where data may go, which places count as internal, and how many messages it may send. The agent cannot create or widen it. The session token is bound to the confirmed slip, so a changed slip is a different token.</p>
         <h2 id="decisions">Four decisions</h2>
@@ -192,29 +193,29 @@ export const PAGES = {
 
   'connect-claude-ai': {
     title: 'Connect Claude.ai',
-    lede: 'Add Hexley as a custom connector and sign in. The officer approves the permission slip with a code shown in the terminal.',
-    source: 'docs/contracts/API.md (Connect), docs/DECISIONS.md D-036, D-044, docs/PHASE_LOG.md rows B1 and F8.',
+    lede: 'Add Hexley as a custom connector, sign in with Google, and ask Claude to set it up. Your connectors stay yours: Hexley holds none of their credentials.',
+    source: 'src/sentinel/cooperative.py, docs/DECISIONS.md D-057 and D-060, docs/PHASE_LOG.md row F3c.',
     body: () => (
       <>
-        <h2 id="before">Before you start</h2>
-        <p>Claude.ai is on the internet, so it needs a public address for the gateway. Start Hexley with a tunnel:</p>
-        <CopyField label="Run this" value="python -m sentinel up --tunnel" block />
-        <p>It prints a connector address. The address changes every time you start, so a connector added earlier points at a dead address and must be added again.</p>
         <h2 id="add">Add the connector</h2>
         <Steps items={[
           'In Claude.ai open Customize, then Connectors, then Add custom connector.',
-          'Paste the connector address that Hexley printed (it ends in /mcp).',
-          'Choose Sign in now. Claude registers itself automatically.',
-          'Hexley shows a consent page and prints a six-digit officer code in its terminal. Check the permission slip on the page, type the code and approve.',
+          'Paste https://hexley.site/mcp and connect.',
+          'Choose any Google account, then press Allow on the one short page that follows. It lists what the AI may do. The slip lasts 7 days.',
         ]} />
+        <h2 id="setup">Set it up once</h2>
+        <p>You do not need to know your tool names. Claude knows them, so ask it to list them. The exact request is on the <Link to="/connect?client=claude-web">Connect page</Link>, with a copy button. Hexley returns a short text. Paste it into your personal preferences in Claude.ai, and from then on Claude asks Hexley before each connector tool and runs the tool only on a yes.</p>
+        <p>Hexley also returns what the slip does with each tool: checked, or refused until an officer classifies it. A tool nobody has classified is refused.</p>
         <h2 id="see">What you will see</h2>
-        <p>Claude can now use the slip's tools and nothing else. Ask it to process the quotation and to include the stock figures in the e-mail: the send is denied by R2, Claude tells you so, and nothing is delivered. The same denial appears in the console and in the signed log.</p>
-        <h2 id="other-tools">Other connectors in the same chat</h2>
-        <Note tone="limit">Hexley decides only what goes through Hexley. If the same Claude conversation also has another connector switched on (Gmail, Drive, a browser), Claude can use that one instead, and Hexley never sees the call. For a test that shows what Hexley does, switch the other connectors off, and let Claude read the document through Hexley (put it in the uploads folder with the chat page's + button) rather than attaching it to the conversation: a file attached to Claude never passes through Hexley, so it is not marked untrusted and nothing reads or sends it through the gateway.</Note>
-        <p>To sign in with a slip for your own documents instead of the quotation one, start Hexley with <code>python -m sentinel up --tunnel --oauth-preset own_document</code>. That slip allows the document tools, the customer database, e-mail inside the company domain, and files under /out, with the Rule of Two on.</p>
+        <p>Claude tells you in one line what Hexley decided for each tool. Ask it to mail an address that is not on the slip: Hexley refuses (R1) and no mail goes. A call that needs a person waits in the <a href="/console/">console</a>, where the officer sees the exact request and approves or denies it.</p>
+        <h2 id="advisory">This route is advisory</h2>
+        <Note tone="limit">Claude's connectors run on Anthropic's servers and nothing asks Hexley on the way, so on Claude.ai the text is a request to the model. Nothing forces it to ask, and a hidden instruction may tell it not to, in which case Hexley never sees the call. For enforcement use a client with a hook, such as <Link to="/docs/connect-claude-code-hook">Claude Code</Link>. To go back to normal Claude.ai, remove the text from your preferences.</Note>
+        <p>In Claude Code, with the same text and no hook, two models asked first in 5 of 5 runs each, also when a mail told them to skip Hexley, and in 0 of 5 without the text. They obeyed a refusal in 10 of 10 runs. That is n=5 per condition on Claude Code with one fixed injection, not a measurement of Claude.ai, and both models ignored the injection with no Hexley at all, so it does not show Hexley stopping an attack.</p>
+        <h2 id="shared">One slip for everyone, for now</h2>
+        <p>Any Google account can sign in, and everyone who does gets the same slip and the same approved destinations. A restart of the hosted server signs everyone out, so reconnect with one click.</p>
         <h2 id="evidence">Evidence</h2>
         <ClientEvidence id="claude-web" />
-        <Note tone="limit">This was run once, on a free account. It is a demonstration that the route works, not a measurement.</Note>
+        <Note tone="limit">One account, one run per test. It is a demonstration that the route works, not a measurement.</Note>
       </>
     ),
   },
@@ -226,7 +227,7 @@ export const PAGES = {
     body: () => (
       <>
         <h2 id="token">Create a token</h2>
-        <p>Open the <Link to="/connect?client=claude-code">Connect page</Link> from the link that <code>python -m sentinel up</code> prints (it carries the officer token), choose Claude Code and press <strong>Create an access token</strong>. The token carries the quotation slip and stops working after fifteen minutes or so; treat it like a password.</p>
+        <p>Open the <Link to="/connect?client=claude-code">Connect page</Link> from the officer's link (it carries the officer token), choose Claude Code and press <strong>Create an access token</strong>. The token carries the quotation slip and stops working after fifteen minutes or so; treat it like a password.</p>
         <h2 id="add">Add the server</h2>
         <p>The page shows the exact command with the real address and token filled in. It looks like this:</p>
         <CopyField label="Command" value={'claude mcp add --transport http sentinel <connector address> --header "Authorization: Bearer <token>"'} block />
@@ -235,6 +236,34 @@ export const PAGES = {
         <h2 id="evidence">Evidence</h2>
         <ClientEvidence id="claude-code" />
         <Note tone="limit">One session on one machine, against a local gateway, with one model. It shows that a real client can connect with the token and be decided by the gateway; it is not a measurement.</Note>
+      </>
+    ),
+  },
+
+  'connect-antigravity': {
+    title: 'GitHub through Antigravity',
+    lede: 'GitHub\'s own MCP server stays in Antigravity with its own token. Antigravity\'s hook asks Hexley before each MCP call.',
+    source: 'scripts/connectors/antigravity_hook.py, docs/DECISIONS.md D-059, docs/PHASE_LOG.md row G3.',
+    body: () => (
+      <>
+        <h2 id="steps">Set it up</h2>
+        <Steps items={[
+          'Add GitHub\'s MCP server to Antigravity in the usual way. Its token stays in Antigravity; Hexley never sees it.',
+          'Copy scripts/connectors/antigravity_hook.py from the repository into .agents in your project. It needs only Python.',
+          'The officer creates a slip that names the GitHub tools and the repositories (POST /api/v1/slips), with unseen_context on. Save its session token, without the word Bearer, in ~/.hexley/antigravity_token.',
+          'Point Antigravity\'s hooks.json at the program, as shown on the Connect page.',
+        ]} />
+        <h2 id="what">What happens</h2>
+        <p>Antigravity sends every MCP call to the hook. The hook asks Hexley, and denies if anything goes wrong: Hexley unreachable, no token, or a call in a shape it does not recognise. The log it keeps at <code>~/.hexley/antigravity_hook.log</code> holds tool names, never arguments or tokens.</p>
+        <h2 id="limits">What this does not give you</h2>
+        <ul className="dx-list">
+          <li><strong>Antigravity's terminal and built-in tools are not judged,</strong> so <code>git</code> or <code>gh</code> there go around Hexley.</li>
+          <li><strong>Hexley cannot learn from what GitHub returned.</strong> Antigravity's after-tool hook is not documented as carrying results, so the slip treats the session as having read untrusted content from its first call, and a leak from a private repository to a public one is not something this route can see.</li>
+          <li><strong>The way Antigravity sends MCP calls is not documented.</strong> It was read from a real run. If an update changes it, the hook denies.</li>
+        </ul>
+        <h2 id="evidence">Evidence</h2>
+        <ClientEvidence id="antigravity" />
+        <Note tone="limit">One run per condition, two for the attack, on test repositories. Antigravity was told to carry out the planted steps, as a stand-in for a fooled model.</Note>
       </>
     ),
   },
@@ -249,11 +278,11 @@ export const PAGES = {
         <p>Add Hexley to Claude Code as an MCP server and Hexley decides the tools it hosts. Every other tool Claude Code has (a Gmail or GitHub connector, a shell, file edits) never reaches Hexley. Claude Code's hook feature closes that: before each tool call it can send the call to a web address and obey the answer, and after the call it can report the result. The model does not choose whether the hook runs.</p>
         <h2 id="steps">Set it up</h2>
         <Steps items={[
-          'Start Hexley and open the link it prints. Classify each tool of the connector once (Your own tools). A tool nobody classified is refused, so a connector Hexley has never heard of cannot be used by accident.',
+          'Open the officer\'s link. Gmail, Slack and Notion tools are already classified; classify any other connector\'s tools once (Your own tools). A tool nobody classified is refused, so a connector Hexley has never heard of cannot be used by accident.',
           'Create a permission slip that allows those tools, and an access token for it (the Connect page, or the slip builder in the API).',
           'Write the hook block into Claude Code\'s settings, and set the token in an environment variable.',
         ]} />
-        <CopyField label="Print the settings block" value="python -m sentinel hook-config --api-url http://127.0.0.1:8000 --skip sentinel" block />
+        <CopyField label="Print the settings block" value="python -m sentinel hook-config --api-url https://hexley.site --skip sentinel" block />
         <p>The block sends both events (before and after each call) to Hexley over HTTP. The token is read from the environment variable <code>SENTINEL_TOKEN</code> and is never written into the file. <code>--skip sentinel</code> names a server that already goes through Hexley's gateway, so its calls are not decided twice. The block sets <code>onFailure: block</code>: if Hexley is down or too slow, the call does not run (this needs Claude Code 2.1.295 or newer; on older versions a failed hook lets the call run).</p>
         <h2 id="what">What happens</h2>
         <Table head={['Claude Code is about to…', 'Hexley answers']} rows={[
@@ -269,7 +298,7 @@ export const PAGES = {
         <p>Ask the API for a session's coverage (<code>GET /api/v1/sessions/&lt;id&gt;/coverage</code>, officer token). It lists the tools Hexley saw, which route each came by, which it decided on, and which it refused because nobody classified them. Make the hook's matcher match every tool and the list shows what is not mediated.</p>
         <h2 id="evidence">Evidence</h2>
         <ClientEvidence id="claude-code-hook" />
-        <Note tone="limit">One headless session per condition, with Claude Code's default model, a demonstration connector and synthetic data. The model ignored the hidden instruction in the injected page by itself, so that run shows nothing about Hexley stopping an injection. It is not a measurement.</Note>
+        <Note tone="limit">One headless session per condition, on test accounts. In the attack runs Claude was told to carry out the planted steps, as a stand-in for a fooled model, so these show Hexley blocking the call, not a model being fooled. It is not a measurement.</Note>
         <h2 id="limits">What this does not give you</h2>
         <ul className="dx-list">
           <li><strong>The client decides whether to ask.</strong> A hook that a user removes from Claude Code's own settings, or a tool the matcher does not name, is not mediated. Organisations can lock hooks in managed settings, which Hexley does not control. Writes to the settings files through Write, Edit and the common shell forms above are refused (tested), but a program that changes the file in a way the recogniser cannot read is not, so do not treat the hook as tamper-proof.</li>
@@ -351,11 +380,11 @@ export const PAGES = {
         <h2 id="gaps">Known gaps, declared</h2>
         <p>A paraphrase of confidential text is not caught by value matching; digits spaced apart and a spelled-out address are listed as gaps in the evaluation. Text hidden in images needs OCR and is not covered. R7 can hold valid actions on a task that reads untrusted content and then acts often.</p>
         <h2 id="demo-grade">What is demo-grade</h2>
-        <p>One static API token and a one-time officer code are not identity management. OAuth state is in memory with one officer. The audit log shows that a record was altered, deleted or reordered; it does not prove the events were true, and a truncated log is only noticed if the verifier holds the earlier chain head. Chats live in memory.</p>
+        <p>One static officer token is not identity management. Any Google account can sign in, and everyone who does shares one slip; a limit per address slows one noisy address and does nothing against many. Sign-ins and sessions are in memory. The audit log shows that a record was altered, deleted or reordered; it does not prove the events were true, and a truncated log is only noticed if the verifier holds the earlier chain head. On the hosted server the log and its signing key are cleared by every restart or deploy, so a past session's log cannot be checked there. Chats live in memory.</p>
         <h2 id="evidence">What the evidence is</h2>
-        <p>The tools are our own mocks. The test cases were written by us from the documented matcher list and the routes we built, so a zero means "does what we say", not "no other route exists". The real-model runs are one model on one task with a small sample. People who have not read the rules have not yet attacked it; that result will be reported on its own line with the number of people and the date. The numbers, each with its sample size and its "what this is not", are on the <Link to="/#evidence">home page</Link>.</p>
+        <p>In the measured scenarios the tools are our own mocks. The connector tests used real connectors on test accounts, one run per condition, and they show the route works rather than a rate. The test cases were written by us from the documented matcher list and the routes we built, so a zero means "does what we say", not "no other route exists". The real-model runs are one model on one task with a small sample. People who have not read the rules have not yet attacked it; that result will be reported on its own line with the number of people and the date. The numbers, each with its sample size and its "what this is not", are on the <Link to="/#evidence">home page</Link>.</p>
         <h2 id="not-built">What is not built</h2>
-        <p>A separate phone approval page, several upstream tool servers, adapters for agents that do not use MCP, and the browser extension (cut).</p>
+        <p>A separate phone approval page, adapters for agents that do not use MCP, and the browser extension (cut). Hosting several connectors behind the gateway is built and parked as a backup: Hexley judges the connectors an app already has instead of rebuilding them.</p>
       </>
     ),
   },

@@ -28,7 +28,7 @@ export const FAQ = [
   },
   {
     q: 'Is any of the data real?',
-    a: <>No. Every record, mailbox, document and bank detail is synthetic; domains end in <code>.example</code>, and the tools are mocks.</>,
+    a: <>Not in the demo: every record, mailbox, document and bank detail there is synthetic, domains end in <code>.example</code>, and the tools are mocks. The connector tests used real Gmail, Slack, Notion and GitHub on test accounts only.</>,
   },
   {
     q: 'What does the officer see when asked?',

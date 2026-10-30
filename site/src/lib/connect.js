@@ -11,7 +11,7 @@ export const STATUS_MEANING = {
   planned: 'Designed for, not built.',
 }
 export const KIND_LABEL = { web: 'Web app', ide: 'Code editor', cli: 'Command line', local: 'Local model', other: 'Other agents' }
-export const METHOD_LABEL = { oauth: 'Sign in (OAuth)', header: 'Access token (header)', none: 'No way to connect yet' }
+export const METHOD_LABEL = { oauth: 'Sign in with Google', header: 'Access token (header)', hook: 'Its own hook, with a token', none: 'No way to connect yet' }
 
 // Clients grouped by status, in the fixed order Tested, Should work, Planned; empty groups are left out.
 export function groupByStatus(clients) {
@@ -23,7 +23,7 @@ export function groupByStatus(clients) {
 // visible in the text instead of silently producing a broken command.
 export function fillSnippet(snippet, values) {
   if (!snippet) return null
-  return snippet.replace(/\{(mcp_url|header_value)\}/g, (whole, key) => (values[key] ? values[key] : whole))
+  return snippet.replace(/\{(mcp_url|header_value|api_url)\}/g, (whole, key) => (values[key] ? values[key] : whole))
 }
 
 // "14 min 05 s left", or "expired".

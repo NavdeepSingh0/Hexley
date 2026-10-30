@@ -13,7 +13,7 @@ export default function Footer() {
       <div className="footer-inner">
         <div className="footer-brand">
           <p className="footer-word">HEXLEY</p>
-          <p className="footer-line">Built for Zinnovatio 4.0 by team 404 Disruptors. Every record, mailbox and document shown is synthetic.</p>
+          <p className="footer-line">Built for Zinnovatio 4.0 by team 404 Disruptors. The demo's records, mailboxes and documents are synthetic; the connector tests used test accounts.</p>
         </div>
         {COLUMNS.map(([title, links]) => (
           <nav key={title} className="footer-col" aria-label={title}>

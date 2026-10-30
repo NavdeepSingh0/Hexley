@@ -428,8 +428,9 @@ def build_gateway(rt: Runtime) -> FastMCP:
 
     @proxy.tool
     async def hexley_setup(tools: list[str]) -> dict:
-        """Set Hexley up in a client with no hook. Give the names of all the connector tools you have. Returns the text the person
-        pastes into their personal preferences, and what this task's permission slip does with each tool."""
+        """Set Hexley up in a client with no hook. List every connector tool you have in this chat yourself, except Hexley's own, as
+        Connector:tool_name; do not ask the person for the names. Returns the text the person pastes into their personal preferences,
+        and what this task's permission slip does with each tool."""
         from .cooperative import setup_view
 
         return setup_view(rt, _current.get(), tools)
