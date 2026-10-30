@@ -50,9 +50,11 @@ A confidentiality result does not imply the other two.
 Sentinel governs only what passes through the gateway. It does **not** govern:
 
 - **The model's own reply** to the user. The gateway sees tool calls, not what the agent says in chat. In a hosted client such as Claude.ai, that reply goes to the client's provider.
+- **A client that does not ask.** The hook route (`POST /api/v1/hooks/claude-code`, `/api/v1/check/call`, plan F1) lets a client that supports hooks send every tool call to Sentinel before it runs, so another MCP server, a shell and file edits are decided too. It is the client's choice to call: a user can remove the hook, a tool the hook's matcher does not name is not decided, and Sentinel learns what a tool returned only if the client reports the result (tested: without the report, the same leak is allowed). `coverage` lists the tools Sentinel saw and never the ones it did not. The hook settings file is protected from a write by Write, Edit and the common shell forms; a program that changes it in a way the recogniser cannot read is not caught. Claude Code's managed settings can lock hooks; Sentinel does not control them.
+- **A client whose context Sentinel cannot see** (a file attached to a chat app, another connector): a slip can say `unseen_context`, and the session then counts as having read untrusted content from its first call (R7 and R8 apply). It does not make Sentinel see the content.
 - **Other capabilities the agent holds:** another MCP server, a browser, a direct credential, a local shell. For a real deployment the agent must hold no credential for what Sentinel is meant to govern. "Change one URL" is an integration benefit, not a guarantee.
 - **Covert channels:** which calls the agent makes, their timing, retries, send versus no-send. Hardened mode narrows the e-mail channel to a fixed message, and the claim is only that: not that nothing can be inferred.
-- **Several upstream servers:** one tool server per gateway is built.
+- **Several upstream servers behind the gateway:** one tool server per gateway is built. Connectors the client reaches by itself are decided through the hook route instead.
 - **Our tools are mocks.** No result here is evidence about real file, browser or database servers.
 
 ## 7. How each claim is evaluated

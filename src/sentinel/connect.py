@@ -20,6 +20,13 @@ CLIENTS = [
      'claude mcp add --transport http sentinel {mcp_url} --header "Authorization: {header_value}"', None,
      {"url": "/proof/claude-code-header-20261029.txt",
       "caption": "A real Claude Code session, 29 Oct 2026, header token: the read and stock checks were allowed, the e-mail with restricted stock figures was denied (R2), nothing was delivered. One session, not a measurement."}),
+    # The enforcing route (plan F1): Claude Code's own hook sends every tool call to Sentinel, whichever server it belongs to.
+    ("claude-code-hook", "Claude Code with the Sentinel hook (other connectors included)", "cli", "tested", "header",
+     'python -m sentinel hook-config --api-url http://127.0.0.1:8000 --skip sentinel > .claude/settings.local.json\n'
+     '# then set SENTINEL_TOKEN to the token created above, without the word Bearer',
+     None,
+     {"url": "/proof/claude-code-hook-20261030.txt",
+      "caption": "A real Claude Code session, 30 Oct 2026, through Claude Code's own hook and a connector Sentinel does not host: an over-share to a non-internal address was denied (R2) and never ran, the same request without the hook was delivered. One session per condition, not a measurement."}),
     ("vscode", "VS Code (MCP)", "ide", "should_work", "header",
      '{ "servers": { "sentinel": { "type": "http", "url": "{mcp_url}", "headers": { "Authorization": "{header_value}" } } } }',
      None, None),

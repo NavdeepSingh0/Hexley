@@ -53,6 +53,11 @@ def load_templates(path: Path | None = None) -> dict[str, dict]:
     return templates
 
 
+# The name under which a slip with `unseen_context` records that the session has already read untrusted content. It reads
+# as a source in the rule texts ("... untrusted content (from the client's own context, which Sentinel cannot see)").
+UNSEEN_CONTEXT = "the client's own context, which Sentinel cannot see"
+
+
 class SlipError(ValueError):
     """The slip cannot be drafted as asked (mode mismatch, missing or unresolvable work item)."""
 
@@ -99,6 +104,7 @@ def draft_contract(templates: dict[str, dict], template: str, officer: str, now:
         egress_templates=[EgressTemplate(**et) for et in spec.get("egress_templates", [])],
         strict_flows=bool(spec.get("strict_flows", False)),
         freeze_after=int(spec.get("freeze_after", 3)),
+        unseen_context=bool(spec.get("unseen_context", False)),
         issued_at=now,
         expires_at=now + timedelta(seconds=spec["ttl_seconds"]),
         status=SessionStatus.PENDING,
@@ -130,7 +136,8 @@ def _covered(entry: str, allowed_list: list[str]) -> bool:
 
 def draft_custom(registry, *, objective: str, allowed_tools: list[str], allowed_destinations: list[str],
                  internal_destinations: list[str] | None = None, max_messages: int = 1, ttl_seconds: int = 900,
-                 officer: str, now: datetime | None = None, strict_flows: bool = False, freeze_after: int = 3) -> TaskContract:
+                 officer: str, now: datetime | None = None, strict_flows: bool = False, freeze_after: int = 3,
+                 unseen_context: bool = False) -> TaskContract:
     """Build a pending slip for ANY task from what the officer chose (the slip builder). The officer's choices are the
     boundary, so vague or contradictory ones are refused with a plain message instead of being accepted and guessed at."""
     objective = " ".join((objective or "").split())
@@ -173,7 +180,7 @@ def draft_custom(registry, *, objective: str, allowed_tools: list[str], allowed_
         resource_classes=list(dict.fromkeys(e.resource_class for e in entries)),
         allowed_recipient_domains=allowed, internal_destinations=internal,
         max_records=100, max_messages=max_messages, max_records_out=0,
-        strict_flows=strict_flows, freeze_after=freeze_after,
+        strict_flows=strict_flows, freeze_after=freeze_after, unseen_context=unseen_context,
         issued_at=now, expires_at=now + timedelta(seconds=ttl_seconds), status=SessionStatus.PENDING)
     return contract.model_copy(update={"contract_hash": contract.compute_hash()})
 
@@ -256,8 +263,21 @@ class Session:
     # tools whose restricted output this session has read (tool -> short note). With tainted_by, the Rule of Two (R8).
     restricted_reads: dict[str, str] = field(default_factory=dict)
     trusted_addresses: frozenset[str] = frozenset()  # vendor-master addresses (trusted records), set at confirmation
+    # Plan F1. What Sentinel has seen of this session's tools: tool -> {route, calls, mediated}. `route` is `gateway` (the
+    # call went through Sentinel's MCP endpoint) or `hook` (the client's own hook reported it). Only calls that reached
+    # Sentinel are here; a tool that never did cannot be listed.
+    coverage: dict[str, dict] = field(default_factory=dict)
+    # tool_use_id -> (action_id, tool, decision) for calls the hook route allowed, so the result report can find them
+    hook_calls: dict[str, tuple] = field(default_factory=dict, repr=False)
     # Held across "decide + reserve budget + count the block", so concurrent calls cannot both take the last slot.
     lock: asyncio.Lock = field(default_factory=asyncio.Lock, repr=False)
+
+    def note_tool(self, tool: str, route: str, mediated: bool = True) -> None:
+        """Remember that a tool reached Sentinel, by which route (`gateway` or `hook`), and whether Sentinel decided on it."""
+        seen = self.coverage.setdefault(tool, {"routes": [], "mediated": mediated, "calls": 0})
+        if route not in seen["routes"]:
+            seen["routes"].append(route)
+        seen["calls"] += 1
 
     @property
     def session_id(self) -> str:
@@ -278,6 +298,8 @@ class SessionStore:
         if contract.compute_hash() != claims.contract_hash:
             raise SessionError("contract does not match the token's contract hash")
         session = Session(claims=claims, contract=contract)
+        if contract.unseen_context:
+            session.tainted_by[UNSEEN_CONTEXT] = "unseen client context"
         self.sessions[claims.session_id] = session
         return session
 

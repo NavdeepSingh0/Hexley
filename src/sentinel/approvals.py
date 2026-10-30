@@ -109,13 +109,15 @@ class ApprovalStore:
         a.status = ApprovalStatus.USED
         return True
 
-    async def wait(self, approval_id: str, timeout: float) -> ApprovalStatus:
-        """Wait for the officer. Silence is a denial: a pending approval that times out becomes EXPIRED."""
+    async def wait(self, approval_id: str, timeout: float, expire: bool = True) -> ApprovalStatus:
+        """Wait for the officer. Silence is a denial: a pending approval that times out becomes EXPIRED. A caller that cannot
+        wait as long as the officer may need (a client's hook, plan F1) passes expire=False: the approval stays PENDING, the
+        officer can still approve it, and the agent's identical retry then runs once."""
         a = self._by_id[approval_id]
         try:
             await asyncio.wait_for(a.event.wait(), timeout=timeout)
         except asyncio.TimeoutError:
-            if a.status == ApprovalStatus.PENDING:
+            if expire and a.status == ApprovalStatus.PENDING:
                 a.status = ApprovalStatus.EXPIRED
                 a.event.set()
         return self._refresh(a).status

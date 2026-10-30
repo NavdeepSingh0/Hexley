@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import json
 import os
 import re
 import secrets
@@ -195,6 +196,12 @@ def main(argv: list[str] | None = None) -> None:
     up.add_argument("--consent-url", help="where the officer's consent page lives (default: the gateway's own address)")
     up.add_argument("--oauth-preset", default="quotation_processing", help="slip template approved by an OAuth sign-in")
     up.add_argument("--oauth-ttl", type=int, default=3600, help="seconds an OAuth-approved slip lasts")
+    hk = sub.add_parser("hook-config", help="print the settings.json block that makes Claude Code check every tool call with Sentinel")
+    hk.add_argument("--api-url", default="http://127.0.0.1:8000", help="Sentinel's API address (not the gateway)")
+    hk.add_argument("--env-var", default="SENTINEL_TOKEN", help="the environment variable that holds the session token")
+    hk.add_argument("--skip", action="append", default=[], metavar="SERVER",
+                    help="an MCP server that already goes through Sentinel's gateway (repeatable)")
+    hk.add_argument("--wait", type=float, default=15.0, help="seconds a held call waits for the officer before Claude is told to retry")
     rec = sub.add_parser("record", help="run a scenario against a model several times and keep every attempt")
     rec.add_argument("--scenario", required=True)
     rec.add_argument("--model", required=True, help="model id, e.g. nvidia/nemotron-3-ultra-550b-a55b")
@@ -217,6 +224,14 @@ def main(argv: list[str] | None = None) -> None:
             asyncio.run(_up(args))
         except KeyboardInterrupt:
             pass
+    elif args.command == "hook-config":
+        from .check import claude_code_settings
+
+        try:
+            settings = claude_code_settings(args.api_url, env_var=args.env_var, skip=tuple(args.skip), wait=args.wait)
+        except ValueError as e:
+            parser.error(str(e))
+        print(json.dumps(settings, indent=2))
     elif args.command == "record":
         from .record import record_scenario
 

@@ -157,6 +157,10 @@ class TaskContract(_Model):
     # restricted data would pass value matching. freeze_after: how many refused attempts freeze the session (R6).
     strict_flows: bool = False
     freeze_after: int = 3
+    # Plan F1. unseen_context: the client reads things Sentinel cannot see (a file attached to the chat, another
+    # connector), so the session counts as having read untrusted content from its first call: R7 and R8 apply from
+    # the start. Part of the contract hash, like every other choice the officer made.
+    unseen_context: bool = False
     issued_at: datetime
     expires_at: datetime
     status: SessionStatus = SessionStatus.PENDING

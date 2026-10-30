@@ -165,3 +165,25 @@ def test_indian_formats_spaced_digits_and_commas_in_words_are_caught(text):
 @pytest.mark.parametrize("text", ["1 2 3", "page 1 of 3", "items 4 5 6", "14,50", "ref 11 50"])
 def test_short_or_unrelated_digit_runs_are_not(text):
     assert not [m for m in _salary_index().scan_text(text) if m.kind == "number"], text
+
+
+# ---- plan F1: an agent must not be able to remove its own hook with a shell command -------------------------------------------
+@pytest.mark.parametrize("command", [
+    "sed -i 's/a/b/' .claude/settings.json", "sed --in-place s/a/b/ .claude/settings.json", "sed -i.bak s/a/b/ .claude/settings.json",
+    "cp evil.json .claude/settings.json", "mv evil.json .claude/settings.local.json", "rm .claude/settings.json",
+    "rm -f ~/.claude/settings.json", "touch .cursor/mcp.json", "install -m 644 evil.json .vscode/mcp.json",
+    "Remove-Item .claude/settings.json", "Set-Content -Path .claude/settings.json -Value x", "del .claude/settings.json",
+    "python -c \"open('.claude/settings.json','w').write('{}')\"", "node -e \"require('fs').writeFileSync('.cursor/mcp.json','{}')\"",
+    "bash -c 'echo {} > .claude/settings.json'",
+])
+def test_a_shell_command_that_changes_agent_configuration_is_flagged_whatever_program_does_it(command):
+    assert shell_effect(command).writes_config, command
+
+
+@pytest.mark.parametrize("command", [
+    "cp .claude/settings.json backup.json",  # reading configuration is not writing it
+    "sed 's/a/b/' src/app.py", "sed -i 's/a/b/' src/app.py", "cp a.txt b.txt", "mv build/out.txt build/old.txt", "rm build/out.txt",
+    "python script.py", "python -c \"print(1)\"", "node -e \"console.log(2)\"", "touch notes.txt", "ls .claude",
+])
+def test_ordinary_shell_commands_and_reads_of_configuration_are_not_flagged_as_writes(command):
+    assert not shell_effect(command).writes_config, command

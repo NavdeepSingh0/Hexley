@@ -10,10 +10,11 @@ import io
 import json
 import re
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal
 
 import httpx
-from fastapi import Depends, FastAPI, File, Header, HTTPException, UploadFile, WebSocket, WebSocketDisconnect
+from fastapi import (Depends, FastAPI, File, Header, HTTPException, Request, UploadFile, WebSocket,
+                     WebSocketDisconnect)
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, PlainTextResponse, Response
 from fastapi.staticfiles import StaticFiles
@@ -26,6 +27,7 @@ from starlette.websockets import WebSocketClose
 
 from .approvals import ApprovalError
 from .chat import ChatError, ChatManager, latest_mascot
+from .check import CheckError, check_call, coverage_view, report_result, session_from_authorization
 from .audit import AuditError
 from .confirm import ConfirmError, confirm_draft
 from .connect import connect_view, issue_header_token
@@ -99,6 +101,22 @@ class SlipRequest(BaseModel):
     confirm: bool = False
     strict_flows: bool = False  # the Rule of Two (R8)
     freeze_after: int = 3  # refused attempts before the session freezes (R6)
+    unseen_context: bool = False  # the client reads things Sentinel cannot see: untrusted from the first call
+
+
+class CheckCallRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    tool_name: str
+    tool_input: dict[str, Any] = {}
+    tool_use_id: str | None = None
+    wait_s: float = 20.0  # how long a held call waits for the officer before the client is told to try again
+
+
+class CheckResultRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    tool_name: str
+    tool_use_id: str | None = None
+    tool_response: Any = None
 
 
 class OAuthDecision(BaseModel):
@@ -406,6 +424,57 @@ def create_api(rt: Runtime, console_dir: Path | None = None, site_dir: Path | No
         shown, findings = check_reply(req.text, session, session.contract)
         return {"safe": not findings, "text": shown, "removed": [f.as_dict() for f in findings]}
 
+    # ---- calls a client reports instead of sending through the gateway (plan F1) ------------------------------------
+    # These are NOT behind the officer's API token: the caller is the agent's own machine, so the credential is the session
+    # token, the same one an MCP client sends to the gateway. It is bound to one confirmed slip, can be frozen and revoked, and
+    # can decide nothing about approvals. See check.py for what this route can and cannot guarantee.
+    # A dependency, so the token is checked before the body is even parsed: a caller without a valid token learns nothing else.
+    def hook_session(authorization: str = Header(default="")):
+        try:
+            return session_from_authorization(rt, authorization)
+        except CheckError as e:
+            raise HTTPException(status_code=e.status, detail=e.detail) from e
+
+    @app.post("/api/v1/check/call")
+    async def api_check_call(req: CheckCallRequest, session=Depends(hook_session)):
+        return await check_call(rt, session, req.tool_name, req.tool_input, req.tool_use_id,
+                                wait=min(max(req.wait_s, 0.0), 55.0))
+
+    @app.post("/api/v1/check/result")
+    async def api_check_result(req: CheckResultRequest, session=Depends(hook_session)):
+        return await report_result(rt, session, req.tool_name, req.tool_use_id, req.tool_response)
+
+    @app.post("/api/v1/hooks/claude-code")
+    async def claude_code_hook(request: Request, skip: str = "", wait: float = 20.0, session=Depends(hook_session)):
+        """Claude Code's http hook, as it sends it and as it wants the answer (docs: code.claude.com/docs/en/hooks). One address
+        for both events: PreToolUse is decided here; PostToolUse reports the result. An allowed call gets an empty answer, so
+        Claude Code's own permission prompts still apply; Sentinel only ever denies. `skip` lists MCP servers whose calls
+        already go through Sentinel's gateway (so they are not decided twice)."""
+        try:
+            body = await request.json()
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail="the hook body is not JSON") from e
+        if not isinstance(body, dict):
+            raise HTTPException(status_code=400, detail="the hook body is not a JSON object")
+        name = str(body.get("tool_name") or "")
+        if body.get("hook_event_name") == "PreToolUse" and name:
+            r = await check_call(rt, session, name, body.get("tool_input"), body.get("tool_use_id"), wait=min(max(wait, 0.0), 55.0),
+                                 skip_servers=frozenset(s.strip() for s in skip.split(",") if s.strip()))
+            if r["effect"] == "ALLOW":
+                return {}
+            return {"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "deny",
+                                           "permissionDecisionReason": r["reason"]}}
+        if body.get("hook_event_name") == "PostToolUse" and name:
+            await report_result(rt, session, name, body.get("tool_use_id"), body.get("tool_response"))
+        return {}
+
+    @app.get("/api/v1/sessions/{session_id}/coverage", dependencies=[Depends(require_token)])
+    async def session_coverage(session_id: str):
+        session = rt.store.get(session_id)
+        if session is None:
+            raise HTTPException(status_code=404, detail="No such session.")
+        return coverage_view(rt, session)
+
     @app.post("/api/v1/chat/{chat_id}/documents", status_code=201, dependencies=[Depends(require_token)])
     async def upload_document(chat_id: str, file: UploadFile = File(...)):
         """The officer uploads a PDF into a chat (plan Q10). It is stored beside the audit log, read by the tool server as
@@ -531,8 +600,11 @@ def create_api(rt: Runtime, console_dir: Path | None = None, site_dir: Path | No
     @app.post("/api/v1/tools/{name}/classify", dependencies=[Depends(require_token)])
     async def classify_tool(name: str, body: ToolClassification):
         """The officer labels one tool. Built-in entries cannot be changed; the record is written to the audit log first."""
-        tools = {t.name: t for t in await upstream_tools()}
-        if name not in tools:
+        # A name like `github.issue_write` is a tool of a connector the client reaches on its own and reports through its hook
+        # (plan F1). Sentinel has no tool list for it, so the officer's labels stand without a check against one.
+        external = "." in name
+        tools = {} if external else {t.name: t for t in await upstream_tools()}
+        if not external and name not in tools:
             raise HTTPException(status_code=404, detail=f"The tool server has no tool called '{name}'.")
         if rt.registry.is_builtin(name):
             raise HTTPException(status_code=409, detail=f"'{name}' is a built-in tool and cannot be reclassified.")
@@ -540,7 +612,7 @@ def create_api(rt: Runtime, console_dir: Path | None = None, site_dir: Path | No
         if bad:
             raise HTTPException(status_code=422, detail=f"Unknown fingerprint field(s): {', '.join(bad)}. "
                                                         f"Use 'all' or any of: {', '.join(sorted(FIELD_KINDS))}.")
-        args = set(schema_of(tools[name]).get("properties", {}))
+        args = set(schema_of(tools[name]).get("properties", {})) if not external else set(body.destination_args)
         unknown = [a for a in body.destination_args if a not in args]
         if unknown:
             raise HTTPException(status_code=422, detail=f"'{name}' has no argument called {', '.join(unknown)}.")
@@ -568,14 +640,16 @@ def create_api(rt: Runtime, console_dir: Path | None = None, site_dir: Path | No
                                     allowed_destinations=req.allowed_destinations,
                                     internal_destinations=req.internal_destinations, max_messages=req.max_messages,
                                     ttl_seconds=req.ttl_seconds, officer=req.officer,
-                                    strict_flows=req.strict_flows, freeze_after=req.freeze_after)
+                                    strict_flows=req.strict_flows, freeze_after=req.freeze_after,
+                                    unseen_context=req.unseen_context)
         except SlipError as e:
             raise HTTPException(status_code=422, detail=str(e)) from e
         rt.drafts[contract.contract_id] = contract
         slip = {"objective": contract.objective, "allowed_tools": contract.allowed_tools,
                 "allowed_destinations": contract.allowed_recipient_domains,
                 "internal_destinations": contract.internal_destinations, "max_messages": contract.max_messages,
-                "ttl_seconds": req.ttl_seconds, "strict_flows": contract.strict_flows, "freeze_after": contract.freeze_after}
+                "ttl_seconds": req.ttl_seconds, "strict_flows": contract.strict_flows, "freeze_after": contract.freeze_after,
+                "unseen_context": contract.unseen_context}
         out = {"contract_id": contract.contract_id, "contract_hash": contract.contract_hash, "slip": slip, "confirmed": False}
         if req.confirm:
             try:

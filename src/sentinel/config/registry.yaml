@@ -114,6 +114,44 @@ tools:
     output_integrity: trusted
     output_confidentiality: internal
 
+  # ---- tools a coding client has built in (plan F1). A client's own hook reports them under these names, with the client's
+  # own argument names (command, file_path, url); effects.py reads those, so a protected path or a destructive command is
+  # caught whichever tool carries it. Bash output may hold anything (a file, a page), so it taints the session; a command or a
+  # file edit is not itself held after that, because the dangerous ones are caught by what they do (R1, R4 effects).
+  Bash:
+    capability: write
+    resource_class: shell
+    outbound: false
+    consequential: false
+    output_integrity: untrusted
+    output_confidentiality: internal
+
+  Write:
+    capability: write
+    resource_class: file
+    outbound: false
+    consequential: false
+    output_integrity: trusted
+    output_confidentiality: internal
+
+  Edit:
+    capability: write
+    resource_class: file
+    outbound: false
+    consequential: false
+    output_integrity: trusted
+    output_confidentiality: internal
+
+  WebFetch:
+    capability: read
+    resource_class: web
+    outbound: true                    # like fetch_url: a web address can carry data out in its query string
+    consequential: true
+    output_integrity: untrusted
+    output_confidentiality: internal
+    destination_args: [url]
+    destination_kind: url
+
   update_vendor_bank:
     capability: write
     resource_class: vendor_bank_details

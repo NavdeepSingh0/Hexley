@@ -136,11 +136,14 @@ class SentinelMiddleware(Middleware):
                 self.rt.store.freeze(session.session_id)
         return decision, approval
 
-    async def on_call_tool(self, context, call_next):
-        session = await self._session()
-        tool = context.message.name
-        args = context.message.arguments or {}
+    async def mediate(self, session: Session, tool: str, args: dict, wait: float | None = None, route: str = "gateway"):
+        """Decide one call and everything that comes with deciding it: the 'requested' event, the tool-definition check, the
+        decision (recorded before anything runs), the wait for the officer when a rule asks, the freeze. It forwards nothing.
+        It serves calls that arrive through the gateway and calls a client's own hook reports (plan F1), so the two routes
+        cannot drift apart. Returns (decision, action, entry); the caller acts only on ALLOW. `wait` is how long a held call
+        may wait for the officer (default: the runtime's approval wait)."""
         entry = self.rt.registry.get(tool)
+        session.note_tool(tool, route)
         action = AgentAction(
             action_id=f"act_{uuid.uuid4().hex[:12]}", ts=datetime.now(timezone.utc),
             session_id=session.session_id, contract_id=session.contract.contract_id, column=session.column,
@@ -157,7 +160,7 @@ class SentinelMiddleware(Middleware):
             async with session.lock:
                 await self._record_decision(action, decision, session, protected)
             await self.rt.bus.publish(make_event("decision", session.session_id, session.column, decision.model_dump(mode="json")))
-            raise ToolError(decision.summary_plain)
+            return decision, action, entry
         decision, approval = await self._evaluate(session, action, entry, protected)
         await self.rt.bus.publish(make_event("decision", session.session_id, session.column,
                                              decision.model_dump(mode="json")))
@@ -167,7 +170,12 @@ class SentinelMiddleware(Middleware):
             await self.rt.bus.publish(make_event("approval.pending", session.session_id, session.column, {
                 "approval_id": approval.approval_id, "action_id": action.action_id, "tool": tool, "args": args,
                 "summary": decision.summary_plain, "expires_in": int(approval.expires - time.time())}))
-            status = await self.rt.approvals.wait(approval.approval_id, self.rt.approval_wait)
+            status = await self.rt.approvals.wait(approval.approval_id, self.rt.approval_wait if wait is None else wait,
+                                                  expire=wait is None)
+            if status == ApprovalStatus.PENDING:
+                # Only a caller that chose a short wait gets here: the call is still held, the officer can still approve it,
+                # and the agent's identical retry then runs once. Nothing is counted against the session meanwhile.
+                return decision, action, entry
             await self.rt.bus.publish(make_event("approval.resolved", session.session_id, session.column,
                                                  {"approval_id": approval.approval_id, "action_id": action.action_id,
                                                   "status": status.value}))
@@ -186,8 +194,16 @@ class SentinelMiddleware(Middleware):
             await self.rt.bus.publish(make_event("freeze", session.session_id, session.column,
                                                  {"reason": "block threshold", "blocks": session.blocks,
                                                   "decision_id": decision.decision_id}))
+        return decision, action, entry
+
+    async def on_call_tool(self, context, call_next):
+        session = await self._session()
+        tool = context.message.name
+        args = context.message.arguments or {}
+        decision, action, entry = await self.mediate(session, tool, args)
         if decision.effect != Effect.ALLOW:
             raise ToolError(decision.agent_summary or decision.summary_plain)
+        protected = session.column == Column.SENTINEL
         # For a fixed-template tool, hand the tool the hash of the message the decision recorded, so it can
         # refuse to send anything different (D-020).
         egress_ev = next((e for e in decision.evidence if e.kind == "egress" and e.source_ref), None)
@@ -198,15 +214,22 @@ class SentinelMiddleware(Middleware):
         finally:
             _egress_expected.reset(reset_expected)
             _current.reset(reset)
-        text = _result_text(result)
+        await self.note_result(session, entry, tool, action.action_id, decision, _result_text(result))
+        return result
+
+    async def note_result(self, session: Session, entry, tool: str, action_id: str, decision: Decision, text: str) -> None:
+        """What Sentinel learns from a tool's result: it is recorded, any credential in it is remembered, restricted values are
+        indexed, and untrusted content taints the session. Runs after a gateway call returns and when a client's hook reports
+        a result (plan F1). Raises ToolError only when a restricted result must be withheld because it could not be recorded."""
+        protected = session.column == Column.SENTINEL
         await self.rt.bus.publish(make_event("action.completed", session.session_id, session.column, {
-            "action_id": action.action_id, "tool": tool, "ok": True, "result_sha256": sha256_hex(text),
+            "action_id": action_id, "tool": tool, "ok": True, "result_sha256": sha256_hex(text),
             "chars": len(text)}))
         try:
-            await self.rt.audit.append("result", session_id=session.session_id, action_id=action.action_id,
+            await self.rt.audit.append("result", session_id=session.session_id, action_id=action_id,
                                        decision_id=decision.decision_id, payload=result_payload(tool, text))
         except AuditError as e:
-            log.warning("audit append of result failed for %s: %s", action.action_id, e)
+            log.warning("audit append of result failed for %s: %s", action_id, e)
             if protected and entry.output_confidentiality == Confidentiality.RESTRICTED:
                 # A restricted result is not handed to the agent unless the record of it is durable.
                 raise ToolError("Blocked: Sentinel could not record this result in its audit log, so it was withheld.") from e
@@ -214,29 +237,28 @@ class SentinelMiddleware(Middleware):
                 # The action already ran and cannot be undone or retried: freeze the session and raise the alarm.
                 self.rt.store.freeze(session.session_id)
                 await self.rt.bus.publish(make_event("audit.failure", session.session_id, session.column,
-                                                     {"tool": tool, "action_id": action.action_id,
+                                                     {"tool": tool, "action_id": action_id,
                                                       "detail": "audit record of an executed action could not be written"}))
                 await self.rt.bus.publish(make_event("freeze", session.session_id, session.column,
                                                      {"reason": "audit failure after execution",
                                                       "decision_id": decision.decision_id}))
         # Any credential in any result is remembered, whatever the tool's label: a key in a runbook or a token in a ticket
         # must never be sent out or used by this session (R2, R9; plan Q2).
-        if protected and session.secrets.add(text, source_ref=tool, action_id=action.action_id):
+        if protected and session.secrets.add(text, source_ref=tool, action_id=action_id):
             session.restricted_reads.setdefault(tool, "read a credential")
         # Label what came back from the registry (never from the content) and remember restricted values,
         # so a later outbound call can be checked against them (R2).
         if protected and entry.output_confidentiality == Confidentiality.RESTRICTED:
             session.restricted_reads.setdefault(tool, "read restricted data")  # R8 (Rule of Two), with or without fingerprints
             if entry.fingerprint_fields:
-                session.index.add(text, entry.fingerprint_fields, source_ref=tool, action_id=action.action_id)
+                session.index.add(text, entry.fingerprint_fields, source_ref=tool, action_id=action_id)
         # Addresses found in untrusted content are remembered so R3 can refuse them as destinations later.
         if protected and entry.output_integrity == Integrity.UNTRUSTED:
             session.tainted_by.setdefault(tool, "read untrusted content")  # R7: from now on consequential actions ask
             for address in extract_destinations(text):
                 if address not in session.untrusted_destinations:  # remember the first source, and the exact call
                     session.untrusted_destinations[address] = tool
-                    session.untrusted_actions[address] = action.action_id
-        return result
+                    session.untrusted_actions[address] = action_id
 
 
 def counts_toward_freeze(decision: Decision) -> bool:

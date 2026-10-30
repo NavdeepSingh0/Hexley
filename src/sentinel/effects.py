@@ -115,6 +115,15 @@ _READERS = {"cat", "type", "less", "more", "head", "tail", "grep", "awk", "sed",
 _NET = {"curl", "wget", "nc", "ncat", "netcat", "invoke-webrequest", "iwr", "invoke-restmethod", "irm", "ssh", "scp", "rsync",
         "ftp", "sftp", "telnet", "nslookup", "dig", "host", "ping"}
 _DESTRUCTIVE_PROGRAMS = {"mkfs", "dd", "shred", "format", "diskpart", "remove-item", "rd", "rmdir", "del", "erase"}
+# Programs that change the files named in their arguments. For these, a protected configuration path among the targets is a
+# write (plan F1: an agent that can `sed -i` or `mv` over its own hook settings has removed the hook).
+_MODIFY_ALL = {"rm", "touch", "truncate", "chmod", "chown", "del", "erase", "remove-item", "set-content", "add-content", "out-file",
+               "clear-content", "new-item", "attrib", "rd", "rmdir", "shred"}
+_MODIFY_DEST = {"cp", "mv", "install", "ln", "copy", "move", "ren", "rename", "copy-item", "move-item", "rsync"}  # the last path is written
+_INTERPRETERS = {"python", "python3", "py", "node", "perl", "ruby", "powershell", "pwsh", "bash", "sh", "zsh", "cmd"}
+# Inline code cannot be read as a write or a read, so an agent's own configuration folder named in it is refused. Narrow on purpose:
+# only the agents' folders and server files, not every settings.json.
+_AGENT_CONFIG_TEXT = re.compile(r"(?:^|[/'\"\s=(])\.(?:cursor|claude|vscode|kiro|windsurf|gemini|codeium|continue)(?:/|$)|\bmcp\.json\b")
 _URL = re.compile(r"\b(?:https?|ftp|wss?)://[^\s'\"<>]+", re.I)
 _CLOUD_DELETE = re.compile(r"\b(?:aws|gcloud|az|kubectl|terraform|railway|heroku|vercel|fly|doctl)\b.*\b(?:delete|destroy|"
                            r"rm|remove|terminate|drop|purge)\b", re.I)
@@ -155,6 +164,15 @@ def shell_effect(command: str) -> ShellEffect:
             destructive = True
         if prog in _DESTRUCTIVE_PROGRAMS:
             destructive = True
+        positional = [a for a in rest if not a.startswith("-")]
+        if prog in _MODIFY_ALL:
+            writes += [a for a in positional if path_class(a) == "config"]
+        elif prog in _MODIFY_DEST and positional and path_class(positional[-1]) == "config":
+            writes.append(positional[-1])
+        elif prog == "sed" and any(a == "--in-place" or re.fullmatch(r"-[A-Za-z]*i[A-Za-z0-9.]*", a) for a in rest):
+            writes += [a for a in positional if path_class(a) == "config"]
+        elif prog in _INTERPRETERS:
+            writes += [a[:80] for a in rest if _AGENT_CONFIG_TEXT.search(a.lower().replace("\\", "/"))]
         if prog in ("git",) and any(a in ("push", "reset", "clean") for a in rest) and any(a in ("--force", "-f", "--hard", "-fd", "-fdx") for a in rest):
             destructive = True
     for i, t in enumerate(tokens):  # redirections that write: "> file", ">> file", "tee file"
