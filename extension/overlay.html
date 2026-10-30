@@ -63,6 +63,23 @@
       overflow: visible;
     }
 
+    /* ── Motion that survives a small size ──────────────────────────────────────────────────────────────────────────
+       The mascot's own motion is drawn in a 200-unit box, so at 80 px its bob is about one pixel and looks still on a busy
+       page. This wrapper adds movement a person can see: a slow float while it waits (faster while it checks), and a pop or
+       a shake each time the state changes. It decides nothing and shows no state of its own; it is switched off for anyone
+       whose system asks for reduced motion. */
+    #mascot-wrap { animation: float 3.4s ease-in-out infinite; }
+    #mascot-wrap[data-state="checking"], #mascot-wrap[data-state="needs-approval"] { animation-duration: 1.2s; }
+    #mascot-wrap[data-state="sleeping"] { animation-duration: 5.5s; }
+    @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+    sentinel-mascot.fx-pop { animation: pop .55s cubic-bezier(.3, 1.5, .5, 1); transform-origin: 50% 100%; }
+    sentinel-mascot.fx-shake { animation: shake .5s ease-in-out; transform-origin: 50% 100%; }
+    @keyframes pop { 0% { transform: scale(1); } 35% { transform: scale(1.18) rotate(-3deg); } 70% { transform: scale(.95); } 100% { transform: scale(1); } }
+    @keyframes shake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-6px) rotate(-2deg); } 40% { transform: translateX(6px) rotate(2deg); } 60% { transform: translateX(-4px); } 80% { transform: translateX(3px); } }
+    @media (prefers-reduced-motion: reduce) {
+      #mascot-wrap, sentinel-mascot.fx-pop, sentinel-mascot.fx-shake { animation: none !important; }
+    }
+
     /* ── Connection pill ──────────────────────────────── */
     #pill {
       margin-top: 4px;

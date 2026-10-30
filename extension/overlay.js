@@ -59,9 +59,23 @@ function hidePill() {
 }
 
 // ── Mascot driver ─────────────────────────────────────────────────────────────
+// A visible reaction when the state changes (see the motion note in overlay.html): a pop for good news, a shake for bad.
+const FX = { allowed: 'fx-pop', verified: 'fx-pop', denied: 'fx-shake', quarantined: 'fx-shake', tamper: 'fx-shake' }
+
+function react(state) {
+  const cls = FX[state]
+  mascot.classList.remove('fx-pop', 'fx-shake')
+  if (!cls) return
+  void mascot.offsetWidth // restart the animation even if the same class is added again
+  mascot.classList.add(cls)
+}
+
 function applyState(state, message) {
+  const changed = state !== lastState
   mascot.setAttribute('state', state)
   mascot.setAttribute('message', message || '')
+  document.getElementById('mascot-wrap').dataset.state = state
+  if (changed) react(state)
   lastState = state
 
   // Show review button when holding for officer

@@ -46,6 +46,8 @@ Shows Sentinel's mascot on **claude.ai** and **chatgpt.com**, reacting to real g
 
 ## What the mascot shows
 
+The mascot's own movement is drawn for a large mascot, so at this small size it is subtle. The overlay adds a slow float while it waits (faster while it checks), a pop when something is allowed or verified, and a shake when something is denied, quarantined or tampered with. If your system asks for reduced motion (Windows: Settings, Accessibility, Visual effects, Animation effects), all movement is switched off and the mascot shows a still pose.
+
 | State | Meaning |
 |---|---|
 | `sleeping` | No active Sentinel session |
