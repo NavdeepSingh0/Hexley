@@ -32,9 +32,8 @@ def decide(action: AgentAction, session: Session, registry: Registry, approved: 
                       summary_plain="Allowed: no policy enforcement in this column (instrumented baseline).")
     try:
         entry = registry.get(action.tool)
-        recipients, unparseable = destinations.keys_in(
-            [action.args[k] for k in entry.destination_args if k in action.args],
-            entry.destination_kind) if entry.outbound else ([], [])
+        recipients, unparseable = destinations.destination_keys(
+            action.args, entry.destination_args, entry.destination_kind) if entry.outbound else ([], [])
         if entry.outbound:
             # cc, bcc, reply_to and the like are destinations whether or not the registry listed them (plan Q4)
             for k in effects.extra_destination_args(action.args, entry.destination_args):

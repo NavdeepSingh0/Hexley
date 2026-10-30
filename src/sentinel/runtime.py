@@ -17,6 +17,7 @@ from .events import EventBus
 from .models import TaskContract
 from .registry import Registry, load_registry
 from .tool_pins import ToolPins
+from .upstreams import UpstreamSet
 
 
 def rotate_audit_log(directory: Path) -> Path | None:
@@ -72,11 +73,22 @@ class Runtime:
     drafts: dict[str, TaskContract] = field(default_factory=dict)
     pins: ToolPins = field(default_factory=ToolPins)  # approved tool definitions by hash (plan Q5)
     uploads_dir: Path | None = None  # PDFs the officer uploads into a chat; the tool server reads them as uploads/<name> (Q10)
+    # Plan F2: further tool servers behind the gateway and the credentials Sentinel holds for them. Empty by default, so a
+    # stack without a connector configuration behaves exactly as before.
+    upstreams: UpstreamSet = field(default_factory=UpstreamSet)
+    shadowed: dict[str, int] = field(default_factory=dict)  # tool name -> how many servers offer it (refused, plan F2)
+    catalog_ready: bool = False  # set once the gateway has seen a full tool list (so shadowing is known)
+
+    @property
+    def held_credentials(self) -> list[str]:
+        """Credential values Sentinel holds for its upstreams: never shown to an agent, never logged."""
+        return self.upstreams.creds.secret_values()
 
 
 def build_runtime(*, tools_url: str, gateway_url: str, downstream_token: str, api_token: str, audit_dir: Path,
                   key: Ed25519PrivateKey | None = None, allow_tamper: bool = False,
-                  audit_deadline: float = 2.0, approval_wait: float = 90.0) -> Runtime:
+                  audit_deadline: float = 2.0, approval_wait: float = 90.0,
+                  upstreams: UpstreamSet | None = None) -> Runtime:
     """Refuses to build without both secrets: Sentinel never starts open."""
     if not downstream_token or not api_token:
         raise ValueError("both the downstream token and the API token are required")
@@ -85,4 +97,5 @@ def build_runtime(*, tools_url: str, gateway_url: str, downstream_token: str, ap
     return Runtime(key=key or Ed25519PrivateKey.generate(), tools_url=tools_url, gateway_url=gateway_url,
                    downstream_token=downstream_token, api_token=api_token, audit=audit, allow_tamper=allow_tamper,
                    approval_wait=approval_wait, registry=load_registry(overlay=overlay), registry_overlay=overlay,
-                   pins=ToolPins.load(Path(audit_dir) / "tool_pins.json"), uploads_dir=Path(audit_dir) / "uploads")
+                   pins=ToolPins.load(Path(audit_dir) / "tool_pins.json"), uploads_dir=Path(audit_dir) / "uploads",
+                   upstreams=upstreams or UpstreamSet())

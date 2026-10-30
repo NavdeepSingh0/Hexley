@@ -85,7 +85,7 @@ class ToolClassification(BaseModel):
     output_confidentiality: Confidentiality
     fingerprint_fields: list[str] = []
     destination_args: list[str] = []
-    destination_kind: Literal["email", "url", "path"] = "email"
+    destination_kind: Literal["email", "url", "path", "repo", "channel", "page"] = "email"
     requires_human_verification: bool = False
 
 
@@ -613,7 +613,7 @@ def create_api(rt: Runtime, console_dir: Path | None = None, site_dir: Path | No
             raise HTTPException(status_code=422, detail=f"Unknown fingerprint field(s): {', '.join(bad)}. "
                                                         f"Use 'all' or any of: {', '.join(sorted(FIELD_KINDS))}.")
         args = set(schema_of(tools[name]).get("properties", {})) if not external else set(body.destination_args)
-        unknown = [a for a in body.destination_args if a not in args]
+        unknown = [a for a in body.destination_args if a.split(".", 1)[0] not in args]  # "parent.page_id": a nested argument
         if unknown:
             raise HTTPException(status_code=422, detail=f"'{name}' has no argument called {', '.join(unknown)}.")
         if body.outbound and not body.destination_args:

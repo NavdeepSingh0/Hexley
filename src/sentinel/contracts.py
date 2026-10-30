@@ -124,12 +124,18 @@ def normalise_destination_entry(entry: str) -> str:
         return e
     if e.startswith("path:/") and ".." not in e.split("/") and "\x00" not in e and "\\" not in e and "*" not in e:
         return "path:" + posixpath.normpath(e.removeprefix("path:"))
-    raise SlipError(f"'{entry}' is not a valid destination: use a domain (example.com), an address (boss@example.com) "
-                    "or a folder (path:/reports). Wildcards and web addresses with paths are not accepted.")
+    kind, _, rest = e.partition(":")
+    if kind in destinations.NAMED_KINDS:  # repo:owner/name, channel:id, page:id (plan F2)
+        key = destinations.named_key(kind, [rest])
+        if key:
+            return key
+    raise SlipError(f"'{entry}' is not a valid destination: use a domain (example.com), an address (boss@example.com), "
+                    "a folder (path:/reports), a repository (repo:owner/name), a channel (channel:id) or a page (page:id). "
+                    "Wildcards and web addresses with paths are not accepted.")
 
 
 def _covered(entry: str, allowed_list: list[str]) -> bool:
-    if entry.startswith("path:") or "@" in entry:
+    if entry.startswith("path:") or "@" in entry or entry.split(":", 1)[0] in destinations.NAMED_KINDS:
         return destinations.allowed(entry, allowed_list)
     return entry in allowed_list  # a domain is covered only by the same domain
 

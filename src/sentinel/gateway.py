@@ -5,6 +5,9 @@ Security properties implemented here (ARCHITECTURE.md section 5):
   4  incoming agent headers are never forwarded downstream (forward_incoming_headers=False)
   5  the downstream token is added by Sentinel; the agent never holds it
   7  a frozen or revoked session cannot call
+
+Several tool servers sit behind it (plan F2, `upstreams.py`): each upstream's tools are offered as `<upstream>__<tool>`,
+Sentinel holds each upstream's credential, and a tool name that two servers offer is refused rather than guessed.
 """
 
 from __future__ import annotations
@@ -13,6 +16,7 @@ import json
 import logging
 import time
 import uuid
+from collections import Counter
 from contextvars import ContextVar
 from datetime import datetime, timezone
 
@@ -21,8 +25,9 @@ from fastmcp.client.transports import StreamableHttpTransport
 from fastmcp.exceptions import ToolError
 from fastmcp.server.dependencies import get_http_headers
 from fastmcp.server.middleware import Middleware
-from fastmcp.server.providers.proxy import FastMCPProxy, ProxyClient
+from fastmcp.server.providers.proxy import FastMCPProxy, ProxyClient, ProxyProvider
 
+from . import upstreams as up
 from .approvals import ApprovalStatus
 from .audit import AuditError, action_payload, decision_payload, result_payload, sha256_hex
 from .contracts import Session, SessionError, verify_session_token
@@ -70,8 +75,10 @@ class SentinelMiddleware(Middleware):
             tools = await call_next(context)
         finally:
             _current.reset(reset)
+        await self._observe_names(tools)
         allowed = set(session.contract.allowed_tools)
         if session.column == Column.SENTINEL:
+            tools = [t for t in tools if t.name not in self.rt.shadowed]
             await self._observe_definitions(tools)
         if session.column == Column.UNPROTECTED:
             # The baseline sees every backend tool, but never a gateway-local tool its slip does not allow:
@@ -81,6 +88,27 @@ class SentinelMiddleware(Middleware):
         # changed since it was approved, or whose description reads like instructions, is not shown (plan Q5).
         return [t for t in tools if t.name in allowed and self.rt.registry.is_known(t.name)
                 and (session.column != Column.SENTINEL or self.rt.pins.blocked(t.name) is None)]
+
+    async def _observe_names(self, tools) -> None:
+        """Shadowing (plan F2): a name offered by more than one server is ambiguous, and which one answers would be up to
+        the proxy. Sentinel refuses the name for every session until the configuration is fixed, and says so once."""
+        self.rt.catalog_ready = True
+        counts = Counter(t.name for t in tools)
+        for name, n in counts.items():
+            if n > 1 and name not in self.rt.shadowed:
+                self.rt.shadowed[name] = n
+                payload = {"tool": name, "servers": n, "detail": f"offered by {n} servers"}
+                await self.rt.bus.publish(make_event("tool.shadowed", None, None, payload))
+                try:
+                    await self.rt.audit.append("tool.shadowed", payload=payload)
+                except AuditError as e:
+                    log.warning("audit append of a shadowing alert failed: %s", e)
+
+    async def _ensure_catalog(self, context) -> None:
+        """A call can arrive before any listing (a client that skips tools/list): list once so shadowing is known."""
+        if self.rt.catalog_ready or context.fastmcp_context is None:
+            return
+        await self._observe_names(await context.fastmcp_context.fastmcp.list_tools(run_middleware=False))
 
     async def _observe_definitions(self, tools) -> None:
         """Hash every tool's full definition and compare it with its pin (plan Q5). A new problem is announced once:
@@ -152,6 +180,12 @@ class SentinelMiddleware(Middleware):
         await self.rt.bus.publish(make_event("action.requested", session.session_id, session.column,
                                              action.model_dump(mode="json")))
         protected = session.column == Column.SENTINEL
+        if protected and tool in self.rt.shadowed:
+            decision = tool_shadowed(action, self.rt.shadowed[tool])
+            async with session.lock:
+                await self._record_decision(action, decision, session, protected)
+            await self.rt.bus.publish(make_event("decision", session.session_id, session.column, decision.model_dump(mode="json")))
+            return decision, action, entry
         pin = self.rt.pins.blocked(tool) if protected else None
         if pin is not None:
             # The tool's definition changed since it was approved, or its description reads like instructions to the model:
@@ -200,6 +234,11 @@ class SentinelMiddleware(Middleware):
         session = await self._session()
         tool = context.message.name
         args = context.message.arguments or {}
+        reset = _current.set(session)
+        try:
+            await self._ensure_catalog(context)
+        finally:
+            _current.reset(reset)
         decision, action, entry = await self.mediate(session, tool, args)
         if decision.effect != Effect.ALLOW:
             raise ToolError(decision.agent_summary or decision.summary_plain)
@@ -214,7 +253,17 @@ class SentinelMiddleware(Middleware):
         finally:
             _egress_expected.reset(reset_expected)
             _current.reset(reset)
-        await self.note_result(session, entry, tool, action.action_id, decision, _result_text(result))
+        text = _result_text(result)
+        held = [v for v in self.rt.held_credentials if v in text]
+        if held:
+            # An upstream echoed a credential Sentinel holds for it (a debug message, a misconfigured server). The agent must
+            # never see it: the result is withheld, and the value is remembered so R2 and R9 refuse it if it surfaces.
+            if protected:
+                session.secrets.values.update({v: ("connector credential", tool, action.action_id) for v in held})
+            await self.rt.bus.publish(make_event("credential.withheld", session.session_id, session.column,
+                                                 {"tool": tool, "action_id": action.action_id}))
+            raise ToolError("Blocked: this result contained a credential Sentinel holds for the connector, so it was withheld.")
+        await self.note_result(session, entry, tool, action.action_id, decision, text)
         return result
 
     async def note_result(self, session: Session, entry, tool: str, action_id: str, decision: Decision, text: str) -> None:
@@ -288,6 +337,15 @@ def tool_changed(action: AgentAction, pin) -> Decision:
         evidence=[Evidence(kind="definition", detail=pin.detail or pin.status, source_ref=pin.seen_hash[:16])])
 
 
+def tool_shadowed(action: AgentAction, servers: int) -> Decision:
+    return Decision(
+        decision_id=f"dec_{uuid.uuid4().hex[:12]}", action_id=action.action_id, effect=Effect.BLOCK,
+        rule_ids=[RuleId.R1], reason_code=ReasonCode.TOOL_SHADOWED,
+        summary_plain=f"Blocked: '{action.tool}' is offered by {servers} connected servers, so Sentinel cannot tell which one "
+                      f"would run. Neither is used until the officer fixes the connector configuration.",
+        evidence=[Evidence(kind="definition", detail=f"tool name offered by {servers} servers", source_ref=action.tool)])
+
+
 def audit_unavailable(action: AgentAction) -> Decision:
     return Decision(
         decision_id=f"dec_{uuid.uuid4().hex[:12]}", action_id=action.action_id, effect=Effect.BLOCK,
@@ -320,6 +378,11 @@ def build_gateway(rt: Runtime) -> FastMCP:
     oauth = getattr(rt, "oauth", None)
     proxy = FastMCPProxy(client_factory=client_factory, name="sentinel-gateway", **({"auth": oauth} if oauth else {}))
     proxy.add_middleware(SentinelMiddleware(rt))
+    # Every configured upstream with its credential set becomes a provider of prefixed tools. Sentinel's middleware above
+    # decides every call to them exactly as for the built-in tool server.
+    for u in rt.upstreams.upstreams:
+        provider = ProxyProvider(up.client_factory(u, rt.upstreams.creds))
+        proxy.add_provider(provider.wrap_transform(up.Prefix(u.namespace)) if u.namespace else provider)
     if oauth is not None:
         from .oauth import register_consent_routes
 

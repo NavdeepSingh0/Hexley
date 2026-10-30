@@ -25,6 +25,7 @@ import uvicorn
 from .api import SITE_DIST, create_api
 from .gateway import build_gateway
 from .runtime import build_runtime, rotate_audit_log
+from .upstreams import DEFAULT_CONFIG as DEFAULT_UPSTREAMS, DEFAULT_ENV_FILE, UpstreamSet, install_log_redaction
 
 
 async def _serve(app, port: int, host: str = "127.0.0.1") -> None:
@@ -155,10 +156,13 @@ async def _up(args: argparse.Namespace) -> None:
         moved = rotate_audit_log(data_dir)
         if moved:
             print(f"demo mode: previous audit log moved to {moved.name}")
+    # Connectors (plan F2): the credentials stay in this process; each one goes only to its own upstream.
+    connectors = UpstreamSet.load(Path(args.upstreams), Path(args.connectors_env))
+    install_log_redaction(connectors.creds.secret_values())
     rt = build_runtime(tools_url=f"http://127.0.0.1:{args.tools_port}/mcp",
                        gateway_url=f"http://127.0.0.1:{args.gateway_port}/mcp",
                        downstream_token=downstream, api_token=api_token,
-                       audit_dir=data_dir, allow_tamper=args.demo)
+                       audit_dir=data_dir, allow_tamper=args.demo, upstreams=connectors)
     tunnel = None
     public_url = args.public_url
     if args.tunnel and not public_url:
@@ -196,6 +200,11 @@ async def _up(args: argparse.Namespace) -> None:
     else:
         print("The website is not built (npm --prefix site ci && npm --prefix site run build); opening the console only.")
     print(f"Console (the token is in the link, not on screen once it opens): {console_url}", flush=True)
+    if connectors.upstreams or connectors.skipped:
+        print("Connectors: " + (", ".join(f"{u.name} ({u.transport}, tools {u.namespace}__*)" for u in connectors.upstreams)
+                                or "none started"), flush=True)
+        for name, why in connectors.skipped.items():
+            print(f"  not started: {name} ({why})", flush=True)
     if public_url:
         print(f"Connector URL for an AI client: {public_url.rstrip('/')}/mcp   (Sign in, then enter the officer code printed here)")
     if not args.no_browser:
@@ -230,6 +239,11 @@ def main(argv: list[str] | None = None) -> None:
     up.add_argument("--consent-url", help="where the officer's consent page lives (default: the gateway's own address)")
     up.add_argument("--oauth-preset", default="quotation_processing", help="slip template approved by an OAuth sign-in")
     up.add_argument("--oauth-ttl", type=int, default=3600, help="seconds an OAuth-approved slip lasts")
+    for p in (up, cn := sub.add_parser("connectors", help="say which connectors are configured and whether they answer")):
+        p.add_argument("--upstreams", default=str(DEFAULT_UPSTREAMS), help="connector configuration (names, never values)")
+        p.add_argument("--connectors-env", default=str(DEFAULT_ENV_FILE),
+                       help="git-ignored file with the connectors' credentials (else the process environment)")
+    cn.add_argument("--live", action="store_true", help="connect to each connector and list its tools")
     hk = sub.add_parser("hook-config", help="print the settings.json block that makes Claude Code check every tool call with Sentinel")
     hk.add_argument("--api-url", default="http://127.0.0.1:8000", help="Sentinel's API address (not the gateway)")
     hk.add_argument("--env-var", default="SENTINEL_TOKEN", help="the environment variable that holds the session token")
@@ -258,6 +272,18 @@ def main(argv: list[str] | None = None) -> None:
             asyncio.run(_up(args))
         except KeyboardInterrupt:
             pass
+    elif args.command == "connectors":
+        from .upstreams import check, load_upstreams
+
+        connectors = UpstreamSet.load(Path(args.upstreams), Path(args.connectors_env))
+        install_log_redaction(connectors.creds.secret_values())
+        rows = asyncio.run(check(connectors, load_upstreams(Path(args.upstreams)), args.live))
+        for r in rows:
+            print(f"{r['name']:<10} {r['transport']:<6} {r['status']:<12} {r['detail']}")
+            for t in r.get("tools", []):
+                print(f"{'':<30}{t}")
+        if not rows:
+            print(f"no connectors configured in {args.upstreams}")
     elif args.command == "hook-config":
         from .check import claude_code_settings
 

@@ -22,7 +22,7 @@
 ## 3. The problem and the idea
 **What problem do you solve?** Agents can already send e-mail, read databases and edit files. A poisoned document can steer one, and every call it then makes can be individually allowed, so the leak is in the chain, not in any one call. Sentinel limits the agent to the task a person approved. *Proof: console situation 1; README measured results.*
 
-**Is this a real problem or a hypothetical one?** Real incidents with this shape: GitHub's MCP server (a public issue steered an agent into posting private repository content), EchoLeak, Supabase's MCP. We scored 28 incidents against Sentinel (our own counterfactual reading, not a measurement): about 16 would be stopped by the rules we now have, 7 partly, 5 are out of scope. *Proof: `docs/research/PRODUCT_AUDIT.md` section 4.*
+**Is this a real problem or a hypothetical one?** Real incidents with this shape: GitHub's MCP server (a public issue steered an agent into posting private repository content), EchoLeak, Supabase's MCP. We scored 28 incidents against Sentinel (our own counterfactual reading, not a measurement): 11 of 28 stopped or held today (10 of them backed by a scenario that runs); about 12 to 18 of 28 in the complete state, the upper end only where the host also uses our reply check; 10 out of reach by design. *Proof: section 5 of `docs/research/BENCHMARK_20261030.md`; the incidents themselves are in `docs/research/PRODUCT_AUDIT.md` section 4.*
 
 **Why not just tell the model not to leak?** An instruction is advice a poisoned document can talk it out of. In our recorded runs of one real model, the unprotected setup leaked in 13 of 13 usable runs. *Proof: README, real-model table.*
 

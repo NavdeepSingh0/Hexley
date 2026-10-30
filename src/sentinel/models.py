@@ -62,6 +62,7 @@ class ReasonCode(StrEnum):
     PROTECTED_PATH = "PROTECTED_PATH"  # R1: agent configuration is never written, credential files never read (plan Q4)
     WRONG_EFFECT = "WRONG_EFFECT"  # R1: a read tool asked to change data, or a statement that cannot be read safely
     TOOL_CHANGED = "TOOL_CHANGED"  # R1: the tool's definition changed or reads like instructions (plan Q5)
+    TOOL_SHADOWED = "TOOL_SHADOWED"  # R1: two upstreams offer a tool under the same name; neither is used (plan F2)
     DESTRUCTIVE = "DESTRUCTIVE"  # R4: an action that cannot be undone waits for the officer (plan Q4)
     DISCOVERED_CREDENTIAL = "DISCOVERED_CREDENTIAL"  # R9: a secret found in a tool result, used or sent
     SESSION_INVALID = "SESSION_INVALID"
@@ -109,7 +110,9 @@ class ToolEntry(_Model):
     output_confidentiality: Confidentiality
     fingerprint_fields: list[str] = Field(default_factory=list)
     destination_args: list[str] = Field(default_factory=list)  # arguments that name where data is going
-    destination_kind: Literal["email", "url", "path"] = "email"  # how those arguments are read (destinations.keys_in)
+    # How those arguments are read (destinations.destination_keys). repo, channel and page join the listed arguments into
+    # one key (owner + name -> "repo:owner/name"); a dotted name reads a nested argument ("parent.page_id"). Plan F2.
+    destination_kind: Literal["email", "url", "path", "repo", "channel", "page"] = "email"
     requires_human_verification: bool = False
     egress_template: str | None = None  # a tool that sends only through this fixed template (hardened mode)
     local: bool = False  # implemented inside the gateway, not forwarded to the tool server

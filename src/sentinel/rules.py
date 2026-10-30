@@ -43,7 +43,8 @@ def rule_r1(action: AgentAction, contract: TaskContract, entry: ToolEntry) -> Ru
     return None
 
 
-_KIND_NOUN = {"email": "e-mail address", "url": "web address", "path": "file path"}
+_KIND_NOUN = {"email": "e-mail address", "url": "web address", "path": "file path", "repo": "repository",
+              "channel": "channel", "page": "page"}
 
 
 def rule_r1_recipient(action: AgentAction, entry: ToolEntry, contract: TaskContract, recipients: list[str],

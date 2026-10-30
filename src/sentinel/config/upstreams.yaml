@@ -1,0 +1,48 @@
+# Connectors behind Sentinel's gateway (plan F2). The agent connects to Sentinel only and sees each connector's tools as
+# <name>__<tool>; Sentinel holds the credentials.
+#
+# This file holds variable NAMES, never values. Values come from the git-ignored `.env.connectors` file next to where
+# Sentinel is started (KEY=value lines), or from the process environment on a hosting platform. A connector whose
+# variable is not set is not started; `python -m sentinel connectors` says which, and `--live` lists each one's tools.
+#
+# Every tool must also be classified in registry.yaml; an unclassified tool is treated as untrusted, restricted and
+# outbound, and no slip can allow it until the officer classifies it.
+
+upstreams:
+  # GitHub's own MCP server, hosted by GitHub. A fine-grained token limited to the test repositories.
+  - name: github
+    transport: http
+    description: GitHub (official remote MCP server)
+    url: https://api.githubcopilot.com/mcp/
+    headers:
+      Authorization: Bearer ${GITHUB_TOKEN}
+
+  # Notion's own MCP server, started by Sentinel. An internal integration token; only pages shared with the
+  # integration are reachable.
+  - name: notion
+    transport: stdio
+    description: Notion (official MCP server)
+    command: npx
+    args: ["-y", "@notionhq/notion-mcp-server"]
+    env:
+      NOTION_TOKEN: ${NOTION_TOKEN}
+
+  # Slack's own hosted MCP server: address and token type confirmed in the Slack step before it is enabled.
+  - name: slack
+    transport: http
+    description: Slack (official hosted MCP server)
+    url: https://mcp.slack.com/mcp
+    headers:
+      Authorization: Bearer ${SLACK_USER_TOKEN}
+    enabled: false
+
+  # Gmail over IMAP and SMTP with an app password, through a community server chosen after reading its code.
+  - name: gmail
+    transport: stdio
+    description: Gmail (community IMAP/SMTP server, app password)
+    command: npx
+    args: ["-y", "TBD-after-code-read"]
+    env:
+      EMAIL_ADDRESS: ${GMAIL_ADDRESS}
+      EMAIL_PASSWORD: ${GMAIL_APP_PASSWORD}
+    enabled: false
