@@ -193,6 +193,14 @@ def test_the_preset_agrees_with_the_real_definition(name):
     assert all(a in required for a in entry.destination_args)  # a destination the real tool can omit would be refused
 
 
+def test_a_clients_hook_gets_the_same_labels_as_the_gateway():
+    reg = load_registry()
+    for name, entry in PRESET.items():
+        hook = reg.get("github." + name.removeprefix("github__"))
+        assert hook.known, name
+        assert hook.model_dump(exclude={"name"}) == entry.model_dump(exclude={"name"}), name
+
+
 def test_a_destructive_tool_in_the_preset_waits_for_the_officer():
     for name, entry in PRESET.items():
         if (REAL[name.removeprefix("github__")]["annotations"] or {}).get("destructive_hint"):

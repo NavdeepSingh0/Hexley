@@ -268,6 +268,109 @@ tools:
     destination_args: [owner, repo]
     destination_kind: repo
 
+  # ---- the same GitHub labels, for a client's hook (Antigravity's own GitHub server, D-059). A hook reports these names as
+  # github.<tool>; a test holds the two lists to the same labels.
+  github.issue_read:
+    capability: read
+    resource_class: github_issue
+    outbound: false
+    consequential: false
+    output_integrity: untrusted       # anyone can open an issue or comment on a public repository
+    output_confidentiality: internal
+
+  github.list_issues:
+    capability: read
+    resource_class: github_issue
+    outbound: false
+    consequential: false
+    output_integrity: untrusted
+    output_confidentiality: internal
+
+  github.search_issues:
+    capability: read
+    resource_class: github_issue
+    outbound: false
+    consequential: false
+    output_integrity: untrusted
+    output_confidentiality: internal
+    free_text_args: [query]           # a search, not a statement
+
+  github.get_file_contents:
+    capability: read
+    resource_class: github_code
+    outbound: false
+    consequential: false
+    output_integrity: untrusted       # a contributor or a pull request can put instructions in a file
+    output_confidentiality: restricted   # the file may be in a private repository
+    fingerprint_fields: [all]
+
+  github.list_commits:
+    capability: read
+    resource_class: github_code
+    outbound: false
+    consequential: false
+    output_integrity: untrusted       # commit messages are written by contributors
+    output_confidentiality: internal
+
+  github.list_branches:
+    capability: read
+    resource_class: github_code
+    outbound: false
+    consequential: false
+    output_integrity: trusted
+    output_confidentiality: internal
+
+  github.add_issue_comment:
+    capability: send
+    resource_class: github_issue
+    outbound: true                    # a comment on a public repository is published to the world
+    consequential: true
+    output_integrity: trusted
+    output_confidentiality: internal
+    destination_args: [owner, repo]
+    destination_kind: repo
+
+  github.issue_write:
+    capability: send
+    resource_class: github_issue
+    outbound: true
+    consequential: true
+    output_integrity: trusted
+    output_confidentiality: internal
+    destination_args: [owner, repo]
+    destination_kind: repo
+
+  github.create_or_update_file:
+    capability: write
+    resource_class: github_code
+    outbound: true                    # writing to a repository is data leaving if the repository is public
+    consequential: true
+    output_integrity: trusted
+    output_confidentiality: internal
+    destination_args: [owner, repo]
+    destination_kind: repo
+
+  github.create_branch:
+    capability: write
+    resource_class: github_code
+    outbound: true
+    consequential: true
+    output_integrity: trusted
+    output_confidentiality: internal
+    destination_args: [owner, repo]
+    destination_kind: repo
+
+  github.delete_file:
+    capability: write
+    resource_class: github_code
+    outbound: true
+    consequential: true
+    requires_human_verification: true  # R4: a deletion waits for the officer
+    output_integrity: trusted
+    output_confidentiality: internal
+    destination_args: [owner, repo]
+    destination_kind: repo
+
   # ---- connector preset: Notion (official MCP server 2.6.1; plan F2, D-053) --------------------------------------------
   # Tool names are notion__API-<tool>. Whoever can edit a page can write instructions into it, so every read of content is
   # untrusted (R7, R8), and a workspace is private, so content is restricted with every value fingerprinted (R2). Every write
