@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Sentinel</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0D0D14;
+      --surface:  #16161F;
+      --surface2: #1E1E2A;
+      --border:   rgba(255,255,255,0.08);
+      --text:     #FFFFFF;
+      --muted:    #A9A9BC;
+      --violet:   #A98BFF;
+      --green:    #34E8A3;
+      --red:      #FF5468;
+      --amber:    #FFB62E;
+      --font:     "Helvetica Neue", Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 13px;
+      width: 280px;
+      padding: 16px;
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .header-left { display: flex; align-items: center; gap: 8px; }
+    .header-left svg { width: 24px; height: 24px; flex: none; }
+    .header-left span { font-weight: 700; font-size: 14px; }
+
+    /* Connection badge */
+    #conn-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 9px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    #conn-badge .dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      flex: none;
+    }
+    #conn-badge.connected    { background: rgba(52,232,163,.12); color: var(--green); }
+    #conn-badge.connected .dot { background: var(--green); }
+    #conn-badge.disconnected { background: var(--surface2); color: var(--muted); }
+    #conn-badge.disconnected .dot { background: var(--muted); }
+    #conn-badge.rejected     { background: rgba(255,84,104,.12); color: var(--red); }
+    #conn-badge.rejected .dot { background: var(--red); }
+
+    /* Current state row */
+    #state-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin-bottom: 12px;
+    }
+    #state-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+    #state-msg { color: var(--muted); font-size: 12px; margin-top: 2px; }
+
+    /* State colours */
+    .state-allowed    { color: var(--green); }
+    .state-denied     { color: #5B9BFF; }
+    .state-checking   { color: var(--violet); }
+    .state-needs-approval { color: var(--amber); }
+    .state-quarantined { color: var(--red); }
+    .state-tamper      { color: var(--red); }
+    .state-verified    { color: var(--green); }
+    .state-idle        { color: var(--muted); }
+    .state-sleeping    { color: var(--muted); }
+
+    /* Divider */
+    hr { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
+
+    /* Site toggles */
+    .section-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .site-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .site-name { font-size: 13px; }
+
+    /* Toggle switch */
+    .toggle {
+      position: relative;
+      width: 34px;
+      height: 20px;
+    }
+    .toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+    .toggle-track {
+      position: absolute;
+      inset: 0;
+      background: var(--surface2);
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: background .2s;
+    }
+    .toggle input:checked + .toggle-track { background: var(--violet); border-color: var(--violet); }
+    .toggle-thumb {
+      position: absolute;
+      top: 2px; left: 2px;
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      background: #fff;
+      transition: transform .2s;
+      pointer-events: none;
+    }
+    .toggle input:checked ~ .toggle-thumb { transform: translateX(14px); }
+
+    /* Links */
+    .links { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; }
+    .links a {
+      color: var(--muted);
+      font-size: 12px;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .links a:hover { color: var(--violet); }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <div class="header">
+    <div class="header-left">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="1" y="2" width="22" height="20" rx="6" fill="#A98BFF" opacity=".15"/>
+        <rect x="1" y="2" width="22" height="20" rx="6" stroke="#A98BFF" stroke-width="1.2"/>
+        <rect x="4" y="7" width="16" height="10" rx="3" fill="#07070A"/>
+        <line x1="8" y1="12" x2="8" y2="15" stroke="#A98BFF" stroke-width="2" stroke-linecap="round"/>
+        <line x1="16" y1="12" x2="16" y2="15" stroke="#A98BFF" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <span>Sentinel</span>
+    </div>
+    <div id="conn-badge" class="disconnected">
+      <span class="dot"></span>
+      <span id="conn-text">Checking…</span>
+    </div>
+  </div>
+
+  <!-- Current mascot state -->
+  <div id="state-row">
+    <div>
+      <div id="state-label" class="state-sleeping">SLEEPING</div>
+      <div id="state-msg"></div>
+    </div>
+  </div>
+
+  <!-- Per-site show/hide toggles -->
+  <div class="section-title">Show on site</div>
+
+  <div class="site-row">
+    <span class="site-name">claude.ai</span>
+    <label class="toggle" aria-label="Show Sentinel on claude.ai">
+      <input type="checkbox" id="toggle-claude" checked>
+      <span class="toggle-track"></span>
+      <span class="toggle-thumb"></span>
+    </label>
+  </div>
+
+  <div class="site-row">
+    <span class="site-name">chatgpt.com</span>
+    <label class="toggle" aria-label="Show Sentinel on chatgpt.com">
+      <input type="checkbox" id="toggle-chatgpt" checked>
+      <span class="toggle-track"></span>
+      <span class="toggle-thumb"></span>
+    </label>
+  </div>
+
+  <hr>
+
+  <!-- Links -->
+  <div class="links">
+    <a href="#" id="open-console">↗ Open Sentinel console</a>
+    <a href="#" id="open-options">⚙ Settings</a>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
+
