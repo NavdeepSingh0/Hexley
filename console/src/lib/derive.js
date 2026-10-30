@@ -398,7 +398,14 @@ export function laneCaption(lane, view) {
 export function approvalView(approval) {
   return {
     what: TOOL_ALLOWS[approval.tool] ?? approval.tool,
-    detail: shortArgs({ tool: approval.tool, args: approval.args }),
+    // A connector's tool (gmail.send_message) has no sentence of its own: the officer approves this exact request, so show all of it.
+    detail: approval.tool.includes('.') ? fullArgs(approval.args) : shortArgs({ tool: approval.tool, args: approval.args }),
     why: approval.summary,
   }
+}
+
+function fullArgs(args) {
+  return Object.entries(args || {})
+    .map(([k, v]) => `${k}: ${typeof v === 'string' ? v : JSON.stringify(v)}`)
+    .join(' · ')
 }

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
-  cancelRun, confirmRun, createRun, getRecordings, initAuth, listRuns, restoreAudit, tamperAudit, verifyAudit,
+  cancelRun, confirmRun, createRun, getRecordings, initAuth, listRuns, pendingApprovals, restoreAudit, tamperAudit, verifyAudit,
 } from './api.js'
 import { mascotFor, pickDefaultRecording, presenterNext } from './lib/derive.js'
 import { useRun } from './hooks/useRun.js'
@@ -116,7 +116,16 @@ export default function App() {
   }, [wantVerdict, hasVerdict, openVerdict])
   const target = view && drawer && drawer.index != null ? targetFor(view, drawer.laneId, drawer.index) : null
   const stepsLane = view && drawer && drawer.index == null ? drawer.laneId : null
-  const pending = view ? view.lanes.flatMap((l) => l.approvals || []).find((a) => a.status === 'pending') : null
+  const running = view ? view.lanes.flatMap((l) => l.approvals || []).find((a) => a.status === 'pending') : null
+  // A held call from outside the console's own runs (an AI client on a real connector) waits here too, or nobody would ever see it.
+  const [outside, setOutside] = useState(null)
+  const checkOutside = useCallback(() => pendingApprovals().then((list) => setOutside(list[0] ?? null)).catch(() => {}), [])
+  useEffect(() => {
+    checkOutside()
+    const timer = setInterval(checkOutside, 2500)
+    return () => clearInterval(timer)
+  }, [checkOutside])
+  const pending = running ?? outside
 
   // Presenter keys, via refs so the listener is registered once and always sees current state.
   const live = useRef({})
@@ -209,7 +218,7 @@ export default function App() {
         <Drawer target={target} onContinue={advance} onDismiss={() => setDrawer(null)}
           onBack={drawer.from === 'steps' ? () => setDrawer({ laneId: drawer.laneId }) : undefined} />
       ) : null}
-      {pending ? <ApprovalModal approval={pending} onDecided={refresh} /> : null}
+      {pending ? <ApprovalModal approval={pending} onDecided={() => Promise.all([refresh(), checkOutside()])} /> : null}
       <AuditBar verify={verify} onVerify={doVerify} onTamper={doTamper} onRestore={doRestore} busy={busy} />
     </div>
   )
