@@ -362,7 +362,7 @@ async def test_connect_endpoints(ostack):
         assert [m["id"] for m in v["methods"]] == ["oauth", "header"]
         assert all(c["screenshot"] is None for c in v["clients"] if c["status"] != "tested")
         assert {m["id"]: m["status"] for m in v["methods"]} == {"oauth": "tested", "header": "tested"}
-        assert [c["id"] for c in v["clients"] if c["status"] == "tested"] == ["claude-web", "claude-code", "claude-code-hook", "antigravity", "local-chat"]
+        assert [c["id"] for c in v["clients"] if c["status"] == "tested"] == ["claude-web", "claude-code", "claude-code-hook", "antigravity", "claude-code-vscode", "local-chat"]
         assert all(c["transcript"] is None for c in v["clients"] if c["status"] != "tested")
         tok = (await api.post("/api/v1/connect/token", json={"preset": "quotation_processing"})).json()
         assert tok["header_value"].startswith("Bearer ") and tok["slip"]["max_messages"] == 1

@@ -39,6 +39,12 @@ CLIENTS = [
      None,
      {"url": "/proof/antigravity-github-20261031.txt",
       "caption": "Real Antigravity and GitHub's own MCP server on test repositories, 31 Oct 2026: an honest comment went through; a poisoned issue's comment on the private repository was blocked, twice. The AI was told to carry the steps out, as a stand-in for a fooled model. Its terminal is not judged."}),
+    ("claude-code-vscode", "Claude Code in VS Code, with the Hexley hook", "ide", "tested", "header",
+     'python -m sentinel hook-config --api-url {api_url} --skip sentinel > .claude/settings.local.json\n'
+     '# then set SENTINEL_TOKEN to the token created above, without the word Bearer, and open this folder in VS Code',
+     None,
+     {"url": "/proof/claude-code-vscode-20261031.txt",
+      "caption": "The real VS Code window with Claude's real Gmail connector on a test account, 31 Oct 2026, one run per test: an honest send went, a send off the slip was blocked (R1). Claude read a poisoned mail and attempted no send, so Hexley stopped nothing there; the same send, asked directly at the decision endpoint, was blocked (R1, R2, R3)."}),
     ("vscode", "VS Code (MCP)", "ide", "should_work", "header",
      '{ "servers": { "sentinel": { "type": "http", "url": "{mcp_url}", "headers": { "Authorization": "{header_value}" } } } }',
      None, None),
