@@ -198,7 +198,7 @@ async def _chat(c, mode="scripted", preset="quotation"):
 async def test_a_visitor_can_chat_and_the_rules_still_decide(public):
     async with _visitor(public) as c:
         presets = (await c.get("/api/v1/chat/presets")).json()
-        assert "quotation" in {p["id"] for p in presets} and "own-doc" not in {p["id"] for p in presets}
+        assert {"quotation", "own-doc"} <= {p["id"] for p in presets} and "real-github" not in {p["id"] for p in presets}
         chat = await _chat(c)
         assert chat["can_upload"] is False
         assert (await c.post(f"/api/v1/chat/{chat['chat_id']}/messages", json={"text": "Process the quotation"})).status_code == 202
@@ -207,7 +207,7 @@ async def test_a_visitor_can_chat_and_the_rules_still_decide(public):
 
 
 @pytest.mark.parametrize("body", [
-    {"preset": "own-doc", "mode": "scripted"}, {"preset": "quotation", "mode": "local"}, {"preset": "quotation", "mode": "replay", "recording": {"x": 1}},
+    {"preset": "real-github", "mode": "auto"}, {"preset": "quotation", "mode": "local"}, {"preset": "quotation", "mode": "replay", "recording": {"x": 1}},
 ])
 async def test_what_a_visitors_chat_may_not_ask_for(public, body):
     async with _visitor(public) as c:

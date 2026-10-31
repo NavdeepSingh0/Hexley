@@ -32,6 +32,7 @@
   "permissions": ["storage"],
 
   "host_permissions": [
+    "https://hexley.site/*",
     "http://127.0.0.1/*",
     "http://localhost/*"
   ],

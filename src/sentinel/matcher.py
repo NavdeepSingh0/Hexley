@@ -21,6 +21,8 @@ from dataclasses import dataclass, field
 from decimal import Decimal, InvalidOperation
 from typing import Any
 
+from .unwrap import with_decoded
+
 MIN_NUMBER = 100  # smaller numbers are too common to be useful fingerprints
 
 FIELD_KINDS = {"quantity": "number", "depot_code": "code", "dispatch_date": "date",
@@ -179,6 +181,8 @@ class Match:
 _EMAIL_RE = re.compile(r"[a-z0-9._%+\-]+@[a-z0-9\-]+(?:\.[a-z0-9\-]+)+")
 _DIGITS_RUN = re.compile(r"(?<!\d)\+?\d(?:[\s().\-]?\d){8,14}(?!\d)")  # 9 to 15 digits, however separated (phones, accounts)
 _ID_RE = re.compile(r"\b([a-z]{2,6})[-_ ]?(\d{3,}(?:[ -]\d{3,})*)\b")  # CUST-00123, emp 4471, ACCT_99231, zqx 1000 451
+# A machine name: warehouse_prod, svc_inventory_rw, s3://bucket-eu1, a path or an internal address. Plain hyphenated words are not one.
+_MACHINE_NAME = re.compile(r"(?<![\w.@-])[a-z0-9]+(?:(?:[_./-]|://)+[a-z0-9]+)+(?![\w@-])")
 
 
 def _digits_key(run: str) -> str:
@@ -188,6 +192,13 @@ def _digits_key(run: str) -> str:
 
 def _id_key(letters: str, number: str) -> str:
     return f"{letters}{int(re.sub(r'[ -]', '', number))}"  # leading zeros and digit groups do not make a different identifier
+
+
+def _machine_names(norm: str) -> list[str]:
+    names = (m.group() for m in _MACHINE_NAME.finditer(norm))
+    # An underscore, a digit, a scheme, two slashes or a file ending says machine; "read/write" says English.
+    return list(dict.fromkeys(n for n in names if len(n) >= 7 and (re.fullmatch(r"\d{1,3}(?:\.\d{1,3}){3}", n)  # an internal address
+                                                                  or (re.search(r"[a-z]", n) and re.search(r"_|\d|://|/.*/|\.[a-z]{1,5}$", n)))))
 
 
 def _shingles(norm: str) -> list[str]:
@@ -207,6 +218,7 @@ def _generic_candidates(norm: str, kinds: set[str]) -> list[Candidate]:
         out += [Candidate("digits", _digits_key(m.group()), m.group().strip()) for m in _DIGITS_RUN.finditer(norm)]
     if "id" in kinds:
         out += [Candidate("id", _id_key(m[1], m[2]), m.group()) for m in _ID_RE.finditer(norm)]
+        out += [Candidate("id", name, name) for name in _machine_names(norm)]
     if "text" in kinds:
         out += [Candidate("text", _shingle_key(s), s) for s in dict.fromkeys(_shingles(norm))]
     return out
@@ -218,8 +230,9 @@ class FingerprintIndex:
 
     entries: dict[tuple[str, str], str] = field(default_factory=dict)
     actions: dict[tuple[str, str], str | None] = field(default_factory=dict)  # (kind, value) -> the call that produced it
+    origins: dict[tuple[str, str], set[str]] = field(default_factory=dict)  # (kind, value) -> the repositories, channels or pages it was read from
 
-    def add(self, result_text: str, fields: list[str], source_ref: str, action_id: str | None = None) -> None:
+    def add(self, result_text: str, fields: list[str], source_ref: str, action_id: str | None = None, origin: str | None = None) -> None:
         wanted = set(ALL_KINDS) if "all" in fields else {FIELD_KINDS[f] for f in fields if f in FIELD_KINDS}
         norm = normalise(result_text)
         # Without "code" among the wanted kinds, switch the weak code pattern off entirely: left on, "owes 48,500" is read
@@ -233,10 +246,16 @@ class FingerprintIndex:
             if (c.kind, c.canonical) not in self.entries:
                 self.entries[(c.kind, c.canonical)] = source_ref
                 self.actions[(c.kind, c.canonical)] = action_id
+            if origin:
+                self.origins.setdefault((c.kind, c.canonical), set()).add(origin)
+
+    def already_at(self, kind: str, canonical: str, places: list[str]) -> bool:
+        """Every place named here is somewhere this value was read from, so sending it there tells that place nothing new."""
+        return bool(places) and set(places) <= self.origins.get((kind, canonical), set())
 
     def scan_text(self, text: str, path: str = "") -> list[Match]:
         codes = frozenset(canonical for kind, canonical in self.entries if kind == "code")
-        norm = normalise(text)
+        norm = normalise(with_decoded(text))
         present = {kind for kind, _ in self.entries}
         found = [*candidates(norm, codes), *_generic_candidates(norm, present & ALL_KINDS)]
         return [Match(c.kind, c.canonical, self.entries[(c.kind, c.canonical)], c.snippet[:60], path,

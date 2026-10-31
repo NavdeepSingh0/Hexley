@@ -20,6 +20,7 @@ from typing import Any
 
 from fastmcp.exceptions import ToolError
 
+from .destinations import origin_key
 from .contracts import Session, SessionError, verify_session_token
 from .gateway import SentinelMiddleware
 from .models import Effect
@@ -119,7 +120,7 @@ async def check_call(rt: Runtime, session: Session, raw_tool: str, tool_input: A
     base = dict(action_id=action.action_id, decision_id=decision.decision_id, rule_ids=[str(r) for r in decision.rule_ids])
     if decision.effect == Effect.ALLOW:
         if tool_use_id:
-            session.hook_calls[tool_use_id] = (action.action_id, tool, decision)
+            session.hook_calls[tool_use_id] = (action.action_id, tool, decision, origin_key(action.args))
         return _reply("ALLOW", decision.summary_plain, tool=tool, **base)
     reason = decision.agent_summary or decision.summary_plain
     if decision.effect == Effect.ASK:
@@ -138,10 +139,10 @@ async def report_result(rt: Runtime, session: Session, raw_tool: str, tool_use_i
     found = session.hook_calls.pop(tool_use_id, None) if tool_use_id else None
     if found is None or found[1] != tool:
         return {"recorded": False, "reason": "no matching check for this call"}
-    action_id, _, decision = found
+    action_id, _, decision, origin = found
     entry = rt.registry.get(tool)
     try:
-        await SentinelMiddleware(rt).note_result(session, entry, tool, action_id, decision, response_text(tool_response))
+        await SentinelMiddleware(rt).note_result(session, entry, tool, action_id, decision, response_text(tool_response), origin)
     except ToolError as e:
         return {"recorded": False, "reason": str(e)}
     return {"recorded": True}

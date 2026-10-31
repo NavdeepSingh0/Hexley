@@ -30,12 +30,12 @@ function hideStatus() {
   statusEl.style.display = 'none'
 }
 
-/** Hexley's officer API runs on this computer. The token can approve actions, so it is only ever sent to this computer: not to a
- *  tunnel (which reaches the AI gateway, not the officer API) and not to an address pasted by mistake. */
+/** The token can approve actions, so it is only ever sent to this computer or to the hosted Hexley: not to a tunnel (which reaches the
+ *  AI gateway, not the officer API) and not to an address pasted by mistake. */
 function isLocalAddress(base) {
   try {
     const u = new URL(base)
-    return u.protocol === 'http:' && (u.hostname === '127.0.0.1' || u.hostname === 'localhost')
+    return (u.protocol === 'http:' && (u.hostname === '127.0.0.1' || u.hostname === 'localhost')) || (u.protocol === 'https:' && u.hostname === 'hexley.site')
   } catch (_) {
     return false
   }
@@ -107,7 +107,7 @@ saveBtn.addEventListener('click', async () => {
   const token = (tokenInput.value   || '').trim()
 
   if (!isLocalAddress(base)) {
-    showStatus('Use the address of Hexley on this computer, like http://127.0.0.1:8000. A tunnel address reaches the AI gateway, not the officer API, and the token is never sent to another machine.', 'error')
+    showStatus('Use https://hexley.site or the address of Hexley on this computer, like http://127.0.0.1:8000. The token is never sent anywhere else.', 'error')
     return
   }
 

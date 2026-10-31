@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Icon } from '../Blocks.jsx'
-import { MODES, ago } from '../../lib/chat.js'
+import { ago } from '../../lib/chat.js'
 import { getTheme, setTheme } from '../../theme.js'
 
 function ThemeRow() {
@@ -15,7 +15,7 @@ function ThemeRow() {
 }
 
 // Left column: the way home, a New chat button, the chats started in this browser, and the settings that rarely change.
-export default function Sidebar({ chats, activeId, onNew, onOpen, onRemove, mode, setMode, open, onClose }) {
+export default function Sidebar({ chats, activeId, onNew, onOpen, onRemove, open, onClose }) {
   return (
     <>
       {open && <div className="cx-scrim" onClick={onClose} aria-hidden="true" />}
@@ -45,12 +45,6 @@ export default function Sidebar({ chats, activeId, onNew, onOpen, onRemove, mode
           ))}
         </nav>
         <div className="cx-side-foot">
-          <label className="cx-model">
-            <span className="s-label">Model</span>
-            <select value={mode} onChange={(e) => setMode(e.target.value)} aria-label="Where the model's replies come from">
-              {MODES.map(([v, label]) => <option key={v} value={v}>{label}</option>)}
-            </select>
-          </label>
           <Link to="/docs" className="cx-side-btn"><Icon name="book" size={17} /> Docs</Link>
           <ThemeRow />
         </div>

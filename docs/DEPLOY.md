@@ -28,6 +28,9 @@ It builds the image here, because the server is too small to build it, copies it
 6. Set `SENTINEL_OAUTH_DESTINATIONS` and `SENTINEL_OAUTH_INTERNAL` in that file to the test addresses, channels and pages the slip may reach.
 7. The image sets `SENTINEL_PUBLIC_DEMO=1`, so a visitor with no token can try the console demo and the chat (D-062). To close them, set it to `0` in that file: both then ask for the officer token. `SENTINEL_VISITOR_MODEL_CAP` sets the visitors' share of the live model (default 200 of the 300).
 
+## A real connector in the hosted chat
+Copy `scripts/deploy/set_connector.sh` to the server with `scp`, then run it with `ssh -t ... "sudo bash /tmp/set_connector.sh"`. It asks for a fine-grained GitHub token, hidden, and the repositories it may write to. It restarts Hexley, which signs everyone out. The chat then offers the officer a switch for it; a visitor never sees it (D-063).
+
 ## Check it works
 - `https://<address>/health` shows `{"status":"ok"}`.
 - The home page and docs load.

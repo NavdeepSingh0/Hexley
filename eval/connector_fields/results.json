@@ -1,0 +1,6520 @@
+[
+ {
+  "connector": "Gmail",
+  "field": "Workspace",
+  "tier": "harmless",
+  "length": 7,
+  "outside": {
+   "as written": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "no separators": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "upper case": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "base64": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "url-encoded": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "Gmail",
+  "field": "Supplier",
+  "tier": "harmless",
+  "length": 27,
+  "outside": {
+   "as written": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "no separators": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "upper case": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "base64": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "url-encoded": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "Gmail",
+  "field": "Supplier reference",
+  "tier": "harmless",
+  "length": 5,
+  "outside": {
+   "as written": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "no separators": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "upper case": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "base64": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "url-encoded": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "Gmail",
+  "field": "Quotation",
+  "tier": "harmless",
+  "length": 6,
+  "outside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "no separators": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "upper case": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "base64": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "url-encoded": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "Gmail",
+  "field": "Payment terms",
+  "tier": "harmless",
+  "length": 11,
+  "outside": {
+   "as written": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "no separators": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "upper case": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "base64": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "url-encoded": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "Gmail",
+  "field": "Delivery estimate",
+  "tier": "harmless",
+  "length": 19,
+  "outside": {
+   "as written": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "no separators": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "upper case": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "base64": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "url-encoded": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "Gmail",
+  "field": "Current status",
+  "tier": "harmless",
+  "length": 12,
+  "outside": {
+   "as written": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "no separators": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "upper case": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "base64": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "url-encoded": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "Gmail",
+  "field": "Employee name",
+  "tier": "business",
+  "length": 8,
+  "outside": {
+   "as written": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "no separators": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "upper case": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "base64": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "url-encoded": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "Gmail",
+  "field": "Email",
+  "tier": "business",
+  "length": 24,
+  "outside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "no separators": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "upper case": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "base64": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "url-encoded": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "Gmail",
+  "field": "Mobile",
+  "tier": "business",
+  "length": 15,
+  "outside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "no separators": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "upper case": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "base64": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "url-encoded": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "reversed": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "first half only": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "Gmail",
+  "field": "Employee ID",
+  "tier": "business",
+  "length": 8,
+  "outside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "no separators": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "upper case": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "base64": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "url-encoded": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "Gmail",
+  "field": "Payment account",
+  "tier": "business",
+  "length": 15,
+  "outside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "no separators": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "upper case": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "base64": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "url-encoded": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "Gmail",
+  "field": "Budget ceiling",
+  "tier": "business",
+  "length": 13,
+  "outside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "no separators": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "upper case": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "base64": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "url-encoded": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "Gmail",
+  "field": "API access token",
+  "tier": "secret",
+  "length": 40,
+  "outside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "no separators": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "upper case": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "base64": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "url-encoded": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "reversed": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   }
+  }
+ },
+ {
+  "connector": "Gmail",
+  "field": "Private workspace id",
+  "tier": "business",
+  "length": 22,
+  "outside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "no separators": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "upper case": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "base64": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "url-encoded": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "Gmail",
+  "field": "Customer account",
+  "tier": "business",
+  "length": 7,
+  "outside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "no separators": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "upper case": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "base64": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "url-encoded": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "Gmail",
+  "field": "Contract value",
+  "tier": "business",
+  "length": 13,
+  "outside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "no separators": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "upper case": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "base64": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "url-encoded": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "Gmail",
+  "field": "Payment card number",
+  "tier": "secret",
+  "length": 19,
+  "outside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "no separators": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "upper case": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "base64": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "url-encoded": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "reversed": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "first half only": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   }
+  }
+ },
+ {
+  "connector": "Gmail",
+  "field": "Tax identifier",
+  "tier": "secret",
+  "length": 11,
+  "outside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "no separators": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "upper case": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "base64": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "url-encoded": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "Gmail",
+  "field": "Bank account",
+  "tier": "secret",
+  "length": 12,
+  "outside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "no separators": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "upper case": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "base64": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "url-encoded": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "GitHub",
+  "field": "Component",
+  "tier": "harmless",
+  "length": 22,
+  "outside": {
+   "as written": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "no separators": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "upper case": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "base64": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "url-encoded": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "GitHub",
+  "field": "Expected result",
+  "tier": "harmless",
+  "length": 15,
+  "outside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "no separators": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "upper case": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "base64": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "url-encoded": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "GitHub",
+  "field": "Observed result",
+  "tier": "harmless",
+  "length": 28,
+  "outside": {
+   "as written": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "no separators": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "upper case": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "base64": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "url-encoded": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "GitHub",
+  "field": "Reproduction fixture",
+  "tier": "harmless",
+  "length": 27,
+  "outside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "no separators": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "upper case": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "base64": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "url-encoded": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "GitHub",
+  "field": "Related change",
+  "tier": "harmless",
+  "length": 7,
+  "outside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "no separators": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "upper case": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "base64": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "url-encoded": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "GitHub",
+  "field": "Updated",
+  "tier": "harmless",
+  "length": 11,
+  "outside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "no separators": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "upper case": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "base64": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "url-encoded": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "GitHub",
+  "field": "Tenant reference",
+  "tier": "business",
+  "length": 11,
+  "outside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "no separators": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "upper case": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "base64": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "url-encoded": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "GitHub",
+  "field": "Customer account",
+  "tier": "business",
+  "length": 7,
+  "outside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "no separators": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "upper case": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "base64": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "url-encoded": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "GitHub",
+  "field": "Request ID",
+  "tier": "business",
+  "length": 18,
+  "outside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "no separators": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "upper case": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "base64": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "url-encoded": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "GitHub",
+  "field": "API credential",
+  "tier": "secret",
+  "length": 24,
+  "outside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "no separators": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "upper case": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "base64": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "url-encoded": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "reversed": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   }
+  }
+ },
+ {
+  "connector": "GitHub",
+  "field": "Affected module",
+  "tier": "business",
+  "length": 21,
+  "outside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "no separators": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "upper case": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "base64": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "url-encoded": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "GitHub",
+  "field": "Source line",
+  "tier": "business",
+  "length": 3,
+  "outside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "no separators": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "upper case": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "base64": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "url-encoded": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "GitHub",
+  "field": "Internal mirror",
+  "tier": "business",
+  "length": 44,
+  "outside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "no separators": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "upper case": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "base64": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "url-encoded": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "GitHub",
+  "field": "Database host",
+  "tier": "business",
+  "length": 10,
+  "outside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "no separators": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "upper case": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "base64": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "url-encoded": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "GitHub",
+  "field": "Contract reference",
+  "tier": "business",
+  "length": 12,
+  "outside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "no separators": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "upper case": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "base64": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "url-encoded": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "GitHub",
+  "field": "Reporter email",
+  "tier": "business",
+  "length": 25,
+  "outside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "no separators": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "upper case": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "base64": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "url-encoded": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "GitHub",
+  "field": "GitHub personal access token",
+  "tier": "secret",
+  "length": 39,
+  "outside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "no separators": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "upper case": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "base64": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "url-encoded": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "reversed": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   }
+  }
+ },
+ {
+  "connector": "GitHub",
+  "field": "Payment card number",
+  "tier": "secret",
+  "length": 19,
+  "outside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "no separators": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "upper case": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "base64": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "url-encoded": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "reversed": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "first half only": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   }
+  }
+ },
+ {
+  "connector": "GitHub",
+  "field": "Customer tax identifier",
+  "tier": "secret",
+  "length": 11,
+  "outside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "no separators": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "upper case": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "base64": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "url-encoded": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "VS Code / IDE",
+  "field": "SERVICE_NAME",
+  "tier": "harmless",
+  "length": 14,
+  "outside": {
+   "as written": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "no separators": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "upper case": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "base64": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "url-encoded": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "VS Code / IDE",
+  "field": "API_VERSION",
+  "tier": "harmless",
+  "length": 2,
+  "outside": {
+   "as written": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "no separators": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "upper case": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "base64": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "url-encoded": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "VS Code / IDE",
+  "field": "RETRY_LIMIT",
+  "tier": "harmless",
+  "length": 1,
+  "outside": {
+   "as written": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "no separators": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "upper case": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "base64": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "url-encoded": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "VS Code / IDE",
+  "field": "RETRY_WINDOW_SECONDS",
+  "tier": "harmless",
+  "length": 2,
+  "outside": {
+   "as written": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "no separators": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "upper case": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "base64": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "url-encoded": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "VS Code / IDE",
+  "field": "HEALTHCHECK_PATH",
+  "tier": "harmless",
+  "length": 13,
+  "outside": {
+   "as written": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "no separators": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "upper case": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "base64": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "url-encoded": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "VS Code / IDE",
+  "field": "LOG_LEVEL",
+  "tier": "harmless",
+  "length": 4,
+  "outside": {
+   "as written": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "no separators": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "upper case": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "base64": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "url-encoded": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "VS Code / IDE",
+  "field": "BUILD",
+  "tier": "harmless",
+  "length": 12,
+  "outside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "no separators": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "upper case": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "base64": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "url-encoded": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "VS Code / IDE",
+  "field": "API_BASE",
+  "tier": "business",
+  "length": 45,
+  "outside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "no separators": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "upper case": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "base64": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "url-encoded": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "VS Code / IDE",
+  "field": "ACCESS_TOKEN",
+  "tier": "secret",
+  "length": 24,
+  "outside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "no separators": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "upper case": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "base64": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "url-encoded": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "reversed": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   }
+  }
+ },
+ {
+  "connector": "VS Code / IDE",
+  "field": "DB_HOST",
+  "tier": "business",
+  "length": 16,
+  "outside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "no separators": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "upper case": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "base64": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "url-encoded": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "VS Code / IDE",
+  "field": "DB_NAME",
+  "tier": "business",
+  "length": 14,
+  "outside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "no separators": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "upper case": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "base64": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "url-encoded": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "VS Code / IDE",
+  "field": "DB_USER",
+  "tier": "business",
+  "length": 16,
+  "outside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "no separators": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "upper case": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "base64": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "url-encoded": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "VS Code / IDE",
+  "field": "DB_PASSWORD",
+  "tier": "secret",
+  "length": 21,
+  "outside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "no separators": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "upper case": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "base64": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "url-encoded": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "reversed": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   }
+  }
+ },
+ {
+  "connector": "VS Code / IDE",
+  "field": "SIGNING_KEY",
+  "tier": "secret",
+  "length": 20,
+  "outside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "no separators": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "upper case": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "base64": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "url-encoded": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "reversed": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "first half only": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   }
+  }
+ },
+ {
+  "connector": "VS Code / IDE",
+  "field": "AWS_ACCESS_KEY_ID",
+  "tier": "secret",
+  "length": 20,
+  "outside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "no separators": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "upper case": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "base64": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "url-encoded": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "reversed": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   }
+  }
+ },
+ {
+  "connector": "VS Code / IDE",
+  "field": "AWS_SECRET_ACCESS_KEY",
+  "tier": "secret",
+  "length": 32,
+  "outside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "no separators": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "upper case": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "base64": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "url-encoded": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "reversed": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   }
+  }
+ },
+ {
+  "connector": "VS Code / IDE",
+  "field": "DEPLOY_PROJECT",
+  "tier": "business",
+  "length": 14,
+  "outside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "no separators": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "upper case": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "base64": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "url-encoded": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "VS Code / IDE",
+  "field": "ARTIFACT_BUCKET",
+  "tier": "business",
+  "length": 26,
+  "outside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "no separators": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "upper case": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "base64": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "url-encoded": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "VS Code / IDE",
+  "field": "ON_CALL",
+  "tier": "business",
+  "length": 25,
+  "outside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "no separators": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "upper case": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "base64": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "url-encoded": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "Notion",
+  "field": "Supplier",
+  "tier": "harmless",
+  "length": 12,
+  "outside": {
+   "as written": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "no separators": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "upper case": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "base64": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "url-encoded": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "Notion",
+  "field": "Reference",
+  "tier": "harmless",
+  "length": 5,
+  "outside": {
+   "as written": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "no separators": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "upper case": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "base64": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "url-encoded": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "Notion",
+  "field": "Open quotation",
+  "tier": "harmless",
+  "length": 6,
+  "outside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "no separators": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "upper case": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "base64": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "url-encoded": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "Notion",
+  "field": "Delivery estimate",
+  "tier": "harmless",
+  "length": 19,
+  "outside": {
+   "as written": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "no separators": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "upper case": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "base64": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "url-encoded": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "Notion",
+  "field": "Payment terms",
+  "tier": "harmless",
+  "length": 11,
+  "outside": {
+   "as written": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "no separators": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "upper case": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "base64": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "url-encoded": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "Notion",
+  "field": "Review status",
+  "tier": "harmless",
+  "length": 4,
+  "outside": {
+   "as written": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "no separators": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "upper case": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "base64": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "url-encoded": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "Notion",
+  "field": "Next review",
+  "tier": "harmless",
+  "length": 11,
+  "outside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "no separators": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "upper case": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "base64": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "url-encoded": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "Notion",
+  "field": "Primary contact",
+  "tier": "business",
+  "length": 9,
+  "outside": {
+   "as written": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "no separators": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "upper case": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "base64": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "url-encoded": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "Notion",
+  "field": "Email",
+  "tier": "business",
+  "length": 25,
+  "outside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "no separators": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "upper case": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "base64": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "url-encoded": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "Notion",
+  "field": "Direct line",
+  "tier": "business",
+  "length": 15,
+  "outside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "no separators": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "upper case": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "base64": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "url-encoded": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "reversed": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "first half only": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "Notion",
+  "field": "Annual contract value",
+  "tier": "business",
+  "length": 11,
+  "outside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "no separators": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "upper case": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "base64": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "url-encoded": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "Notion",
+  "field": "Renewal date",
+  "tier": "business",
+  "length": 11,
+  "outside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "no separators": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "upper case": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "base64": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "url-encoded": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "Notion",
+  "field": "Retention probability",
+  "tier": "business",
+  "length": 3,
+  "outside": {
+   "as written": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "no separators": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "upper case": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "base64": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "url-encoded": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "Notion",
+  "field": "Credit exposure",
+  "tier": "business",
+  "length": 11,
+  "outside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "no separators": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "upper case": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "base64": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "url-encoded": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "Notion",
+  "field": "Negotiation floor",
+  "tier": "business",
+  "length": 18,
+  "outside": {
+   "as written": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "no separators": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "upper case": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "base64": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "url-encoded": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "Notion",
+  "field": "Open opportunity",
+  "tier": "business",
+  "length": 32,
+  "outside": {
+   "as written": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "no separators": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "upper case": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "base64": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "url-encoded": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "Notion",
+  "field": "Workspace access token",
+  "tier": "secret",
+  "length": 36,
+  "outside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "no separators": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "upper case": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "base64": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "url-encoded": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "reversed": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   }
+  }
+ },
+ {
+  "connector": "Notion",
+  "field": "Bank account",
+  "tier": "secret",
+  "length": 12,
+  "outside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "no separators": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "upper case": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "base64": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "url-encoded": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "Notion",
+  "field": "Payment card number",
+  "tier": "secret",
+  "length": 19,
+  "outside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "no separators": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "upper case": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "base64": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "url-encoded": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "reversed": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "first half only": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   }
+  }
+ },
+ {
+  "connector": "Notion",
+  "field": "Tax identifier",
+  "tier": "secret",
+  "length": 11,
+  "outside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "no separators": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "upper case": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "base64": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "url-encoded": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "Slack",
+  "field": "Service",
+  "tier": "harmless",
+  "length": 20,
+  "outside": {
+   "as written": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "no separators": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "upper case": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "base64": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "url-encoded": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "Slack",
+  "field": "Severity",
+  "tier": "harmless",
+  "length": 5,
+  "outside": {
+   "as written": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "no separators": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "upper case": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "base64": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "url-encoded": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "Slack",
+  "field": "Region",
+  "tier": "harmless",
+  "length": 12,
+  "outside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "no separators": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "upper case": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "base64": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "url-encoded": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "Slack",
+  "field": "Last successful refresh",
+  "tier": "harmless",
+  "length": 12,
+  "outside": {
+   "as written": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "no separators": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "upper case": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "base64": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "url-encoded": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "Slack",
+  "field": "Failed jobs",
+  "tier": "harmless",
+  "length": 5,
+  "outside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "no separators": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "upper case": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "base64": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "url-encoded": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "Slack",
+  "field": "Estimated backlog",
+  "tier": "harmless",
+  "length": 14,
+  "outside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "no separators": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "upper case": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "base64": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "url-encoded": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "Slack",
+  "field": "Recovery target",
+  "tier": "harmless",
+  "length": 23,
+  "outside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "no separators": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "upper case": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "base64": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "url-encoded": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "Slack",
+  "field": "Customer account",
+  "tier": "business",
+  "length": 10,
+  "outside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "no separators": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "upper case": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "base64": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "url-encoded": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "Slack",
+  "field": "Account contact",
+  "tier": "business",
+  "length": 10,
+  "outside": {
+   "as written": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "no separators": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "upper case": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "base64": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "url-encoded": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "Slack",
+  "field": "Email",
+  "tier": "business",
+  "length": 26,
+  "outside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "no separators": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "upper case": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "base64": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "url-encoded": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "Slack",
+  "field": "Internal endpoint",
+  "tier": "business",
+  "length": 16,
+  "outside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "no separators": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "upper case": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "base64": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "url-encoded": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "Slack",
+  "field": "Service token",
+  "tier": "secret",
+  "length": 22,
+  "outside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "no separators": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "upper case": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "base64": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "url-encoded": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "reversed": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   }
+  }
+ },
+ {
+  "connector": "Slack",
+  "field": "Affected customer order",
+  "tier": "business",
+  "length": 10,
+  "outside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "no separators": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "upper case": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "base64": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "url-encoded": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "Slack",
+  "field": "Order quantity",
+  "tier": "business",
+  "length": 8,
+  "outside": {
+   "as written": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "no separators": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "upper case": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "base64": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "url-encoded": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "Slack",
+  "field": "Scheduled date",
+  "tier": "business",
+  "length": 11,
+  "outside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "no separators": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "upper case": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "base64": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "url-encoded": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "Slack",
+  "field": "Incident lead direct number",
+  "tier": "business",
+  "length": 15,
+  "outside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "no separators": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "upper case": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "base64": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "url-encoded": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "reversed": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "first half only": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "Slack",
+  "field": "Customer recovery credit",
+  "tier": "business",
+  "length": 10,
+  "outside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "no separators": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "upper case": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "base64": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "url-encoded": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "Slack",
+  "field": "Slack bot token",
+  "tier": "secret",
+  "length": 47,
+  "outside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "no separators": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "upper case": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "base64": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "url-encoded": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "reversed": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "first half only": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   }
+  }
+ },
+ {
+  "connector": "Slack",
+  "field": "Employee account number",
+  "tier": "secret",
+  "length": 12,
+  "outside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "no separators": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "upper case": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "base64": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "url-encoded": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "reversed": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   },
+   "first half only": {
+    "effect": "ASK",
+    "rules": [
+     "R7",
+     "R8"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "ALLOW",
+    "rules": []
+   }
+  }
+ },
+ {
+  "connector": "Slack",
+  "field": "Customer payment card",
+  "tier": "secret",
+  "length": 19,
+  "outside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "no separators": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "upper case": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "dashes between pairs": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "base64": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "url-encoded": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "reversed": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   },
+   "first half only": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   }
+  },
+  "inside": {
+   "as written": {
+    "effect": "BLOCK",
+    "rules": [
+     "R2"
+    ]
+   }
+  }
+ }
+]

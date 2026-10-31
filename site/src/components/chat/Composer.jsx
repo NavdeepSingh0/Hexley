@@ -23,7 +23,7 @@ export function FileCard({ file, onRemove }) {
 // The box at the bottom: it grows with what is typed, Enter sends, Shift+Enter breaks the line, and when it is closed the
 // reason is written in the box itself. Files picked with + sit inside the box until they are sent with the message. The
 // disclosure sits right under it, always.
-export default function Composer({ draft, setDraft, onSend, block, busy, disclosure, onAttach, attachments = [], onDetach }) {
+export default function Composer({ draft, setDraft, onSend, block, canType = false, busy, disclosure, onAttach, attachments = [], onDetach }) {
   const ref = useRef(null)
   const fileRef = useRef(null)
   useLayoutEffect(() => {
@@ -41,7 +41,7 @@ export default function Composer({ draft, setDraft, onSend, block, busy, disclos
   }
   return (
     <div className="cx-composer-wrap">
-      <div className={`cx-composer${block ? ' is-closed' : ''}`}>
+      <div className={`cx-composer${block && !canType ? ' is-closed' : ''}`}>
         {attachments.length > 0 && (
           <div className="cx-files" aria-label="Files attached to this message">
             {attachments.map((a) => <FileCard key={a.name} file={a} onRemove={a.status === 'uploading' ? null : () => onDetach(a.name)} />)}
@@ -56,9 +56,9 @@ export default function Composer({ draft, setDraft, onSend, block, busy, disclos
             </>
           )}
           <textarea
-            ref={ref} rows={1} value={draft} onChange={(e) => setDraft(e.target.value)} disabled={Boolean(block)}
+            ref={ref} rows={1} value={draft} onChange={(e) => setDraft(e.target.value)} disabled={Boolean(block) && !canType} autoFocus
             aria-label="Message the agent" aria-describedby="cx-disclosure"
-            placeholder={block || (attachments.length ? 'Say what to do with it' : 'Message the agent')}
+            placeholder={canType ? 'Message Hexley Chat' : block || (attachments.length ? 'Say what to do with it' : 'Message Hexley Chat')}
             onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey && can) { e.preventDefault(); onSend() } }}
           />
           <button type="button" className="cx-send" onClick={onSend} disabled={!can} aria-label="Send"><Icon name="arrow" size={18} className="cx-send-icon" /></button>

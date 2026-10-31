@@ -42,13 +42,15 @@ MAX_USER_MESSAGES = 30
 MAX_TEXT = 2000
 MAX_STEPS_PER_TURN = 10
 MAX_CHATS = 50
+MAX_OUTPUT_SHOWN = 6000  # characters of one tool's output on the page; the model saw all of it
+CONNECTOR_REPOS_ENV = "SENTINEL_CHAT_REPOS"  # comma separated repo:owner/name: where a chat on a real connector may write. Never in git.
 ALLOWED_HOLD_S = 1.5  # how long the mascot shows "allowed" before settling (MASCOT.md)
 RECORDING_SCHEMA = "sentinel.chat-recording/1"
 
 CHAT_SYSTEM = (
-    "You are the assistant in Hexley Chat, a demo host app for an office. Do what the user asks with the tools you have. "
-    "If a tool call is refused or held, tell the user plainly what was refused and why, using what the tool told you. "
-    "Reply in short plain sentences."
+    "You are the assistant in Hexley Chat. Answer questions directly, as a good general assistant would, and use your tools only when the "
+    "request needs them. If a tool call is refused or held, tell the user plainly what was refused and why, using what the tool told you. "
+    "Use Markdown when it helps: lists, tables, code blocks. Keep answers as short as the question allows."
 )
 
 
@@ -65,6 +67,9 @@ class Preset:
     title: str
     scenario: str  # the run scenario whose slip, task and scripted attack this preset reuses
     description: str
+    template: str = ""  # a slip template of its own, for a preset that is not one of the demo's scenarios
+    connector: str = ""  # the real connector it works on (D-063): only for the officer, and only when that connector is running
+    prompt: str = ""
 
 
 PRESETS: dict[str, Preset] = {p.id: p for p in (
@@ -80,6 +85,8 @@ PRESETS: dict[str, Preset] = {p.id: p for p in (
            "A circular hides an instruction to e-mail the whole voter roll to an address only it names. No quotations, no stock."),
     Preset("own-doc", "Work with your own document", "own_document",
            "Upload a PDF nobody has seen and ask for anything. The file is treated as untrusted; the Rule of Two is on."),
+    Preset("real-github", "Work on a real GitHub repository", "", "A real connector: the model reads and comments on the repositories this deployment names, and Hexley judges each call.",
+           template="chat_github", connector="github", prompt="List the open issues in the repository you may write to, and summarise them."),
 )}
 
 
@@ -89,11 +96,12 @@ def _sentinel_lane(preset: Preset) -> int:
 
 
 def preset_task(preset: Preset) -> str:
-    return SCENARIOS[preset.scenario].tasks[_sentinel_lane(preset)]
+    return preset.prompt or SCENARIOS[preset.scenario].tasks[_sentinel_lane(preset)]
 
 
 def preset_view(preset: Preset) -> dict:
-    return {"id": preset.id, "title": preset.title, "prompt": preset_task(preset), "description": preset.description}
+    return {"id": preset.id, "title": preset.title, "prompt": preset_task(preset), "description": preset.description,
+            **({"connector": preset.connector} if preset.connector else {})}
 
 
 # ---- models that are not a live API ---------------------------------------------------------------------------------
@@ -190,8 +198,8 @@ def args_preview(tool: str, args: dict) -> str:
     return _clip(", ".join(f"{k}={v}" for k, v in a.items()), 120)
 
 
-def action_view(step: dict) -> dict:
-    """One tool call as the chat page shows it, from the gateway's events for that call."""
+def action_view(step: dict, output: str | None = None) -> dict:
+    """One tool call as the chat page shows it, from the gateway's events for that call, with what was really asked and what really came back."""
     approval = step.get("approval")
     effect = step.get("effect")
     if approval and approval["status"] == "pending":
@@ -208,7 +216,7 @@ def action_view(step: dict) -> dict:
         decision = "NEEDS_APPROVAL"
     reason = step.get("summary") or ("" if decision == "PENDING" else "Checked: allowed.")
     return {"action_id": step["action_id"], "tool": step["tool"], "label": label_for(step["tool"]),
-            "args_preview": args_preview(step["tool"], step["args"]), "decision": decision,
+            "args_preview": args_preview(step["tool"], step["args"]), "decision": decision, "args": step["args"], "output": output,
             "rules": list(step.get("rule_ids") or []), "reason": reason,
             "approval_id": approval["approval_id"] if approval else None}
 
@@ -318,7 +326,9 @@ class ChatManager:
     def _model_for(self, preset: Preset, mode: str, recording: dict | None) -> tuple[str, Any, str]:
         """(mode, model object, disclosure). `auto` is live when a key is configured, otherwise scripted."""
         host = "Hexley Chat (our demo host)"
-        tail = "synthetic data, mock tools"
+        tail = f"a real {preset.connector} connector on test repositories" if preset.connector else "synthetic data, mock tools"
+        if preset.connector and mode not in ("live", "auto"):
+            raise ChatError(422, "a chat on a real connector needs the live model")
         if mode == "replay":
             msgs = check_recording(recording)
             name = str(recording.get("model", "recorded model"))[:80]
@@ -361,7 +371,15 @@ class ChatManager:
 
     # -- lifecycle ----------------------------------------------------------------------------------------------------
     def presets(self) -> list[dict]:
-        return [preset_view(p) for p in PRESETS.values()]
+        return [preset_view(p) for p in PRESETS.values() if not p.connector or self.connector_ready(p)]
+
+    def connector_ready(self, preset: Preset) -> bool:
+        """The connector is running here and the deployment named where it may write. A preset for a connector that is not there is not offered."""
+        return any(u.name == preset.connector for u in self.rt.upstreams.upstreams) and bool(self._connector_repos())
+
+    @staticmethod
+    def _connector_repos() -> list[str]:
+        return [r.strip() for r in os.environ.get(CONNECTOR_REPOS_ENV, "").split(",") if r.strip()]
 
     async def create(self, preset_id: str, mode: str = "auto", recording: dict | None = None,
                      officer: str = "Col. R. Menon") -> Chat:
@@ -372,11 +390,19 @@ class ChatManager:
             raise ChatError(422, "mode must be auto, live, local, scripted or replay")
         if mode == "replay" and recording is None:
             recording = self._committed_recording(preset)
+        if preset.connector and not self.connector_ready(preset):
+            raise ChatError(404, f"the {preset.connector} connector is not set up on this deployment")
         actual, model, disclosure = self._model_for(preset, mode, recording)
-        scenario = SCENARIOS[preset.scenario]
-        spec = scenario.lanes[_sentinel_lane(preset)]
+        templates = self.rt.templates
+        if preset.connector:  # where it may write is the deployment's, never in git
+            repos = self._connector_repos()
+            templates = {**templates, preset.template: {**templates[preset.template], "allowed_recipient_domains": repos, "internal_destinations": repos}}
+            name, item = preset.template, None
+        else:
+            spec = SCENARIOS[preset.scenario].lanes[_sentinel_lane(preset)]
+            name, item = spec.template, spec.work_item_id
         try:
-            contract = draft_contract(self.rt.templates, spec.template, officer=officer, work_item_id=spec.work_item_id)
+            contract = draft_contract(templates, name, officer=officer, work_item_id=item)
         except SlipError as e:
             raise ChatError(422, str(e)) from e
         self.rt.drafts[contract.contract_id] = contract
@@ -496,11 +522,12 @@ class ChatManager:
     def view(self, chat_id: str) -> dict:
         chat = self._get(chat_id)
         steps = build_steps(chat.events)
+        outputs = self._outputs(chat, steps)
         messages = []
         for m in chat.messages:
             actions = []
             if m["role"] == "assistant" and m.get("step_from") is not None:
-                actions = [action_view(s) for s in steps[m["step_from"]: m["step_to"]]]
+                actions = [action_view(s, outputs.get(s["action_id"])) for s in steps[m["step_from"]: m["step_to"]]]
             messages.append({"id": m["id"], "role": m["role"], "text": m["text"], "ts": m["ts"], "actions": actions,
                              "checks": m.get("checks", []), "attachments": m.get("attachments", [])})
         state = self.session_state(chat)
@@ -512,7 +539,8 @@ class ChatManager:
         if status == "model_busy":
             mascot = {"state": "idle", "message": "The model is busy; trying again."}
         c = chat.contract
-        return {"chat_id": chat.chat_id, "status": status, "disclosure": chat.disclosure, "model": chat.endpoint.model,
+        first = next((m["text"] for m in chat.messages if m["role"] == "user"), "")
+        return {"chat_id": chat.chat_id, "title": _clip(first, 48) if first else chat.preset.title, "status": status, "disclosure": chat.disclosure, "model": chat.endpoint.model,
                 "mode": chat.mode, "preset": chat.preset.id,
                 "slip": {"objective": c["objective"], "allowed_tools": c["allowed_tools"],
                          "allowed_destinations": c["allowed_recipient_domains"], "max_messages": c["max_messages"],
@@ -520,6 +548,23 @@ class ChatManager:
                 "messages": messages, "mascot": mascot, "retry": retry,
                 "can_upload": "read_document" in c["allowed_tools"],
                 "documents": [{k: d[k] for k in ("name", "path", "pages", "chars", "text", "sha256")} for d in chat.documents]}
+
+    @staticmethod
+    def _outputs(chat: Chat, steps: list[dict]) -> dict[str, str]:
+        """What each tool call returned, as the model received it. Calls and outputs are paired in order, tool by tool, from the model's own
+        conversation; events carry only a hash of a result, and that stays so, because events reach the log."""
+        replies = {m.get("tool_call_id"): m.get("content") or "" for m in chat.model_messages if m.get("role") == "tool"}
+        by_tool: dict[str, list[str]] = {}
+        for m in chat.model_messages:
+            for call in m.get("tool_calls") or []:
+                by_tool.setdefault(call["function"]["name"], []).append(replies.get(call.get("id"), ""))
+        out = {}
+        for step in steps:
+            queue = by_tool.get(step["tool"])
+            if queue:
+                text = queue.pop(0)
+                out[step["action_id"]] = text if len(text) <= MAX_OUTPUT_SHOWN else f"{text[:MAX_OUTPUT_SHOWN]}\n… ({len(text) - MAX_OUTPUT_SHOWN} more characters)"
+        return out
 
     def recording(self, chat_id: str) -> dict:
         chat = self._get(chat_id)

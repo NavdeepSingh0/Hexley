@@ -18,13 +18,16 @@ import urllib.parse
 from dataclasses import dataclass, field
 from typing import Any
 
+from .unwrap import with_decoded
+
 # (label, pattern, group holding the secret). Order matters only for labelling: a value is indexed once.
 _PATTERNS: list[tuple[str, re.Pattern[str], int]] = [
     ("private key", re.compile(r"-----BEGIN (?:[A-Z]+ )*PRIVATE KEY-----\s*([A-Za-z0-9+/=\s]{40,}?)\s*-----END"), 1),
     ("AWS access key", re.compile(r"\b((?:AKIA|ASIA)[0-9A-Z]{16})\b"), 1),
     ("AWS secret key", re.compile(r"(?i)aws_?secret_?access_?key\W{0,4}([A-Za-z0-9/+=]{40})\b"), 1),
-    ("GitHub token", re.compile(r"\b(gh[pousr]_[A-Za-z0-9]{36,255}|github_pat_[A-Za-z0-9_]{22,255})\b"), 1),
+    ("GitHub token", re.compile(r"\b(gh[pousr]_[A-Za-z0-9]{20,255}|github_pat_[A-Za-z0-9_]{22,255})\b"), 1),
     ("Slack token", re.compile(r"\b(xox[abposr]-[A-Za-z0-9-]{10,})\b"), 1),
+    ("Notion token", re.compile(r"\b(ntn_[A-Za-z0-9]{20,})\b"), 1),
     ("Stripe key", re.compile(r"\b((?:sk|rk)_(?:live|test)_[A-Za-z0-9]{16,})\b"), 1),
     ("Google API key", re.compile(r"\b(AIza[0-9A-Za-z_\-]{35})\b"), 1),
     ("model API key", re.compile(r"\b((?:sk-(?:proj-|ant-)?|nvapi-)[A-Za-z0-9_\-]{20,})\b"), 1),
@@ -39,7 +42,27 @@ _PATTERNS: list[tuple[str, re.Pattern[str], int]] = [
     ("secret setting", re.compile(
         r"(?i)\"[A-Za-z0-9_.\-]*(?:secret|token|passw(?:or)?d|api[_-]?key|apikey|private[_-]?key|access[_-]?key)[A-Za-z0-9_.\-]*\""
         r"\s*:\s*\"([^\"]{6,})\""), 1),
+    # A name and its value in a table, a PDF or a page, with only space or a line between them. The value must mix letters and digits, so
+    # "token limit" or "password policy" followed by a plain word is not read as a secret.
+    ("labelled secret", re.compile(
+        r"(?i)\b[A-Za-z0-9_.\-]*(?:secret|token|credential|passw(?:or)?d|pwd|api[_ -]?key|private[_ -]?key|access[_ -]?key|signing[_ -]?key)"
+        r"[A-Za-z0-9_.\-]*(?:[ \t]+(?:id|key|value))?[\s|]+(?=[^\s]*[A-Za-z])(?=[^\s]*\d)([^\s\"'#|]{8,})"), 1),
 ]
+
+_CARD = re.compile(r"(?<![\d.,])([3-6]\d(?:[ -]?\d){11,17})(?![\d.,])")
+
+
+def _luhn(digits: str) -> bool:
+    total = 0
+    for i, c in enumerate(reversed(digits)):
+        d = int(c) * (2 if i % 2 else 1)
+        total += d - 9 if d > 9 else d
+    return total % 10 == 0
+
+
+def _squeeze(text: str) -> str:
+    """Only letters and digits, in one case: dashes, spaces or capitals put into a secret do not make it a different secret."""
+    return re.sub(r"[^a-z0-9]", "", text.lower())
 
 # Values that look like settings but are not secrets: references, placeholders, booleans, empty-looking stand-ins.
 _NOT_A_SECRET = re.compile(r"(?i)^(?:\$\{.*\}|\$[A-Z_]+|<[^>]*>|\{\{.*\}\}|x{4,}|\*{3,}|true|false|null|none|"
@@ -76,9 +99,14 @@ def find_secrets(text: str) -> list[FoundSecret]:
         for m in pattern.finditer(t):
             value = re.sub(r"\s+", "", m.group(group)) if label == "private key" else m.group(group)
             value = value.strip().rstrip(",;")
+            if label == "labelled secret" and "-----" in m.group(0):
+                continue  # a PEM block's header and body: the private key pattern above has it whole
             if len(value) < 6 or _NOT_A_SECRET.match(value) or len(set(value)) < 4:
                 continue
             found.setdefault(value, label)
+    for m in _CARD.finditer(t):  # a payment card is treated like a credential: it opens something, and it is never sent
+        if _luhn(re.sub(r"\D", "", m.group(1))):
+            found.setdefault(m.group(1), "payment card number")
     return [FoundSecret(label, value) for value, label in found.items()]
 
 
@@ -116,11 +144,12 @@ class SecretIndex:
     def scan_text(self, text: str, path: str = "") -> list[SecretMatch]:
         if not self.values:
             return []
-        t = _clean(text)
-        squeezed = re.sub(r"\s+", "", t)  # a key re-wrapped over several lines is still the key
+        t = _clean(with_decoded(text))
+        squeezed = _squeeze(t)
         out = []
         for value, (label, source, action) in self.values.items():
-            if value in t or (len(value) >= 20 and value in squeezed):
+            key = _squeeze(value)  # re-wrapped, re-cased, re-punctuated, reversed or encoded, it is still the same secret
+            if value in t or (len(key) >= 8 and (key in squeezed or key[::-1] in squeezed)):
                 out.append(SecretMatch(label, mask(value), source, path, action))
         return out
 

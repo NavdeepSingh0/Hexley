@@ -95,6 +95,17 @@ def named_key(kind: str, values: list[Any]) -> str | None:
     return f"page:{page}" if _PAGE.fullmatch(page) else None
 
 
+def origin_key(args: Any) -> str | None:
+    """The repository, channel or page a read call read from, in the same form as a destination; None when it names none."""
+    if not isinstance(args, dict):
+        return None
+    if args.get("owner") and args.get("repo"):
+        return named_key("repo", [args["owner"], args["repo"]])
+    if args.get("channel_id"):
+        return named_key("channel", [args["channel_id"]])
+    return named_key("page", [args["page_id"]]) if args.get("page_id") else None
+
+
 def without_named_destination(args: dict[str, Any], destination_args: list[str], kind: str) -> dict[str, Any]:
     """The arguments R2 scans for restricted values. A repository, channel or page must match the slip exactly (R1), so naming it
     carries no data out, while a result this session read often contains that very name (a page's id, a repository in a file's

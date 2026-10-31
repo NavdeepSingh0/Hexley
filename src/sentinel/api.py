@@ -554,12 +554,12 @@ def create_api(rt: Runtime, console_dir: Path | None = None, site_dir: Path | No
 
     @app.get("/api/v1/chat/presets")
     async def chat_presets(caller: str = Depends(who)):
-        # A visitor cannot upload, so the preset that exists to read your own PDF is not offered.
-        return [p for p in chats.presets() if caller == OFFICER or p["id"] != "own-doc"]
+        # A real connector reaches real accounts, so it is the officer's alone (D-063).
+        return [p for p in chats.presets() if caller == OFFICER or "connector" not in p]
 
     @app.post("/api/v1/chat", status_code=201)
     async def chat_create(req: ChatRequest, caller: str = Depends(who)):
-        if caller == VISITOR and (req.recording is not None or req.mode == "local" or req.preset == "own-doc"):
+        if caller == VISITOR and (req.recording is not None or req.mode == "local" or req.preset == "real-github"):
             raise HTTPException(status_code=403, detail="That option is for the officer.")
         try:
             chat = await chats.create(req.preset, req.mode, req.recording, req.officer)

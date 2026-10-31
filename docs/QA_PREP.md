@@ -89,6 +89,10 @@
 ## 7. Product, users, business
 **Who is the customer?** Offices that run agents on sensitive records and cannot send them to a cloud service: government departments (the local-AI problem statements in SIH), finance, health. A local model through Ollama works in Hexley Chat; nothing leaves the computer.
 
+**Why would anyone bother, and who pays?** An agent works with a person's rights and reads text from strangers, and access control cannot tell the job from a hijack. It fits engineering teams with coding agents, support desks, finance and procurement, and government offices on local models. The likely buyer is whoever answers for an agent's mistakes: a security or compliance lead, or government IT through an integrator. **Say this too:** this is our reasoning. Nobody has paid and no pilot has run. *Proof: the docs page "Who this is for".*
+
+**What did the team's test documents show?** Five documents, 64 sensitive fields, each written eight ways. As written, 57 were refused by value and 7 held for the officer; none was let through unchecked in any writing. All 21 secrets were refused going outside. Those are documents and labels we wrote, and held depends on the officer reading it. The first run found real holes: GitHub issues not treated as restricted, secrets allowed to internal places, and base64 hiding everything. We fixed them. *Proof: the docs page "The field test", `eval/connector_fields/`.*
+
 **Is it only for one scenario?** No. The engine has no quotation logic. We show a second domain, an electoral office with a compromised circular and a synthetic voter roll, through the same rules. *Proof: the chat preset and `tests/test_general_tools.py`.*
 
 **Compliance (DPDP, CERT-In)?** We do not claim compliance. The roadmap includes an incident report generated from the log and a mapping of features to DPDP and CERT-In requirements; not built.

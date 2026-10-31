@@ -43,17 +43,17 @@ const RULE_NOTES = {
   R6: { example: 'A persistent attacker\'s third denied action freezes that session and revokes its token. Other sessions are not affected.', gap: 'It only runs when another rule has already blocked something.' },
   R7: { example: 'After reading an untrusted PDF, the agent tries to e-mail a colleague who is on an allowed domain but not named internal: the action waits for the officer instead of going out.', gap: 'It can hold valid actions on a task that reads untrusted content and then acts often; the cost is measured in the README.' },
   R8: { example: 'On the strict quotation slip the agent reads the stock register and the quotation, then writes to the vendor on file that "we hold sufficient stock at the western depot": no figure is copied, so value matching sees nothing, but the message waits for the officer.', gap: 'It is off unless the slip turns it on, and it asks for approval rather than deciding: an officer who approves everything defeats it.' },
-  R9: { example: 'A runbook has a deploy token left in it. The agent tries to use it in a command, then to paste it into a message to a colleague: both refused, and the report to the manager without it still goes.', gap: 'A credential that matches none of the known shapes (a short password written in prose) or one re-encoded (base64, reversed) is not recognised.' },
+  R9: { example: 'A runbook has a deploy token left in it. The agent tries to use it in a command, then to paste it into a message to a colleague: both refused, and the report to the manager without it still goes.', gap: 'A credential with no known shape and no name beside it (a short password written in prose) is not recognised, nor is one split across messages.' },
 }
 
 const AUDIENCE = 'Everything on this page is written from the repository: the files named at the end.'
 
 export const GROUPS = [
-  { label: 'Get started', pages: [['overview', 'Overview'], ['run-it', 'Run it']] },
+  { label: 'Get started', pages: [['overview', 'Overview'], ['use-cases', 'Who this is for'], ['run-it', 'Run it']] },
   { label: 'Concepts', pages: [['concepts', 'Concepts'], ['rules', 'The rules']] },
-  { label: 'Guides', pages: [['connect-claude-ai', 'Connect Claude.ai'], ['connect-claude-code', 'Connect Claude Code'], ['connect-claude-code-hook', 'Check every tool in Claude Code'], ['connect-antigravity', 'GitHub through Antigravity'], ['own-tools', 'Your own tools']] },
+  { label: 'Guides', pages: [['connect-claude-ai', 'Connect Claude.ai'], ['connect-claude-code', 'Connect Claude Code'], ['connect-claude-code-hook', 'Check every tool in Claude Code'], ['connect-antigravity', 'GitHub through Antigravity'], ['extension', 'The browser extension'], ['own-tools', 'Your own tools']] },
   { label: 'Reference', pages: [['api', 'API in brief']] },
-  { label: 'Honesty', pages: [['limits', 'Limits and honest scope'], ['faq', 'Questions judges ask']] },
+  { label: 'Honesty', pages: [['limits', 'Limits and honest scope'], ['field-test', 'The field test'], ['faq', 'Questions judges ask']] },
 ]
 
 export const PAGES = {
@@ -242,6 +242,83 @@ export const PAGES = {
         <h2 id="evidence">Evidence</h2>
         <ClientEvidence id="claude-code" />
         <Note tone="limit">One session on one machine, against a local gateway, with one model. It shows that a real client can connect with the token and be decided by the gateway; it is not a measurement.</Note>
+      </>
+    ),
+  },
+
+  'use-cases': {
+    title: 'Who this is for',
+    lede: 'Any place an AI agent can both read text from strangers and act on real systems. E-mail is only the easiest example to show.',
+    source: 'docs/plans/PRODUCT_ROADMAP.md, docs/QA_PREP.md section 7.',
+    body: () => (
+      <>
+        <h2 id="why">Why anybody should bother</h2>
+        <p>An agent works with a person's rights, and it reads text written by anyone: a ticket, an issue, a PDF, a web page. Access control asks whether this identity may use this tool, and the answer is yes, so it cannot tell the job from a hijack. A model can be told to behave, but an instruction is advice that the next document can argue with. Hexley sits outside the model, holds the task a person approved, and checks what the agent does next.</p>
+        <h2 id="where">Where it fits</h2>
+        <Table head={['Who', 'What the agent does', 'What goes wrong', 'What Hexley does']} rows={[
+          ['Engineering teams with coding agents', 'Reads issues, code and config, and comments, commits and deploys', 'An issue tells it to post a private file, or it finds a token in a config and uses it', 'Only the repositories on the slip; a found credential is never sent or used; deletes and config writes wait or are refused'],
+          ['Support desks', 'Reads customer tickets, looks up accounts, replies', 'A ticket asks for another customer\'s record', 'Values from restricted records may not leave; addresses named only in a ticket are refused'],
+          ['Finance and procurement', 'Reads invoices and quotations, updates vendors, pays', 'A letter asks to change a bank account', 'The change waits for a person, who approves that exact request once'],
+          ['Government and defence offices', 'Works on files with a local model', 'A circular tells it to mail a voter roll', 'Runs on your own machine with a local model; nothing needs to reach a cloud service'],
+          ['Operations, HR, legal, health', 'Summarises channels and records, drafts messages', 'Tokens or personal data pasted in a channel travel on', 'Credentials and cards never go anywhere; restricted values stay inside the places the slip names'],
+        ]} />
+        <h2 id="who-pays">Who would pay</h2>
+        <p>The likely buyer is whoever answers for an agent's mistakes: a security or compliance lead at a company rolling agents out, or an IT department in government through an integrator. What they would buy is the ability to say yes to agents, with a record that shows what each one was allowed to do and did. The idea on the roadmap is open core: free to run yourself, with single sign-on, high availability and support paid.</p>
+        <Note tone="limit">This is our reasoning, not evidence. Nobody has paid, no pilot has run, and no price is decided. Cloud vendors bundle per-call policy for their own platforms, so our case rests on working outside the agent, on any client, and on your own machine.</Note>
+        <h2 id="not-for">Who does not need it</h2>
+        <p>Someone chatting with a model that has no tools. An agent that can only read public data and has nowhere to send anything. Hexley limits actions, and with no actions there is nothing to limit.</p>
+      </>
+    ),
+  },
+
+  'field-test': {
+    title: 'The field test',
+    lede: 'Five documents with real-looking values, one per connector. Every field was sent out eight ways, to see what Hexley recognises and what it only holds.',
+    source: 'scripts/eval/connector_fields.py, eval/connector_fields/results.md, docs/PHASE_LOG.md row P6.',
+    body: () => (
+      <>
+        <h2 id="how">How it ran</h2>
+        <p>Each document was reported as the result of that connector's read tool, on the hook's own endpoints. Then each field was sent through that connector's write tool to a place the slip allows but does not call internal, and to a place it does. No real service was called, and the documents and their values are not in the repository. The tiers (secret, business, harmless) are our own labels.</p>
+        <h2 id="result">What happened</h2>
+        <Table head={['Sensitive fields, 64 in all', 'Refused by value', 'Held for the officer', 'Let through']} rows={[
+          ['As written', '57', '7', '0'],
+          ['In base64', '53', '11', '0'],
+          ['In capitals', '57', '7', '0'],
+          ['Separators removed', '41', '23', '0'],
+          ['Dashes between pairs', '24', '40', '0'],
+          ['Reversed', '18', '46', '0'],
+          ['First half only', '10', '54', '0'],
+        ]} />
+        <p>All 21 secret fields were refused going outside, and credentials and card numbers were refused going to the internal place too. The first run of this test found that GitHub issues were not treated as restricted, that 18 of those secrets could go to an internal place, and that base64 hid everything. Those are fixed.</p>
+        <h2 id="limits">What it does not show</h2>
+        <ul className="dx-list">
+          <li><strong>Held is not refused.</strong> A held message goes out if the officer approves it, so it depends on the officer reading it.</li>
+          <li><strong>Seven sensitive fields were not recognised as written:</strong> people's names, percentages, short free text, and small numbers such as a quantity of 42. They were held, because the session had read untrusted content.</li>
+          <li><strong>Bank account and tax numbers may go to a place the slip calls internal,</strong> because the officer named it. Only credentials and cards never go.</li>
+          <li><strong>The cost:</strong> 12 of 34 fields we called harmless were refused outright going outside, such as a quotation number or a date. A value read from a restricted source may not leave, and that can refuse an honest message. It may go back to the place it came from.</li>
+          <li><strong>The values were written by a teammate and the tiers by us.</strong> This is a test of matching on documents like these, not a measurement of how an attacker would do.</li>
+        </ul>
+      </>
+    ),
+  },
+
+  extension: {
+    title: 'The browser extension',
+    lede: 'Hexley\'s mascot on claude.ai and chatgpt.com, reacting to real decisions, with held actions you can approve from the browser. It enforces nothing.',
+    source: 'extension/README.md, developer.chrome.com (Chrome Web Store registration and distribution pages, read 31 Oct 2026).',
+    body: () => (
+      <>
+        <h2 id="install">Install it</h2>
+        <p><a href="/hexley-extension-0.1.0.zip" download>Download the extension</a> (26 KB), then:</p>
+        <Steps items={[
+          'Unzip it into a folder you will keep.',
+          'In Chrome open chrome://extensions and turn on Developer mode, top right.',
+          'Press Load unpacked and choose that folder.',
+          'Open the extension\'s Settings and paste the officer\'s link for hexley.site, or for your own copy.',
+        ]} />
+        <Note tone="limit">Chrome does not let a website install an extension on Windows or Mac: it must come from the Chrome Web Store, which charges a one-time registration fee, so we have not published it. That also means it does not update itself. To update, download it again, replace the folder and press Reload on chrome://extensions.</Note>
+        <h2 id="what">What it does and does not do</h2>
+        <p>It shows what Hexley decided and lets the officer approve or deny a held action. It stops nothing by itself, and it needs the officer's token. The decisions happen in Hexley.</p>
       </>
     ),
   },

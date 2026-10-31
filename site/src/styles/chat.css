@@ -207,3 +207,54 @@
 .cx-file-remove:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 .cx-user { display: grid; justify-items: end; gap: 8px; max-width: min(82%, 600px); }
 .cx-user .cx-bubble { max-width: 100%; }
+
+/* ---- a chat like any other (31 Oct): an empty chat is one centred box; a reply is plain text on the page, not a card ---- */
+.cx-head { min-height: 56px; padding: 8px 16px; border-bottom: 0; }
+.cx-head-space { flex: 1; }
+.cx-head-title { flex: 0 1 auto; max-width: 46%; font-family: inherit; font-weight: 600; font-size: 15.5px; letter-spacing: 0; }
+.cx-head-sub { max-width: 34%; font-size: 13.5px; }
+.cx-head-mascot { width: 36px; height: 36px; }
+.cx-model-pick { font: inherit; font-size: 17px; font-weight: 600; color: var(--ink); background: transparent; border: 0; border-radius: 10px; padding: 7px 8px; cursor: pointer; max-width: 70%; }
+.cx-model-pick:hover { background: var(--panel); }
+.cx-model-pick option { color: #0a0a10; background: #fff; font-weight: 400; }
+.cx-landing { grid-row: 2 / 4; display: grid; align-content: center; justify-items: stretch; gap: 18px; width: 100%; max-width: 800px; margin: 0 auto; padding: 0 20px 8vh; overflow-y: auto; }
+.cx-landing-title { margin: 0 0 6px; text-align: center; font-size: clamp(26px, 3.2vw, 34px); font-weight: 600; letter-spacing: -0.02em; }
+.cx-landing .cx-composer-wrap { padding: 0; background: none; }
+.cx-landing .cx-welcome { padding: 0; gap: 8px; }
+.cx-landing .cx-suggest { margin-top: 0; }
+.cx-landing .cx-suggest-card { padding: 12px 14px; background: transparent; }
+.cx-landing .cx-suggest-desc { font-size: 13.5px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.cx-connector { display: inline-flex; gap: 8px; align-items: center; justify-self: center; font-size: 14px; color: var(--muted); cursor: pointer; }
+.cx-col { padding-top: 12px; gap: 26px; }
+.cx-composer { padding: 8px 8px 8px 16px; }
+.cx-slip-compact { background: transparent; border: 0; justify-self: center; width: fit-content; max-width: 100%; }
+.cx-slip-compact summary { padding: 4px 12px; font-size: 13px; border-radius: 999px; }
+.cx-slip-compact summary:hover { background: var(--panel); }
+.cx-slip-compact[open] { width: 100%; background: var(--panel); border-radius: 12px; }
+.cx-avatar { width: 26px; height: 26px; }
+.cx-md { font-size: 16px; line-height: 1.65; overflow-wrap: anywhere; display: grid; gap: 12px; }
+.cx-md > * { margin: 0; }
+.cx-md :is(h3, h4, h5, h6) { font-family: inherit; letter-spacing: 0; font-weight: 600; line-height: 1.3; margin-top: 6px; }
+.cx-md h3 { font-size: 20px; } .cx-md h4 { font-size: 18px; } .cx-md :is(h5, h6) { font-size: 16px; }
+.cx-md :is(ul, ol) { padding-left: 1.5em; display: grid; gap: 4px; }
+.cx-md blockquote { padding-left: 14px; border-left: 3px solid var(--line); color: var(--muted); }
+.cx-md a { color: var(--brand); }
+.cx-md code { font-family: var(--mono); font-size: 0.9em; padding: 1px 5px; border-radius: 5px; background: var(--raised); }
+.cx-code { border-radius: 12px; overflow: hidden; border: 1px solid var(--card-border); background: var(--panel); }
+.cx-code-head { display: flex; justify-content: space-between; align-items: center; padding: 6px 8px 6px 14px; font-size: 12.5px; color: var(--muted); border-bottom: 1px solid var(--line); }
+.cx-code pre { margin: 0; padding: 12px 14px; overflow-x: auto; font-size: 14px; line-height: 1.5; }
+.cx-code pre code { padding: 0; background: none; font-size: inherit; }
+.cx-table-wrap { overflow-x: auto; }
+.cx-md table { border-collapse: collapse; font-size: 15px; }
+.cx-md :is(th, td) { padding: 7px 12px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+.cx-md th { font-weight: 600; }
+.cx-copy { border: 0; background: none; color: var(--muted); font: inherit; font-size: 13px; padding: 3px 8px; border-radius: 7px; cursor: pointer; }
+.cx-copy:hover { background: var(--raised); color: var(--ink); }
+.cx-reply-actions { margin-left: -8px; opacity: 0; transition: opacity var(--dur) var(--ease); }
+.cx-turn--assistant:hover .cx-reply-actions, .cx-reply-actions:focus-within { opacity: 1; }
+.cx-chip-head { margin-top: 8px !important; font-size: 12.5px; color: var(--muted); letter-spacing: 0.04em; }
+.cx-chip-pre { margin: 0; padding: 10px 12px; max-height: 320px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; font-family: var(--mono); font-size: 13px; line-height: 1.5; background: var(--bg); border: 1px solid var(--card-border); border-radius: 10px; }
+@media (max-width: 900px) { .cx-landing { padding: 0 12px 4vh; } .cx-head-sub { display: none; } }
+.cx-app .cx-composer textarea:focus-visible { outline: 0; }
+.cx-app .cx-landing-title { font-family: var(--font); }
+.cx-model-pick { width: fit-content; field-sizing: content; padding-right: 4px; }

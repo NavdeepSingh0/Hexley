@@ -173,7 +173,8 @@ tools:
     outbound: false
     consequential: false
     output_integrity: untrusted       # anyone can open an issue or comment on a public repository
-    output_confidentiality: internal
+    output_confidentiality: restricted   # an issue may be in a private repository, and may hold a pasted token or customer data
+    fingerprint_fields: [all]
 
   github__list_issues:
     capability: read
@@ -181,7 +182,8 @@ tools:
     outbound: false
     consequential: false
     output_integrity: untrusted
-    output_confidentiality: internal
+    output_confidentiality: restricted   # an issue may be in a private repository, and may hold a pasted token or customer data
+    fingerprint_fields: [all]
 
   github__search_issues:
     capability: read
@@ -189,7 +191,8 @@ tools:
     outbound: false
     consequential: false
     output_integrity: untrusted
-    output_confidentiality: internal
+    output_confidentiality: restricted   # an issue may be in a private repository, and may hold a pasted token or customer data
+    fingerprint_fields: [all]
     free_text_args: [query]           # a search, not a statement
 
   github__get_file_contents:
@@ -276,7 +279,8 @@ tools:
     outbound: false
     consequential: false
     output_integrity: untrusted       # anyone can open an issue or comment on a public repository
-    output_confidentiality: internal
+    output_confidentiality: restricted   # an issue may be in a private repository, and may hold a pasted token or customer data
+    fingerprint_fields: [all]
 
   github.list_issues:
     capability: read
@@ -284,7 +288,8 @@ tools:
     outbound: false
     consequential: false
     output_integrity: untrusted
-    output_confidentiality: internal
+    output_confidentiality: restricted   # an issue may be in a private repository, and may hold a pasted token or customer data
+    fingerprint_fields: [all]
 
   github.search_issues:
     capability: read
@@ -292,7 +297,8 @@ tools:
     outbound: false
     consequential: false
     output_integrity: untrusted
-    output_confidentiality: internal
+    output_confidentiality: restricted   # an issue may be in a private repository, and may hold a pasted token or customer data
+    fingerprint_fields: [all]
     free_text_args: [query]           # a search, not a statement
 
   github.get_file_contents:

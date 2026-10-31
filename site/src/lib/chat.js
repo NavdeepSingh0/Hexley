@@ -57,12 +57,18 @@ export function busyLine(view) {
 }
 
 export const MODES = [
-  ['auto', 'Automatic'],
-  ['live', 'Live model'],
+  ['auto', 'Nemotron'],
   ['local', 'Local model (Ollama, on this computer)'],
   ['replay', 'Recorded real chat'],
   ['scripted', 'Scripted attacker (no model)'],
 ]
+
+// A model on this computer is no use to someone on the hosted site.
+export const modesFor = (hostname) => MODES.filter(([id]) => id !== 'local' || hostname === '127.0.0.1' || hostname === 'localhost')
+
+// A new chat with no task chosen uses the general slip. The rest are offered as suggestions; a real connector is offered as a switch.
+export const GENERAL_PRESET = 'own-doc'
+export const suggestions = (presets) => (presets ?? []).filter((p) => p.id !== GENERAL_PRESET && !p.connector)
 
 // The disclosure shown before the server has sent one (it is never absent).
 export const DEFAULT_DISCLOSURE = 'Hexley Chat is our own demo host app. Every record and mailbox is synthetic and the tools are mocks.'
@@ -107,7 +113,7 @@ export function statusChip(view) {
 }
 
 // A conversation's title: the task it was started from, else a plain default.
-export const chatTitle = (preset, view) => preset?.title ?? view?.preset ?? 'New chat'
+export const chatTitle = (preset, view) => view?.title || preset?.title || view?.preset || 'New chat'
 
 // "just now", "5 min ago", "2 h ago", "3 d ago"
 export function ago(ts, now = Date.now()) {

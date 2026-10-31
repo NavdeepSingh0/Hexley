@@ -53,6 +53,8 @@ def decide(action: AgentAction, session: Session, registry: Registry, approved: 
             matches = session.index.scan_args(scanned) if (entry.outbound or contacts) else []
             # An address that IS the recipient is not a leak of itself (you may write to a customer who is in the database).
             matches = [m for m in matches if not (m.kind == "email" and m.canonical in recipients)]
+            # A reply on an issue may quote that issue: a value going back to the repository, channel or page it came from is not a leak.
+            matches = [m for m in matches if not session.index.already_at(m.kind, m.canonical, recipients)]
             if recipients and not unparseable and all(
                     destinations.allowed(r, session.contract.internal_destinations) for r in recipients):
                 matches = []  # restricted data may go to a destination the officer named as internal (the slip says so)

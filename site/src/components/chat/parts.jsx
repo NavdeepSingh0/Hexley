@@ -1,8 +1,9 @@
 // Pieces of the chat page that sit in the conversation: messages, the one-line tool summary, the slip and approval cards, the
 // welcome screen. Everything shown comes from the ChatView the gateway builds; nothing here decides a decision.
 import { FileCard } from './Composer.jsx'
-import { Fragment } from 'react'
+import { Fragment, useEffect, useRef, useState } from 'react'
 import { Icon } from '../Blocks.jsx'
+import Markdown, { CopyButton } from './Markdown.jsx'
 import { decisionKind, decisionWord, ruleLabel, toolSummary } from '../../lib/chat.js'
 
 // **bold** in a model's reply, as React text (never as HTML).
@@ -38,6 +39,10 @@ export function Chip({ a }) {
       <div className="cx-chip-body">
         {a.reason && <p>{a.reason}</p>}
         {a.rules?.length > 0 && <p className="cx-chip-rules">{a.rules.map(ruleLabel).join(' · ')}</p>}
+        <p className="cx-chip-head">Request</p>
+        <pre className="cx-chip-pre">{JSON.stringify(a.args ?? {}, null, 2)}</pre>
+        {a.output != null && <p className="cx-chip-head">Output</p>}
+        {a.output != null && <pre className="cx-chip-pre">{a.output || '(empty)'}</pre>}
       </div>
     </details>
   )
@@ -59,6 +64,37 @@ export function ToolGroup({ actions, live }) {
   )
 }
 
+// A reply that arrives while this page is open appears as it would while being written. It changes only how it is shown: the text is complete.
+function useReveal(text) {
+  const arrived = useRef(!text) // it was empty when first drawn, so it is arriving now; an old message opens whole
+  const [shown, setShown] = useState(text.length)
+  useEffect(() => {
+    if (!arrived.current || !text) return undefined
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) { arrived.current = false; setShown(text.length); return undefined }
+    arrived.current = false
+    let n = 0
+    setShown(0)
+    const step = Math.max(3, Math.ceil(text.length / 150))
+    const timer = setInterval(() => {
+      n += step
+      setShown(Math.min(n, text.length))
+      if (n >= text.length) clearInterval(timer)
+    }, 16)
+    return () => clearInterval(timer)
+  }, [text])
+  return text.slice(0, shown)
+}
+
+function Reply({ text }) {
+  const shown = useReveal(text)
+  return (
+    <>
+      <Markdown text={shown} />
+      {shown.length === text.length && <div className="cx-reply-actions"><CopyButton text={text} /></div>}
+    </>
+  )
+}
+
 export function Message({ m, working }) {
   if (m.role === 'user') {
     return (
@@ -67,7 +103,7 @@ export function Message({ m, working }) {
           {m.attachments?.length > 0 && (
             <div className="cx-files cx-files--sent">{m.attachments.map((a) => <FileCard key={a.name} file={{ ...a, status: 'ready' }} />)}</div>
           )}
-          <div className="cx-bubble"><Inline text={m.text} /></div>
+          <div className="cx-bubble">{m.text}</div>
         </div>
       </div>
     )
@@ -79,14 +115,14 @@ export function Message({ m, working }) {
     <div className="cx-turn cx-turn--assistant">
       <Avatar />
       <div className="cx-turn-body">
-        {m.text ? <p className="cx-text"><Inline text={m.text} /></p> : working && <Dots />}
+        {m.actions?.length > 0 && <ToolGroup actions={m.actions} live={working} />}
+        {m.text ? <Reply text={m.text} /> : working && <Dots />}
         {m.checks?.length > 0 && (
           <p className="cx-check" role="note">
             Hexley removed {m.checks.length === 1 ? 'an address' : `${m.checks.length} addresses`} from this reply before
             showing it: {m.checks.map((c) => `${c.kind} to ${c.host} (${c.reasons[0]})`).join('; ')}.
           </p>
         )}
-        {m.actions?.length > 0 && <ToolGroup actions={m.actions} live={working} />}
       </div>
     </div>
   )
@@ -138,13 +174,10 @@ export function ApprovalCard({ a, busy, onDecide }) {
   )
 }
 
-// The empty state: the mascot, a question, and the four tasks as cards.
-export function Welcome({ presets, busy, onPick, errorText }) {
+// Under the box on an empty chat: ready-made tasks. Clicking one sends it, as on any chat app.
+export function Suggestions({ presets, busy, onPick, errorText }) {
   return (
     <div className="cx-welcome">
-      <sentinel-mascot state="sleeping" message="" size="128" />
-      <h1 className="cx-welcome-title">What should the agent do?</h1>
-      <p className="cx-welcome-lede muted">Pick a task. A model works on it, every tool it calls goes through Hexley first, and you see each decision as it is made.</p>
       {errorText && <p className="muted cx-welcome-error" role="status">{errorText}</p>}
       <div className="cx-suggest">
         {presets.map((p) => (

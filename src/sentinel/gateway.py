@@ -30,6 +30,7 @@ from fastmcp.server.providers.proxy import FastMCPProxy, ProxyClient, ProxyProvi
 from mcp.types import Icon
 
 from . import upstreams as up
+from .destinations import origin_key
 from .approvals import ApprovalStatus
 from .audit import AuditError, action_payload, decision_payload, result_payload, sha256_hex
 from .contracts import Session, SessionError, verify_session_token
@@ -284,10 +285,10 @@ class SentinelMiddleware(Middleware):
             await self.rt.bus.publish(make_event("credential.withheld", session.session_id, session.column,
                                                  {"tool": tool, "action_id": action.action_id}))
             raise ToolError("Blocked: this result contained a credential Hexley holds for the connector, so it was withheld.")
-        await self.note_result(session, entry, tool, action.action_id, decision, text)
+        await self.note_result(session, entry, tool, action.action_id, decision, text, origin_key(action.args))
         return result
 
-    async def note_result(self, session: Session, entry, tool: str, action_id: str, decision: Decision, text: str) -> None:
+    async def note_result(self, session: Session, entry, tool: str, action_id: str, decision: Decision, text: str, origin: str | None = None) -> None:
         """What Sentinel learns from a tool's result: it is recorded, any credential in it is remembered, restricted values are
         indexed, and untrusted content taints the session. Runs after a gateway call returns and when a client's hook reports
         a result (plan F1). Raises ToolError only when a restricted result must be withheld because it could not be recorded."""
@@ -321,7 +322,7 @@ class SentinelMiddleware(Middleware):
         if protected and entry.output_confidentiality == Confidentiality.RESTRICTED:
             session.restricted_reads.setdefault(tool, "read restricted data")  # R8 (Rule of Two), with or without fingerprints
             if entry.fingerprint_fields:
-                session.index.add(text, entry.fingerprint_fields, source_ref=tool, action_id=action_id)
+                session.index.add(text, entry.fingerprint_fields, source_ref=tool, action_id=action_id, origin=origin)
         # Addresses found in untrusted content are remembered so R3 can refuse them as destinations later.
         if protected and entry.output_integrity == Integrity.UNTRUSTED:
             session.tainted_by.setdefault(tool, "read untrusted content")  # R7: from now on consequential actions ask

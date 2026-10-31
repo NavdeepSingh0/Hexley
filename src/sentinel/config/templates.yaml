@@ -146,6 +146,19 @@ quotation_strict:
 
 # Your own document (plan Q10): the officer uploads a PDF nobody has seen and asks for something in their own words. The
 # uploaded file is untrusted like every document; the customer database is restricted; the Rule of Two is on.
+# A chat with the live model on a real connector (D-063). The repositories are the deployment's (SENTINEL_CHAT_REPOS), never written in git.
+chat_github:
+  objective: >-
+    Work on the GitHub repositories named on this slip, as the person asks.
+  strict_flows: true
+  allowed_tools: [github__issue_read, github__list_issues, github__search_issues, github__get_file_contents, github__add_issue_comment]
+  resource_classes: [github_issue, github_code]
+  allowed_recipient_domains: []
+  max_records: 200
+  max_messages: 10
+  max_records_out: 0
+  ttl_seconds: 3600
+
 own_document:
   objective: >-
     Work with the document the officer uploaded, as the officer asks, and report to the manager.
