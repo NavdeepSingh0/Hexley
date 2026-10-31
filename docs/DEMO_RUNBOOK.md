@@ -66,7 +66,7 @@ DO: press `T` (tamper), then `V`: the check turns red at the record that was cha
 SAY: "Change one record, delete one, reorder two: verification fails and says where. What it does not do is prove the events were true, and a truncated log is only caught if the verifier holds an earlier head."
 
 **5:40 Close (20 s).**
-SAY: "Tested: about 750 automated tests, a labelled corpus, 30 recordings of a real model, real clients. Not done: a blind attacker and an adaptive attacker. Our limits are on the next page of the site, because a security tool that hides its limits is not one."
+SAY: "Tested: about 1,050 automated tests, a labelled corpus, 30 recordings of a real model, real clients. Not done: a blind attacker and an adaptive attacker. Our limits are on the next page of the site, because a security tool that hides its limits is not one."
 
 ## 2B. Real connectors (about 2 minutes, after section 2)
 SAY: "That was our own demo tools. This is the real thing. Hexley does not rebuild Gmail or Slack and does not hold their passwords: Claude keeps its own connectors, and Hexley only decides whether each call may run."

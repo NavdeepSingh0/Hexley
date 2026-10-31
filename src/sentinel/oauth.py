@@ -49,6 +49,7 @@ from .confirm import ConfirmError, confirm_draft
 from .contracts import (SessionError, SlipError, draft_contract, mint_session_token, normalise_destination_entry,
                         verify_session_token)
 from .events import make_event
+from .brand import LOGO_SVG
 from .google_login import LOGIN_SECONDS, GoogleLogin, GoogleLoginError
 from .models import Column
 from .runtime import Runtime
@@ -302,7 +303,7 @@ LOGIN_DAYS = 30
 
 # ---- the consent page (served by the gateway, so it works over the public tunnel too) --------------------------------
 _PAGE = """<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Allow access to Hexley</title><style>
+<title>Allow access to Hexley</title><link rel="icon" href="/favicon.svg" type="image/svg+xml"><style>
 :root{{color-scheme:light dark;--bg:#f4f4f7;--card:#fff;--ink:#1c1b22;--soft:#62606e;--line:#e2e1e8;--accent:#6a3de8;--on:#fff}}
 @media (prefers-color-scheme:dark){{:root{{--bg:#0d0d12;--card:#17171f;--ink:#f2f1f6;--soft:#a3a1b0;--line:#2c2b36;--accent:#9a7bff;--on:#14121f}}}}
 *{{box-sizing:border-box}}body{{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px 16px;background:var(--bg);color:var(--ink);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}}
@@ -318,13 +319,13 @@ button,a.go{{font:inherit;font-weight:600;padding:10px 16px;border-radius:9px;bo
 button.ghost{{background:none;border-color:var(--line);color:var(--ink)}}button.link{{background:none;border:0;padding:0;color:var(--accent);font-size:13px;font-weight:500}}
 input.proof{{font:inherit;width:100%;padding:10px 12px;margin-top:6px;background:none;color:var(--ink);border:1px solid var(--line);border-radius:9px}}
 .err{{color:#d92d3f;font-weight:600;margin:0 0 16px}}.small{{margin:0;font-size:13px;color:var(--soft);text-align:center}}
-</style></head><body><main><div class="brand"><svg viewBox="0 0 32 32" aria-hidden="true"><rect x="2" y="2" width="28" height="28" rx="8" fill="#6a3de8"/><rect x="6" y="6" width="20" height="17" rx="5" fill="#0b0b12"/><rect x="11" y="10" width="3" height="9" rx="1.5" fill="#fff"/><rect x="18" y="10" width="3" height="9" rx="1.5" fill="#fff"/></svg><p class="label">Hexley</p></div>{body}</main></body></html>"""
+</style></head><body><main><div class="brand">@LOGO@<p class="label">Hexley</p></div>{body}</main></body></html>""".replace("@LOGO@", LOGO_SVG)
 
 
 def _page(body: str, status: int = 200) -> HTMLResponse:
     return HTMLResponse(_PAGE.format(body=body), status_code=status, headers={
         "Cache-Control": "no-store", "X-Frame-Options": "DENY", "Referrer-Policy": "no-referrer",
-        "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; frame-ancestors 'none'"})
+        "Content-Security-Policy": "default-src 'none'; img-src 'self'; style-src 'unsafe-inline'; frame-ancestors 'none'"})
 
 
 def _lasts(seconds: int) -> str:

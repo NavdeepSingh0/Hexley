@@ -205,7 +205,7 @@
   <!-- Main overlay wrap -->
   <div id="wrap">
     <div id="mascot-wrap">
-      <!-- size="80": viewBox 0 0 200 200, scale = 80/200 = 0.4
+      <!-- size="80": two pixels per cell of the 40-cell art, so it stays crisp.
            overflow:visible on the SVG means speech bubbles show outside the box -->
       <sentinel-mascot
         id="mascot"
@@ -240,8 +240,8 @@
     </section>
   </div>
 
-  <!-- The mascot Web Component — copied from design/mascot/ -->
-  <script type="module" src="sentinel-mascot.js"></script>
+  <!-- The pixel mascot Web Component (art from design/brand/make_brand.py) -->
+  <script type="module" src="pixel-mascot.js"></script>
   <script src="overlay.js"></script>
 </body>
 </html>

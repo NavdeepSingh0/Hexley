@@ -18,7 +18,7 @@ Shows Hexley's mascot on **claude.ai** and **chatgpt.com**, reacting to real gat
 
 3. Click **Load unpacked** → select the `extension/` folder inside the repo.
 
-4. The Hexley icon appears in your toolbar. (`extension/sentinel-mascot.js` is a copy of `design/mascot/sentinel-mascot.js`; after the mascot changes, run `bash extension/scripts/copy-mascot.sh` and reload the extension.)
+4. The Hexley icon appears in your toolbar. (The extension has its own pixel mascot, `extension/pixel-mascot.js`. Its art and the icons are written by `python design/brand/make_brand.py`; after the art changes, run that and reload the extension.)
 
 ---
 
@@ -96,11 +96,13 @@ When the mascot shows **needs-approval**:
 
 ## Updating the mascot
 
-If `design/mascot/sentinel-mascot.js` is updated in the repo, re-copy it:
+The art and icons come from one script. Change the grid there and run it:
 
 ```bash
-bash extension/scripts/copy-mascot.sh
+python design/brand/make_brand.py
 ```
+
+The faces for each state are in `extension/pixel-mascot.js`.
 
 Then reload the extension on `chrome://extensions`.
 

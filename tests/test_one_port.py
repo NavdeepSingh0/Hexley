@@ -79,6 +79,15 @@ async def test_an_agent_runs_through_the_gateway_on_the_shared_port_and_the_rule
     assert not [m for m in sink.snapshot() if "evil.example" in m["to"]]
 
 
+async def test_a_client_is_told_the_servers_name_and_logo_at_addresses_it_can_reach(hosted):
+    _, base, _, _ = hosted
+    token = await _session_token(base)
+    async with Client(StreamableHttpTransport(f"{base}/mcp", headers={"Authorization": f"Bearer {token}"})) as c:
+        info = c.server_info
+    assert info.name == "hexley" and info.website_url == PUBLIC
+    assert [i.src for i in info.icons] == [f"{PUBLIC}/logo-512.png", f"{PUBLIC}/favicon.svg"]
+
+
 async def test_the_gateway_on_the_shared_port_refuses_a_caller_with_no_token(hosted):
     _, base, _, _ = hosted
     async with httpx.AsyncClient(base_url=base) as c:

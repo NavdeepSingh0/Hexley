@@ -27,6 +27,7 @@ from fastmcp.exceptions import ToolError
 from fastmcp.server.dependencies import get_http_headers
 from fastmcp.server.middleware import Middleware
 from fastmcp.server.providers.proxy import FastMCPProxy, ProxyClient, ProxyProvider
+from mcp.types import Icon
 
 from . import upstreams as up
 from .approvals import ApprovalStatus
@@ -414,7 +415,11 @@ def build_gateway(rt: Runtime) -> FastMCP:
     # a client without one with the 401 that starts the sign-in. Off by default: the header route works either way, and
     # the middleware below remains the real check on every call.
     oauth = getattr(rt, "oauth", None)
-    proxy = FastMCPProxy(client_factory=client_factory, name="sentinel-gateway", **({"auth": oauth} if oauth else {}))
+    # The logo a client may show beside the server. It needs an address the client can reach, so only a public deployment names one.
+    public = str(oauth.base_url).rstrip("/") if oauth else None
+    brand = {"website_url": public, "icons": [Icon(src=f"{public}/logo-512.png", mimeType="image/png", sizes=["512x512"]),
+                                              Icon(src=f"{public}/favicon.svg", mimeType="image/svg+xml", sizes=["any"])]} if public else {}
+    proxy = FastMCPProxy(client_factory=client_factory, name="hexley", **brand, **({"auth": oauth} if oauth else {}))
     proxy.add_middleware(SentinelMiddleware(rt))
     # Every configured upstream with its credential set becomes a provider of prefixed tools. Sentinel's middleware above
     # decides every call to them exactly as for the built-in tool server.
