@@ -28,7 +28,7 @@
   <img src="docs/readme/home.png" alt="The Hexley home page, with the headline 'The AI can only do the job you gave it' and the mascot" width="900">
 </p>
 
-Built by team **404 Disruptors** for Zinnovatio 4.0. The product is called Hexley. The code, the `sentinel` command and this repository keep the project's first name, Sentinel.
+Built by **Navdeep Singh Dhunna**. The product is called Hexley. The code, the `sentinel` command and this repository keep the project's first name, Sentinel.
 
 ## The problem
 
@@ -188,7 +188,7 @@ Source: [`recordings/`](recordings/) and `eval/results/recorded-20261026T195255.
 
 0 of 37 valid Hexley actions were blocked.
 
-### Field test on the team's documents
+### Field test on five test documents
 
 Source: [`eval/connector_fields/results.md`](eval/connector_fields/results.md). Five documents, one per connector, reported through the hook's endpoints with no real service called. 64 sensitive fields were each written 8 ways and sent outside. The documents and their tiers are our own.
 
@@ -287,7 +287,7 @@ The live site is one container on one port, serving the website, console, chat, 
 
 ## Status and roadmap
 
-Hexley is a working prototype built for a competition. It has **no customers or pilots and no decided price**, and the site's pricing page sells nothing. Use cases are at [hexley.site/docs/use-cases](https://hexley.site/docs/use-cases).
+Hexley is a working prototype. It has **no customers or pilots and no decided price**, and the site's pricing page sells nothing. Use cases are at [hexley.site/docs/use-cases](https://hexley.site/docs/use-cases).
 
 **Planned, not built:**
 
@@ -313,9 +313,9 @@ Hexley is a working prototype built for a competition. It has **no customers or 
 | [Deployment](docs/DEPLOY.md) | Hosting and configuration |
 | [hexley.site/docs](https://hexley.site/docs) | Guides for each client |
 
-## Team
+## Author
 
-**404 Disruptors**, Zinnovatio 4.0: Archit Sharma (lead), Navdeep Singh Dhunna, Akriti Bhardwaj and Aadarsh Parmar.
+**Navdeep Singh Dhunna** ([@NavdeepSingh0](https://github.com/NavdeepSingh0)).
 
 ## Licence
 
